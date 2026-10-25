@@ -1,0 +1,109 @@
+<a class="retour" routerLink="/admin/commandes">‹ Commandes</a>
+@switch (status()) {
+  @case ('loading') { <p class="info" role="status">Chargement…</p> }
+  @case ('error') { <div class="erreur-etat" role="alert"><p>{{ error() }}</p></div> }
+  @default {
+    @let d = data()!;
+    @let o = d.order;
+    <div class="entete-page">
+      <div>
+        <h1>Commande {{ o.reference }}</h1>
+        <p>Passée le {{ o.createdAt | date: 'dd/MM/y HH:mm' }}</p>
+      </div>
+      <div class="actions-page">
+        <app-status-badge [status]="o.status" />
+        @if (o.status !== 'cancelled') {
+          <select class="champ-admin" aria-label="Changer le statut" (change)="choose($event)" data-testid="admin-order-status">
+            <option value="">Changer le statut…</option>
+            @for (opt of options(); track opt.value) { <option [value]="opt.value">{{ opt.label }}</option> }
+          </select>
+        }
+      </div>
+    </div>
+    @if (message()) { <p class="message" role="status" data-testid="admin-message">{{ message() }}</p> }
+
+    <div class="grille-commande">
+      <div class="colonne">
+        @for (g of byShop(); track g.shopName) {
+          <section class="panneau">
+            <div class="titre-panneau"><h2>{{ g.shopName }}</h2><app-status-badge [status]="g.items[0].fulfillmentStatus" [label]="'Vendeur : ' + labels[g.items[0].fulfillmentStatus]" /></div>
+            <div class="tableau">
+              <table>
+                <thead><tr><th>Produit</th><th>Options</th><th class="droite">Qté</th><th class="droite">Prix unitaire enregistré</th><th class="droite">Total</th></tr></thead>
+                <tbody>
+                  @for (item of g.items; track item.id) {
+                    <tr>
+                      <td>@if (item.productId) { <a class="nom" [routerLink]="['/admin/produits', item.productId]">{{ item.productName }}</a> } @else { <span class="fort">{{ item.productName }}</span> <span class="sous">(produit supprimé)</span> }</td>
+                      <td class="options">
+                        @if (item.customSummary) { <span class="mesures" data-testid="admin-measures">{{ item.customSummary }}</span> }
+                        {{ details(item) || (item.customSummary ? '' : '—') }}
+                      </td>
+                      <td class="droite">{{ item.quantity }}</td>
+                      <td class="droite">{{ item.unitPriceTnd | prixDt }}</td>
+                      <td class="droite fort">{{ item.lineTotalTnd | prixDt }}</td>
+                    </tr>
+                    @if (neonOf(item); as n) { <tr class="ligne-neon"><td colspan="5"><app-neon-order-preview [neon]="n" /></td></tr> }
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+        }
+
+        <section class="panneau">
+          <div class="titre-panneau"><h2>Historique des statuts</h2></div>
+          @if (d.history.length) {
+            <ul class="liste-simple" data-testid="admin-order-history">
+              @for (h of d.history; track h.id) {
+                <li class="ligne-liste">
+                  <span>
+                    {{ h.fromStatus ? (labels[h.fromStatus] || h.fromStatus) + ' → ' : '' }}<strong>{{ labels[h.toStatus] || h.toStatus }}</strong>
+                    <span class="gris"> · {{ author(h) }}</span>
+                    @if (h.note) { <span class="sous">« {{ h.note }} »</span> }
+                  </span>
+                  <span class="sous">{{ h.createdAt | date: 'dd/MM/y HH:mm' }}</span>
+                </li>
+              }
+            </ul>
+          } @else { <p class="vide">Aucun changement de statut enregistré<small>L'historique est enregistré depuis la mise en place de la console.</small></p> }
+        </section>
+      </div>
+
+      <div class="colonne">
+        <section class="panneau">
+          <div class="titre-panneau"><h2>Récapitulatif</h2></div>
+          <dl class="champs-fiche">
+            <div><dt>Total (recalculé par le serveur à la commande)</dt><dd class="total">{{ o.totalTnd | prixDt }}</dd></div>
+            <div><dt>Paiement</dt><dd>Paiement à la livraison — aucun paiement en ligne n'est enregistré par la plateforme.</dd></div>
+          </dl>
+        </section>
+        <section class="panneau">
+          <div class="titre-panneau"><h2>Client et livraison</h2></div>
+          <dl class="champs-fiche">
+            <div><dt>Client</dt><dd>@if (d.client; as c) { <a class="lien-texte" [routerLink]="['/admin/clients', c.id]">{{ c.name || c.email }}</a> } @else { Compte supprimé }</dd></div>
+            <div><dt>Destinataire</dt><dd>{{ o.shippingName }}</dd></div>
+            <div><dt>Téléphone</dt><dd>{{ o.shippingPhone }}</dd></div>
+            <div><dt>Adresse</dt><dd>{{ o.shippingAddress }}, {{ o.shippingCity }}</dd></div>
+            @if (o.shippingNote) { <div><dt>Note</dt><dd>{{ o.shippingNote }}</dd></div> }
+          </dl>
+        </section>
+        <section class="panneau">
+          <div class="titre-panneau"><h2>Commissions</h2></div>
+          @if (d.commissions.length) {
+            <ul class="liste-simple">
+              @for (c of d.commissions; track c.id) {
+                <li class="commission">
+                  <p class="fort">{{ c.shopSlug }}</p>
+                  <p class="sous">Brut {{ c.grossTnd | prixDt }} · commission {{ c.commissionTnd | prixDt }} · net vendeur {{ c.vendorPayoutTnd | prixDt }}</p>
+                  <p class="sous">Statut : {{ commissionStatus(c.status) }}</p>
+                </li>
+              }
+            </ul>
+          } @else { <p class="vide">Aucune commission</p> }
+        </section>
+      </div>
+    </div>
+  }
+}
+
+<app-confirm-dialog [request]="request()" [busy]="busy()" [serverError]="actionError()" (confirmed)="apply($event)" (cancelled)="next.set(null)" />

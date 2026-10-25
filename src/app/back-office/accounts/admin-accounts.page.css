@@ -1,0 +1,31 @@
+.kpis.trois { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.avec-icone { display: flex; align-items: center; gap: 6px; }
+.sombre { border-color: var(--bleu-11, #0f172a); background: var(--bleu-11, #0f172a); color: var(--carte); }
+.plein { width: 100%; }
+.vide { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--bleu-3, #64748b); }
+.vide p { margin: 0; }
+.role { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.role.user { background: var(--surface-29, #e8f4e8); color: var(--vert-8, #3a7a3a); }
+.role.vendor { background: var(--ligne-6, #f4e9e0); color: var(--cuivre-16, #8e5d3e); }
+.role.admin { background: var(--encre-9, #302a26); color: var(--surface-33, #f5ede8); }
+.suspendu { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: var(--ligne-3, #fde8e8); color: var(--rouge-11, #c0392b); font-size: 12px; font-weight: 600; }
+.actif { color: var(--vert-3, #1d8728); font-size: 12px; font-weight: 600; }
+.vert-contour { border-color: var(--vert-1, #c8e6c9); color: var(--vert-7, #2e7d32); }
+.rouge-contour { border-color: var(--rouge-2, #f5c6c6); color: var(--rouge-11, #c0392b); }
+.form-compte { display: grid; gap: 16px; margin-top: 16px; }
+.etiquette { margin: 0 0 8px; color: var(--bleu-8, #475569); font-size: 14px; font-weight: 500; }
+.types { display: flex; gap: 12px; }
+.type { display: flex; min-height: 48px; flex: 1; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--ardoise-ligne-1, #e2e8f0); border-radius: 12px; background: var(--carte); color: var(--bleu-3, #64748b); font: 600 14px var(--police-texte); cursor: pointer; }
+.type.choisi { border-color: var(--cuivre-16, #8e5d3e); background: var(--ligne-6, #f4e9e0); color: var(--cuivre-16, #8e5d3e); }
+.grille-champs { display: grid; gap: 12px; }
+.form-compte label { display: grid; gap: 4px; color: var(--bleu-3, #64748b); font-size: 12px; font-weight: 500; }
+.form-compte .champ-admin { width: 100%; }
+.zone { height: auto; padding: 8px 10px; resize: vertical; }
+.sous-texte { color: var(--bleu-1, #616f83); font-weight: 400; }
+.boutique { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--ardoise-ligne-1, #e2e8f0); border-radius: 12px; background: var(--surface-6, #f8fafc); }
+.boutique .fort { margin: 0; }
+.reussi { display: grid; gap: 8px; margin-top: 16px; padding: 16px; border: 1px solid var(--vert-1, #c8e6c9); border-radius: 12px; background: var(--surface-17, #f1f8f1); color: var(--bleu-8, #475569); font-size: 14px; }
+.reussi p { margin: 0; }
+.vert-texte { color: var(--vert-7, #2e7d32); }
+.mot-de-passe { display: block; padding: 10px 14px; border: 1px solid var(--ardoise-ligne-1, #e2e8f0); border-radius: 8px; background: var(--carte); color: var(--bleu-11, #0f172a); font-size: 16px; letter-spacing: 0.1em; }
+@media (min-width: 640px) { .grille-champs { grid-template-columns: 1fr 1fr; } }

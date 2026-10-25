@@ -1,0 +1,109 @@
+<div class="entete-page">
+  <div>
+    <h1>Statistiques</h1>
+    <p>Toutes les valeurs sont calculées à partir des commandes et inscriptions enregistrées. Les commandes annulées sont exclues du chiffre d'affaires.</p>
+  </div>
+  <div class="onglets" role="tablist" aria-label="Période">
+    @for (p of periods; track p.value) {
+      <button type="button" role="tab" [attr.aria-selected]="period() === p.value" (click)="period.set(p.value)">{{ p.label }}</button>
+    }
+  </div>
+</div>
+
+@switch (status()) {
+  @case ('loading') { <p class="info" role="status">Chargement…</p> }
+  @case ('error') { <div class="erreur-etat" role="alert"><p>{{ error() }}</p><button type="button" class="b" (click)="load()">Réessayer</button></div> }
+  @default {
+    @let d = data()!;
+    <div class="kpis six" data-testid="admin-stats-kpis">
+      <div class="kpi"><p>Commandes</p><strong>{{ d.totals.orders }}</strong><small>{{ d.totals.cancelledOrders }} annulée(s)</small></div>
+      <div class="kpi"><p>Chiffre d'affaires</p><strong>{{ d.totals.revenueTnd | prixDt }}</strong></div>
+      <div class="kpi"><p>Panier moyen</p><strong>{{ d.totals.averageOrderTnd | prixDt }}</strong></div>
+      <div class="kpi"><p>Articles vendus</p><strong>{{ d.totals.unitsSold }}</strong></div>
+      <div class="kpi"><p>Nouveaux clients</p><strong>{{ d.totals.newCustomers }}</strong></div>
+      <div class="kpi"><p>Nouveaux vendeurs</p><strong>{{ d.totals.newVendors }}</strong></div>
+    </div>
+
+    <div class="deux-graphes">
+      <section class="panneau">
+        <div class="titre-panneau"><h2>Évolution des ventes</h2></div>
+        @if (hasSales()) {
+          @let c = revenueChart();
+          <svg class="graphe" viewBox="0 0 600 230" role="img" [attr.aria-label]="salesSummary()" data-testid="chart-revenue">
+            @for (g of c.grid; track g.y) { <line x1="50" [attr.y1]="g.y" x2="590" [attr.y2]="g.y" class="grille" /><text x="44" [attr.y]="g.y + 4" text-anchor="end" class="axe">{{ g.label }}</text> }
+            @for (b of c.bars; track b.key) { <rect [attr.x]="b.x" [attr.y]="b.y" [attr.width]="b.w" [attr.height]="b.h" rx="3" class="barre-ambre"><title>{{ b.title }}</title></rect> }
+            @for (x of c.xs; track $index) { @if (x.show) { <text [attr.x]="x.x" y="222" text-anchor="middle" class="axe">{{ x.text }}</text> } }
+          </svg>
+        } @else { <p class="vide">Aucune vente sur la période</p> }
+      </section>
+      <section class="panneau">
+        <div class="titre-panneau"><h2>Évolution des commandes</h2></div>
+        @if (hasSales()) {
+          @let c = ordersChart();
+          <svg class="graphe" viewBox="0 0 600 230" role="img" [attr.aria-label]="salesSummary()" data-testid="chart-orders">
+            @for (g of c.grid; track g.y) { <line x1="50" [attr.y1]="g.y" x2="590" [attr.y2]="g.y" class="grille" /><text x="44" [attr.y]="g.y + 4" text-anchor="end" class="axe">{{ g.label }}</text> }
+            <polyline [attr.points]="c.orders" class="ligne-commandes" />
+            <polyline [attr.points]="c.cancelled" class="ligne-annulees" />
+            @for (x of c.xs; track $index) { @if (x.show) { <text [attr.x]="x.x" y="222" text-anchor="middle" class="axe">{{ x.text }}</text> } }
+          </svg>
+          <p class="legende"><span class="puce sombre"></span> Commandes <span class="puce rose"></span> Annulées</p>
+        } @else { <p class="vide">Aucune commande sur la période</p> }
+      </section>
+    </div>
+
+    <section class="panneau espace-haut">
+      <div class="titre-panneau"><h2>Évolution des inscriptions</h2></div>
+      @if (hasSignups()) {
+        @let c = signupsChart();
+        <svg class="graphe" viewBox="0 0 600 230" role="img" [attr.aria-label]="signupsSummary()" data-testid="chart-signups">
+          @for (g of c.grid; track g.y) { <line x1="50" [attr.y1]="g.y" x2="590" [attr.y2]="g.y" class="grille" /><text x="44" [attr.y]="g.y + 4" text-anchor="end" class="axe">{{ g.label }}</text> }
+          @for (b of c.bars; track b.key) {
+            <rect [attr.x]="b.x" [attr.y]="b.yc" [attr.width]="b.w" [attr.height]="b.hc" class="barre-sombre"><title>{{ b.title }}</title></rect>
+            <rect [attr.x]="b.x" [attr.y]="b.yv" [attr.width]="b.w" [attr.height]="b.hv" class="barre-ambre-clair"><title>{{ b.title }}</title></rect>
+          }
+          @for (x of c.xs; track $index) { @if (x.show) { <text [attr.x]="x.x" y="222" text-anchor="middle" class="axe">{{ x.text }}</text> } }
+        </svg>
+        <p class="legende"><span class="puce sombre"></span> Clients <span class="puce ambre"></span> Vendeurs</p>
+      } @else { <p class="vide">Aucune inscription sur la période</p> }
+    </section>
+
+    <div class="deux-graphes espace-haut">
+      <section class="panneau">
+        <div class="titre-panneau"><h2>Produits les plus commandés</h2></div>
+        @if (d.topProducts.length) {
+          <div class="tableau"><table>
+            <thead><tr><th>Produit</th><th>Vendeur</th><th class="droite">Qté</th><th class="droite">Ventes</th></tr></thead>
+            <tbody>@for (p of d.topProducts; track p.productSlug) { <tr><td class="fort">{{ p.productName }}</td><td>{{ p.shopName }}</td><td class="droite">{{ p.quantity }}</td><td class="droite">{{ p.revenue | prixDt }}</td></tr> }</tbody>
+          </table></div>
+        } @else { <p class="vide">Aucune vente sur la période</p> }
+      </section>
+      <section class="panneau">
+        <div class="titre-panneau"><h2>Catégories les plus populaires</h2></div>
+        @if (d.topCategories.length) {
+          <div class="tableau"><table>
+            <thead><tr><th>Catégorie</th><th class="droite">Articles vendus</th><th class="droite">Ventes</th></tr></thead>
+            <tbody>@for (c of d.topCategories; track c.category) { <tr><td class="fort">{{ c.category }}</td><td class="droite">{{ c.quantity }}</td><td class="droite">{{ c.revenue | prixDt }}</td></tr> }</tbody>
+          </table></div>
+        } @else { <p class="vide">Aucune vente sur la période</p> }
+      </section>
+    </div>
+
+    <section class="panneau espace-haut">
+      <div class="titre-panneau"><h2>Activité des vendeurs (boutiques approuvées)</h2></div>
+      @if (d.vendorActivity.length) {
+        <div class="tableau"><table>
+          <thead><tr><th>Boutique</th><th class="droite">Commandes</th><th class="droite">Articles vendus</th><th class="droite">Ventes</th><th class="droite">Produits publiés</th><th class="droite">Nouveaux produits</th></tr></thead>
+          <tbody>
+            @for (v of d.vendorActivity; track v.shopId) {
+              <tr>
+                <td><a class="nom" [routerLink]="['/admin/vendeurs', v.shopId]">{{ v.shopName }}</a></td>
+                <td class="droite">{{ v.orders }}</td><td class="droite">{{ v.quantity }}</td><td class="droite">{{ v.revenue | prixDt }}</td>
+                <td class="droite">{{ v.publishedProducts }}</td><td class="droite">{{ v.newProducts }}</td>
+              </tr>
+            }
+          </tbody>
+        </table></div>
+      } @else { <p class="vide">Aucune boutique approuvée</p> }
+    </section>
+  }
+}

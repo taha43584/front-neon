@@ -1,0 +1,98 @@
+/* A-10d : fiche produit du téléphone « façon application » (< 768 px seulement ; l'ordinateur ne change pas) */
+.pression { transition: transform .15s ease, background-color .25s ease, color .25s ease, border-color .25s ease; }
+.pression:active { transform: scale(0.96); }
+
+/* Place sous la barre d'achat fixe (≈ 54 px + marges + zone sûre des téléphones à encoche) */
+.tel-fiche { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+
+/* 9. Photo pleine largeur 4/5 : une photo par écran, défilement aimanté */
+.tel-photo { position: relative; aspect-ratio: 4 / 5; background: var(--beige); }
+.tel-defil { display: flex; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
+.tel-defil::-webkit-scrollbar { display: none; }
+.tel-defil:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
+.tel-diapo { position: relative; width: 100%; height: 100%; flex-shrink: 0; scroll-snap-align: start; }
+.tel-diapo img { object-fit: cover; }
+.tel-boutons-photo { position: absolute; top: calc(12px + env(safe-area-inset-top)); right: 14px; left: 14px; display: flex; gap: 10px; }
+.tel-espace { flex: 1; }
+.tel-rond { display: flex; width: 44px; height: 44px; align-items: center; justify-content: center; padding: 0; border: none; border-radius: 999px; background: var(--carte); box-shadow: 0 4px 14px rgba(42, 36, 32, 0.16); box-shadow: 0 4px 14px color-mix(in srgb, var(--ombre, #2a2420) 16%, transparent); color: var(--texte); cursor: pointer; }
+.tel-rond:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.favori-tel.actif { color: var(--promo); }
+.tel-badge { top: auto; bottom: 44px; left: 16px; }
+/* Points de galerie : le point actif s'allonge (largeur animée sur 6 px de haut, coût négligeable) */
+/* Points posés sur la PHOTO : blancs dans les deux thèmes ; chaque point est un bouton de 44 × 44 px */
+.tel-points { position: absolute; bottom: 26px; left: 50%; display: flex; transform: translateX(-50%); }
+.tel-points button { display: flex; width: 44px; height: 44px; align-items: center; justify-content: center; padding: 0; border: none; background: none; cursor: pointer; }
+.tel-points button:focus-visible { outline: 2px solid #fff; outline-offset: -8px; border-radius: 12px; }
+.tel-points span { width: 6px; height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.6); box-shadow: 0 0 0 1px rgba(42, 36, 32, 0.12); transition: width .3s var(--ease), background-color .3s; }
+.tel-points button.actif span { width: 20px; background: #fff; }
+.tel-toast { position: fixed; top: calc(68px + env(safe-area-inset-top)); left: 50%; z-index: 60; margin: 0; padding: 10px 16px; border-radius: 999px; background: var(--texte); color: var(--carte); font-size: 14px; transform: translateX(-50%); }
+
+/* 10. Feuille de contenu qui monte sur la photo, coins de 26 px */
+.tel-feuille { position: relative; margin-top: -26px; padding: 22px 16px 8px; border-radius: 26px 26px 0 0; background: var(--fond); }
+.tel-atelier { display: inline-flex; min-height: 44px; align-items: center; gap: 10px; color: var(--texte); text-decoration: none; }
+.tel-atelier-texte { display: flex; flex-direction: column; }
+.tel-atelier-nom { font-size: 14px; font-weight: 600; }
+.tel-verifie { display: inline-flex; align-items: center; gap: 4px; color: var(--vert-7, #2e7d32); font-size: 12px; }
+.tel-note { margin: 0; }
+.tel-nom { margin: 6px 0 0; font-size: 26px; line-height: 1.12; letter-spacing: -0.03em; }
+.tel-prix { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 10px 0 0; font-size: 22px; font-weight: 600; }
+.tel-prix.promo { color: var(--promo); }
+
+/* Puces de variantes avec pastille de couleur */
+.tel-variantes { margin-top: 18px; }
+.tel-puces { display: flex; gap: 8px; margin: 10px -16px 0; padding: 0 16px 2px; overflow-x: auto; scrollbar-width: none; }
+.tel-puces::-webkit-scrollbar { display: none; }
+.tel-puce { display: inline-flex; min-height: 44px; flex-shrink: 0; align-items: center; gap: 8px; padding: 0 16px; border: 1px solid var(--bordure); border-radius: 999px; background: var(--carte); color: var(--texte); font: 500 14px var(--police-texte); white-space: nowrap; cursor: pointer; }
+.tel-puce.actif { border-color: var(--texte); background: var(--texte); color: var(--carte); }
+.tel-pastille { width: 18px; height: 18px; border-radius: 999px; box-shadow: inset 0 0 0 1px rgba(42, 36, 32, 0.25); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--texte) 30%, transparent); } /* contour visible dans les deux thèmes (pastille noire en sombre) */
+.tel-puce.actif .tel-pastille { box-shadow: 0 0 0 2px var(--carte); }
+
+.tel-quantite-ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; }
+.tel-quantite-ligne .quantite { width: 144px; }
+
+/* Livraison / paiement à la livraison */
+.tel-livraison { display: grid; gap: 12px; margin: 22px 0 0; padding: 16px; border-radius: 20px; background: var(--beige); list-style: none; color: var(--texte-secondaire); font-size: 13px; }
+.tel-livraison li { display: flex; align-items: flex-start; gap: 12px; }
+.tel-livraison app-icon { color: var(--accent); }
+.tel-livraison strong { display: block; color: var(--texte); font-size: 14px; }
+
+/* Accordéons : la hauteur passe de 0fr à 1fr (aucune hauteur fixe à deviner) */
+.tel-accordeons { margin-top: 18px; border-top: 1px solid var(--bordure); }
+.tel-accordeon { border-bottom: 1px solid var(--bordure); }
+.tel-accordeon h2 { margin: 0; font: inherit; }
+.tel-accordeon button { display: flex; width: 100%; min-height: 56px; align-items: center; justify-content: space-between; padding: 0; border: none; background: none; color: var(--texte); font: 600 15px var(--police-texte); text-align: left; cursor: pointer; }
+.tel-accordeon button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+.tel-accordeon button app-icon { transition: transform .3s var(--ease); }
+.tel-accordeon.ouvert button app-icon { transform: rotate(180deg); }
+.tel-panneau { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .35s var(--ease); }
+.tel-accordeon.ouvert .tel-panneau { grid-template-rows: 1fr; }
+.tel-panneau > div { overflow: hidden; color: var(--texte-secondaire); font-size: 14px; line-height: 1.7; }
+.tel-panneau p { margin: 0 0 10px; }
+.tel-panneau a { color: var(--surtitre); }
+.tel-description { white-space: pre-line; }
+.tel-caracteristiques { margin: 0 0 14px; }
+.tel-caracteristiques div { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; }
+.tel-caracteristiques dt { color: var(--texte-secondaire); }
+.tel-caracteristiques dd { margin: 0; color: var(--texte); text-align: right; }
+
+.tel-bloc { margin-top: 28px; }
+
+/* 11. Barre d'achat fixe */
+.tel-barre-achat { position: fixed; right: 0; bottom: 0; left: 0; z-index: 40; display: flex; align-items: center; gap: 14px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--bordure); background: rgba(250, 248, 244, 0.94); background: color-mix(in srgb, var(--fond) 94%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.tel-total { display: flex; min-width: 0; flex-direction: column; margin: 0; line-height: 1.2; }
+.tel-total strong { font-size: 18px; white-space: nowrap; }
+.tel-total-attente { font-size: 13px !important; white-space: normal !important; }
+.tel-ajouter { flex: 1; height: 54px; border: none; border-radius: 999px; background: var(--texte); color: var(--carte); font: 700 15px var(--police-texte); cursor: pointer; }
+.tel-ajouter:disabled { opacity: 0.5; cursor: not-allowed; }
+.tel-ajouter:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pression, .tel-points span, .tel-panneau, .tel-accordeon button app-icon { transition: none; }
+  .pression:active { transform: none; }
+}
+
+/* A-10e : question à l'atelier sur WhatsApp */
+.tel-whatsapp { margin-top: 14px; padding: 16px; border: 1px solid var(--bordure); border-radius: 20px; background: var(--carte); }
+.tel-whatsapp-titre { margin: 0 0 10px; font-size: 14px; font-weight: 600; }
+.tel-whatsapp-lien { display: flex; min-height: 48px; align-items: center; justify-content: center; gap: 8px; border-radius: 999px; background: var(--vert-wa, #1f7a4d); color: #fff; font-weight: 700; text-decoration: none; }
+.tel-whatsapp-lien:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }

@@ -1,0 +1,18 @@
+<!-- Barre de chargement globale : visible tant qu'une requête au back est en cours (intercepteur) -->
+@if (loading.isLoading()) {
+  <div class="barre-chargement" role="progressbar" aria-label="Chargement en cours" data-testid="global-loading"></div>
+}
+
+<!-- La console d'administration est une application indépendante : sans l'en-tête ni le pied du site -->
+@if (!adminConsole() && !phoneProductPage()) { <app-site-header /> }
+
+<main>
+  <router-outlet />
+</main>
+
+@if (!adminConsole()) {
+  <app-site-footer />
+  @if (!phoneProductPage()) { <app-mobile-nav /> }
+}
+
+<app-toast-host />

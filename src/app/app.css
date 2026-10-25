@@ -1,0 +1,30 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--surface-5, #fcfaf7);
+  color: var(--encre-9, #302a26);
+}
+
+/* A-11 : la zone de contenu occupe au moins tout l'écran, même vide pendant le chargement d'une page.
+   Sinon le pied de page s'affiche sous l'en-tête puis « saute » vers le bas (décalage CLS de 0,8 mesuré). */
+main { flex: 1; min-height: 100vh; min-height: 100dvh; }
+
+/* A-10d (téléphone) : place réservée sous le contenu pour la barre du bas flottante (ou la barre d'achat de la fiche) */
+@media (max-width: 767.98px) {
+  :host { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+}
+
+.barre-chargement {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  background-size: 50% 100%;
+  animation: chargement 1s linear infinite;
+}
+@keyframes chargement { from { background-position: -50% 0; } to { background-position: 150% 0; } }
+@media (prefers-reduced-motion: reduce) { .barre-chargement { animation: none; background: var(--accent); } }

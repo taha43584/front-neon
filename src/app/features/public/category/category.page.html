@@ -1,0 +1,120 @@
+@if (state().status === 'notfound') {
+  <div class="introuvable">
+    <h1>Catégorie introuvable</h1>
+    <p>Cette catégorie n'existe pas ou ne contient plus de créations.</p>
+    <a routerLink="/produits" class="lien">← Tout le catalogue</a>
+  </div>
+} @else {
+  <div class="conteneur page">
+    <nav class="ariane" aria-label="Fil d'Ariane">
+      <a routerLink="/">Accueil</a><span>/</span><a routerLink="/produits">Catégories</a><span>/</span>
+      <span class="courant">{{ data()?.category?.name ?? '…' }}</span>
+    </nav>
+
+    <header class="entete-page">
+      <div>
+        <p class="surtitre">Catégorie</p>
+        <h1>{{ data()?.category?.name ?? ' ' }}</h1>
+        @if (data(); as d) {
+          <p class="compteur">{{ d.category.productCount }} création{{ d.category.productCount > 1 ? 's' : '' }} · {{ d.category.shopCount }} boutique{{ d.category.shopCount > 1 ? 's' : '' }}</p>
+        }
+      </div>
+      <div class="outils">
+        @if (viewport.phone()) {
+          <!-- Téléphone (A-10e) : panneau de filtres qui monte du bas (ateliers de cette catégorie compris) -->
+          @if (sheetOptions(); as options) {
+            <app-filter-sheet [options]="options" [value]="sheetValue()" [counter]="countFor" (apply)="applySheet($event)" />
+          }
+        } @else {
+          <button type="button" class="pastille bouton-filtres" [attr.aria-expanded]="filtersOpen()" (click)="filtersOpen.set(!filtersOpen())">Filtres{{ hasFilters() ? ' •' : '' }}</button>
+        }
+        <label class="masque" for="tri-categorie">Trier</label>
+        <select id="tri-categorie" class="champ tri" [value]="input().sort" (change)="setParams({ tri: $any($event.target).value === 'recent' ? null : $any($event.target).value })">
+          @for (s of sorts; track s.value) { <option [value]="s.value">{{ s.label }}</option> }
+        </select>
+      </div>
+    </header>
+
+    <!-- Catégorie du configurateur néon : bannière et ateliers avant les produits -->
+    @if (neonBanner()) {
+      <div class="bloc-neon">
+        <app-neon-banner />
+        @if (workshops().length) {
+          <section aria-label="Ateliers néon">
+            <h2 class="masque">Ateliers qui réalisent votre néon</h2>
+            <app-neon-workshop-grid [workshops]="workshops()" />
+          </section>
+        }
+      </div>
+    }
+
+    <div class="mise-en-page">
+      <!-- Filtres : colonne sur ordinateur, panneau dépliable sur téléphone -->
+      @if (!viewport.phone() && data()?.facets; as facets) {
+        <aside class="filtres" [class.ouvert]="filtersOpen()" aria-label="Filtres">
+          @if (facets.customCount > 0 || facets.promoCount > 0) {
+            <fieldset>
+              <legend>Type</legend>
+              <div class="groupe">
+                @if (facets.customCount > 0) {
+                  <button type="button" class="pastille" [class.active]="input().custom" [attr.aria-pressed]="!!input().custom" (click)="toggle('sur_mesure', input().custom)">Sur mesure ({{ facets.customCount }})</button>
+                }
+                @if (facets.promoCount > 0) {
+                  <button type="button" class="pastille" [class.active]="input().promo" [attr.aria-pressed]="!!input().promo" (click)="toggle('promo', input().promo)">Promotions ({{ facets.promoCount }})</button>
+                }
+              </div>
+            </fieldset>
+          }
+
+          <form [formGroup]="priceForm" (ngSubmit)="applyPrice()">
+            <fieldset>
+              <legend>Prix (DT)</legend>
+              <p class="aide">De {{ facets.minPrice | prixDt }} à {{ facets.maxPrice | prixDt }}</p>
+              <div class="prix">
+                <label>Min<input class="champ" inputmode="decimal" formControlName="min" [placeholder]="floor(facets.minPrice)" /></label>
+                <label>Max<input class="champ" inputmode="decimal" formControlName="max" [placeholder]="ceil(facets.maxPrice)" /></label>
+                <button type="submit" class="bouton petit">OK</button>
+              </div>
+            </fieldset>
+          </form>
+
+          @if (facets.shops.length > 1) {
+            <fieldset>
+              <legend>Boutiques</legend>
+              @for (s of facets.shops; track s.slug) {
+                <label class="case">
+                  <span><input type="checkbox" [checked]="input().shops?.includes(s.slug)" (change)="toggleShop(s.slug)" /> {{ s.name }}</span>
+                  <small>{{ s.count }}</small>
+                </label>
+              }
+            </fieldset>
+          }
+
+          @if (hasFilters()) {
+            <button type="button" class="lien" (click)="reset()">✕ Effacer les filtres</button>
+          }
+        </aside>
+      }
+
+      <div class="resultats">
+        @if (state().status === 'error') {
+          <app-load-state status="error" (retry)="retry()" />
+        } @else if (!data()) {
+          <app-load-state status="loading" />
+        } @else if (data()!.products.length) {
+          <p class="compteur" aria-live="polite">{{ data()!.products.length }} résultat{{ data()!.products.length > 1 ? 's' : '' }}{{ state().status === 'loading' ? '…' : '' }}</p>
+          <div class="grille-produits grille-categorie" data-testid="category-products">
+            @for (p of data()!.products; track p.slug; let i = $index) {
+              <app-product-card [product]="p" [index]="i" [priority]="i < 2" />
+            }
+          </div>
+        } @else {
+          <div class="vide">
+            <p class="titre">Aucune création ne correspond à ces filtres</p>
+            <button type="button" class="bouton" (click)="reset()">Effacer les filtres</button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

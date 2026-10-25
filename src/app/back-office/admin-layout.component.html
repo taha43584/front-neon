@@ -1,0 +1,48 @@
+<ng-template #sidebar>
+  <div class="barre-laterale toujours-sombre">
+    <div class="marque">
+      <span class="logo-e" aria-hidden="true">E</span>
+      <div><p class="nom">Elegance Deco</p><p class="role">Administration</p></div>
+    </div>
+    <nav class="navigation" aria-label="Navigation administration">
+      @for (item of nav; track item.path) {
+        <a [routerLink]="item.path" routerLinkActive="actif" ariaCurrentWhenActive="page" [routerLinkActiveOptions]="{ exact: item.exact }" (click)="drawerOpen.set(false)">
+          <span>{{ item.label }}</span>
+          @if (badge(item.badge); as count) { <span class="compte" [attr.aria-label]="count + ' à traiter'">{{ count }}</span> }
+        </a>
+      }
+    </nav>
+    <div class="pied-barre">
+      <a routerLink="/" class="lien-site">↗ Voir le site public</a>
+      <div class="utilisateur">
+        <p class="nom-utilisateur">{{ auth.user()?.name || 'Administrateur' }}</p>
+        <p class="email">{{ auth.user()?.email }}</p>
+      </div>
+      <button type="button" class="deconnexion" (click)="logout()">Se déconnecter</button>
+    </div>
+  </div>
+</ng-template>
+
+<div class="console">
+  <aside class="colonne ordi-seul"><ng-container [ngTemplateOutlet]="sidebar" /></aside>
+
+  @if (drawerOpen()) {
+    <div class="tiroir" role="dialog" aria-modal="true" aria-label="Menu de l'administration" (keydown.escape)="drawerOpen.set(false)">
+      <button type="button" class="voile" tabindex="-1" aria-label="Fermer le menu" (click)="drawerOpen.set(false)"></button>
+      <div class="panneau-tiroir">
+        <ng-container [ngTemplateOutlet]="sidebar" />
+        <button #closeButton type="button" class="fermer" aria-label="Fermer le menu" (click)="drawerOpen.set(false)">✕</button>
+      </div>
+    </div>
+  }
+
+  <div class="principal">
+    <header class="barre-tel tel-seul">
+      <button type="button" class="menu" aria-label="Ouvrir le menu" (click)="drawerOpen.set(true)"><app-icon name="menu" [size]="20" /></button>
+      <p>Administration · {{ currentLabel() }}</p>
+    </header>
+    <div class="contenu">
+      <router-outlet />
+    </div>
+  </div>
+</div>

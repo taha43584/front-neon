@@ -1,0 +1,103 @@
+@switch (status()) {
+  @case ('loading') {
+    <p class="chargement" role="status">Chargement de la boutique…</p>
+  }
+  @case ('error') {
+    <div class="introuvable" role="alert">
+      <p class="grand">Boutique momentanément indisponible</p>
+      <button type="button" class="bouton" (click)="load()">Réessayer</button>
+    </div>
+  }
+  @case ('notfound') {
+    <div class="introuvable" data-testid="shop-not-found">
+      <p class="grand">Boutique introuvable</p>
+      <p>Cette boutique n'existe pas ou n'est pas encore validée.</p>
+      <a routerLink="/boutiques" class="lien-retour"><app-icon name="arrow-left" [size]="16" /> Toutes les boutiques</a>
+    </div>
+  }
+  @default {
+    @let d = data()!;
+    @let shop = d.shop;
+    <div class="conteneur page">
+      <nav class="ariane" aria-label="Fil d'Ariane">
+        <a routerLink="/">Accueil</a><span>/</span><a routerLink="/boutiques">Boutiques</a><span>/</span><span class="courant">{{ shop.name }}</span>
+      </nav>
+
+      <section class="vitrine" data-testid="public-shop">
+        <!-- Couverture 1600×500 (mêmes proportions que le recadrage) ; sans image : fond beige uni -->
+        <div class="couverture" data-testid="public-cover">
+          <!-- Image principale de la page (LCP) : demandée en priorité -->
+          @if (shop.coverUrl; as cover) { <img [ngSrc]="cover" [alt]="'Couverture de ' + shop.name" fill priority /> }
+        </div>
+        <div class="corps">
+          <div class="haut">
+            <!-- Seul le logo chevauche la couverture ; le nom reste sous la bannière -->
+            <div class="identite">
+              <app-shop-logo class="logo" [name]="shop.name" [logoUrl]="shop.logoUrl" [size]="96" />
+              <div class="titres">
+                <h1>{{ shop.name }}</h1>
+                @if (shop.tagline) { <p class="accroche">{{ shop.tagline }}</p> }
+                <div class="reseaux"><app-shop-social-links [shopName]="shop.name" [facebook]="shop.socialFacebook" [instagram]="shop.socialInstagram" /></div>
+              </div>
+            </div>
+            <div class="actions">
+              @if (auth.user()?.role !== 'vendor') {
+                <button type="button" class="bouton bouton-contour" [disabled]="followBusy()" [attr.aria-pressed]="following()" (click)="toggleFollow()" data-testid="shop-follow">
+                  <app-icon name="heart" [size]="16" [filled]="following()" [class.rouge]="following()" /> {{ following() ? 'Suivie' : 'Suivre' }}
+                </button>
+              }
+              @if (hasNeon()) {
+                <a class="bouton bouton-contour fonce" [routerLink]="['/neon', shop.slug]" data-testid="shop-neon-cta"><app-icon name="lightbulb" [size]="16" /> Créer mon néon avec {{ shop.name }}</a>
+              }
+              <a class="bouton" [routerLink]="['/messages', shop.slug]" data-testid="shop-contact"><app-icon name="message-circle" [size]="16" /> Contacter</a>
+            </div>
+          </div>
+
+          <div class="details">
+            <div>
+              <p class="presentation">{{ shop.about || "Cette boutique n'a pas encore rédigé sa présentation." }}</p>
+              <p class="chiffres-boutique">
+                <span>{{ d.products.length }} création{{ d.products.length > 1 ? 's' : '' }} publiée{{ d.products.length > 1 ? 's' : '' }}</span>
+                <span>{{ d.reviewCount ? '★ ' + d.rating?.toFixed(1) + ' · ' + d.reviewCount + ' avis' : 'Aucun avis publié' }}</span>
+                <span>Sur la marketplace depuis {{ shop.createdAt | date: 'MMMM y' }}</span>
+              </p>
+              @if (categories().length) {
+                <div class="etiquettes">
+                  @for (c of categories(); track c.id) { <span>{{ c.name }} · {{ c.productCount }}</span> }
+                </div>
+              }
+            </div>
+            <ul class="coordonnees">
+              @if (shop.city) { <li><app-icon name="map-pin" [size]="16" class="accent" />{{ shop.city }}</li> }
+              @if (shop.deliveryInfo) { <li><app-icon name="truck" [size]="16" class="accent" /><span class="multi">{{ shop.deliveryInfo }}</span></li> }
+              @if (shop.openingHours) { <li><app-icon name="clock" [size]="16" class="accent" />{{ shop.openingHours }}</li> }
+              @if (shop.phone) { <li><app-icon name="phone" [size]="16" class="accent" />{{ shop.phone }}</li> }
+              @if (shop.whatsapp && whatsappLink()) { <li><app-icon name="message-circle" [size]="16" class="vert" /><a [href]="whatsappLink()" target="_blank" rel="noreferrer">WhatsApp : {{ shop.whatsapp }}</a></li> }
+              @if (shop.socialWebsite) { <li><app-icon name="globe" [size]="16" class="accent" />{{ shop.socialWebsite }}</li> }
+              @if (!hasContact()) { <li><app-icon name="store" [size]="16" class="accent" />Contactez la boutique via la messagerie.</li> }
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <div class="titre-creations">
+        <h2>Les créations de {{ shop.name }}</h2>
+        @if (categories().length) {
+          <div class="onglets" role="tablist" aria-label="Catégories de la boutique">
+            <button type="button" role="tab" class="pastille" [class.active]="category() === null" [attr.aria-selected]="category() === null" (click)="category.set(null)">Tous</button>
+            @for (c of categories(); track c.id) {
+              <button type="button" role="tab" class="pastille" [class.active]="category() === c.id" [attr.aria-selected]="category() === c.id" (click)="category.set(c.id)">{{ c.name }}</button>
+            }
+          </div>
+        }
+      </div>
+      @if (visible().length) {
+        <div class="grille-produits grille-boutique" data-testid="shop-products">
+          @for (p of visible(); track p.slug; let i = $index) { <app-product-card [product]="p" [index]="i" /> }
+        </div>
+      } @else {
+        <div class="prepare">La boutique prépare ses premières créations.</div>
+      }
+    </div>
+  }
+}

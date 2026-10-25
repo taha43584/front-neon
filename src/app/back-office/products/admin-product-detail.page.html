@@ -1,0 +1,66 @@
+<a class="retour" routerLink="/admin/produits">‹ Produits</a>
+@switch (status()) {
+  @case ('loading') { <p class="info" role="status">Chargement…</p> }
+  @case ('error') { <div class="erreur-etat" role="alert"><p>{{ error() }}</p></div> }
+  @default {
+    @let d = data()!;
+    @let p = d.product;
+    <div class="entete-page">
+      <div>
+        <h1>{{ p.name }}</h1>
+        <p>Créé le {{ p.createdAt | date: 'dd/MM/y HH:mm' }} · modifié le {{ p.updatedAt | date: 'dd/MM/y HH:mm' }}</p>
+      </div>
+      <div class="actions-page">
+        <app-status-badge [status]="p.status" />
+        @if (p.status === 'published' && shop()?.status === 'active') { <a class="b" [routerLink]="['/produit', p.slug]" target="_blank">↗ Fiche publique</a> }
+        <app-product-action-buttons [productId]="p.id" [name]="p.name" [status]="p.status" (action)="ask($event)" />
+      </div>
+    </div>
+    @if (message()) { <p class="message" role="status" data-testid="admin-message">{{ message() }}</p> }
+    @if (p.moderationNote) { <div class="bandeau-ambre"><strong>Note de modération :</strong> {{ p.moderationNote }}</div> }
+
+    <div class="grille-produit">
+      <section class="panneau">
+        <div class="titre-panneau"><h2>Médias ({{ d.images.length }} photo{{ d.images.length > 1 ? 's' : '' }}{{ d.video ? ' + vidéo' : '' }})</h2></div>
+        <div class="medias">
+          @if (current(); as img) { <img class="grande" [src]="img.url" [alt]="p.name" /> } @else { <p class="vide">Aucune photo</p> }
+          @if (d.images.length > 1) {
+            <div class="miniatures">
+              @for (img of d.images; track img.id; let i = $index) {
+                <button type="button" [class.active]="i === activeImage()" [attr.aria-label]="'Photo ' + (i + 1) + (img.isPrimary ? ' (principale)' : '')" [attr.aria-pressed]="i === activeImage()" (click)="activeImage.set(i)"><img [src]="img.url" alt="" /></button>
+              }
+            </div>
+          }
+          @if (d.video) { <video [src]="d.video.url" controls preload="metadata"></video> }
+          @else if (embed(); as url) { <iframe [src]="url" title="Vidéo du produit" allowfullscreen></iframe> }
+        </div>
+      </section>
+
+      <div class="colonne-infos">
+        <section class="panneau">
+          <div class="titre-panneau"><h2>Informations</h2></div>
+          <dl class="champs-fiche deux">
+            <div><dt>Vendeur</dt><dd>@if (shop(); as s) { <a class="lien-texte" [routerLink]="['/admin/vendeurs', s.id]">{{ s.name }}</a> } @else { — }</dd></div>
+            <div><dt>Propriétaire</dt><dd>@if (shop(); as s) { {{ s.ownerName ?? '' }} · {{ s.ownerEmail ?? '' }} } @else { — }</dd></div>
+            <div><dt>Catégorie du vendeur</dt><dd>{{ p.shopCategoryName || 'Sans catégorie' }}</dd></div>
+            <div><dt>Catégorie du site (navigation, facultative)</dt><dd><app-global-category-select [productId]="p.id" [productName]="p.name" [categoryId]="p.categoryId" [options]="categoryOptions()" (saved)="message.set($event); load(p.id)" /></dd></div>
+            <div><dt>Référence</dt><dd>{{ p.sku || '—' }}</dd></div>
+            <div><dt>Prix</dt><dd>@if (p.promoPriceTnd !== null) { {{ p.promoPriceTnd | prixDt }} (au lieu de {{ p.priceTnd | prixDt }}) } @else { {{ p.priceTnd | prixDt }} }</dd></div>
+            <div><dt>Disponibilité</dt><dd>{{ availability[p.availability] }}{{ p.availability === 'in_stock' ? ' · ' + (p.stock ?? 0) + ' en stock' : '' }}</dd></div>
+            <div><dt>Commandes</dt><dd>{{ d.orderCount }} commande(s)</dd></div>
+            <div><dt>Délai de préparation</dt><dd>{{ p.preparationTime || '—' }}</dd></div>
+            <div><dt>Livraison</dt><dd>{{ p.delivery || '—' }}</dd></div>
+            <div><dt>Variantes</dt><dd>{{ variants() || '—' }}</dd></div>
+          </dl>
+        </section>
+        <section class="panneau">
+          <div class="titre-panneau"><h2>Description</h2></div>
+          <p class="description">{{ p.description || 'Aucune description.' }}</p>
+          @if (p.extraInfo) { <p class="description bordure">{{ p.extraInfo }}</p> }
+        </section>
+      </div>
+    </div>
+  }
+}
+
+<app-confirm-dialog [request]="request()" [busy]="busy()" [serverError]="actionError()" (confirmed)="apply($event)" (cancelled)="pending.set(null)" />

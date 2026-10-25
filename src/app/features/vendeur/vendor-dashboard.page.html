@@ -1,0 +1,57 @@
+<div class="titre-page">
+  <div>
+    <h1>Tableau de bord</h1>
+    <p>Chiffres calculés à partir de vos produits et des commandes réellement enregistrées.</p>
+  </div>
+  <a routerLink="/espace-vendeur/ajouter" class="bouton">+ Ajouter un produit</a>
+</div>
+
+@if (stats(); as s) {
+  <div class="compteurs" data-testid="vendor-stats">
+    <div class="compteur"><p>Produits</p><strong>{{ s.productCount }}</strong><small>{{ s.productCount ? 'Dans votre catalogue' : 'Aucun produit créé' }}</small></div>
+    <div class="compteur"><p>Publiés</p><strong>{{ s.activeProductCount }}</strong><small>Visibles dans le catalogue</small></div>
+    <div class="compteur"><p>Brouillons</p><strong>{{ s.draftProductCount }}</strong><small>Non visibles publiquement</small></div>
+    <div class="compteur"><p>En attente de validation</p><strong>{{ s.pendingProductCount }}</strong><small>Soumis à l'administration</small></div>
+    <div class="compteur"><p>Commandes reçues</p><strong>{{ s.orderCount }}</strong><small>Contenant vos produits</small></div>
+    <div class="compteur"><p>Articles vendus</p><strong>{{ s.unitsSold }}</strong><small>Hors articles annulés</small></div>
+    <div class="compteur"><p>Chiffre d'affaires</p><strong>{{ s.revenueTnd | prixDt }}</strong><small>Vos lignes de commande, hors annulations</small></div>
+    <div class="compteur"><p>Revenus nets</p><strong>{{ s.netPayoutTnd | prixDt }}</strong><small>Après commission de la plateforme</small></div>
+  </div>
+}
+
+<div class="deux-colonnes">
+  <section class="bloc">
+    <div class="titre-bloc"><h2>Produits récents</h2><a routerLink="/espace-vendeur/produits" class="lien">Tout voir</a></div>
+    @if (recentProducts().length) {
+      <ul class="liste">
+        @for (p of recentProducts(); track p.id) {
+          <li>
+            <a [routerLink]="['/espace-vendeur/modifier', p.id]" class="ligne-lien">
+              @if (p.imageUrl) { <img [src]="p.imageUrl" [alt]="p.name" class="vignette" /> } @else { <span class="vignette vide-img" aria-hidden="true"></span> }
+              <span class="texte"><span class="nom">{{ p.name }}</span><span class="petit">{{ p.createdAt | date: 'd MMM y' }}</span></span>
+              <span class="badge" [class]="'badge ' + (productStatus[p.status]?.tone ?? 'gris')">{{ productStatus[p.status]?.label ?? p.status }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="vide-bloc"><p>Aucun produit créé.</p><a routerLink="/espace-vendeur/ajouter" class="bouton petit">+ Ajouter un produit</a></div>
+    }
+  </section>
+
+  <section class="bloc">
+    <div class="titre-bloc"><h2>Dernières commandes</h2></div>
+    @if (recentOrders().length) {
+      <ul class="liste">
+        @for (o of recentOrders(); track o.orderId) {
+          <li class="ligne-commande">
+            <span class="texte"><span class="nom">{{ reference(o.orderId) }} · {{ o.articles }} article(s)</span><span class="petit">{{ o.shippingName }} · {{ o.shippingCity }} · {{ o.createdAt | date: 'd MMM y' }}</span></span>
+            <span class="droite"><strong>{{ o.total | prixDt }}</strong><span class="statut">{{ statusLabel(o.status) }}</span></span>
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="vide-bloc"><p>Aucune commande reçue pour le moment.</p></div>
+    }
+  </section>
+</div>

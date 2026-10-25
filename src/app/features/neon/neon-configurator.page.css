@@ -1,0 +1,108 @@
+.page { padding-top: 24px; padding-bottom: 40px; }
+.chargement { display: flex; justify-content: center; padding: 96px 0; }
+.rond { width: 24px; height: 24px; border: 3px solid var(--beige); border-top-color: var(--accent); border-radius: 999px; animation: tourne 0.8s linear infinite; }
+@keyframes tourne { to { transform: rotate(360deg); } }
+.indisponible { max-width: 36rem; margin: 0 auto; padding: 80px 24px; text-align: center; }
+.indisponible h1 { font-size: 30px; }
+.indisponible p { margin: 12px 0 24px; color: var(--texte-secondaire); font-size: 14px; }
+svg { width: 16px; height: 16px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.masque { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* En-tête de l'atelier */
+.retour { display: inline-flex; min-height: 44px; align-items: center; gap: 6px; color: var(--surtitre); font-size: 14px; font-weight: 600; text-decoration: none; }
+.retour:hover { text-decoration: underline; }
+.entete-atelier { display: flex; align-items: center; gap: 16px; margin-top: 8px; }
+.logo-atelier { border: 1px solid var(--bordure); border-radius: 999px; }
+.titres { min-width: 0; }
+.titres h1 { font-size: 30px; letter-spacing: -0.03em; }
+.titres p { margin: 0; color: var(--texte-secondaire); font-size: 14px; }
+.nom-atelier { display: inline-flex; min-height: 44px; align-items: center; color: var(--texte); font-weight: 600; text-decoration: none; }
+.nom-atelier:hover { text-decoration: underline; }
+
+.mise-en-page { display: grid; gap: 24px; margin-top: 24px; }
+
+/* Aperçu : collé sous l'en-tête du site sur téléphone pendant les choix */
+.zone-apercu { position: sticky; top: var(--hauteur-entete, 66px); z-index: 20; margin: 0 -16px; padding: 4px 16px 8px; background: var(--fond); }
+.apercu { position: relative; display: flex; aspect-ratio: 16 / 9; align-items: center; justify-content: center; overflow: hidden; padding: 0 24px; border-radius: 24px; }
+.texte-apercu { max-width: 100%; }
+.dimensions { position: absolute; bottom: 16px; left: 16px; margin: 0; padding: 4px 12px; border-radius: 999px; background: rgba(0, 0, 0, .45); color: var(--carte); font-size: 12px; backdrop-filter: blur(8px); }
+.fonds { display: flex; gap: 8px; margin-top: 8px; overflow-x: auto; scrollbar-width: none; }
+.fonds::-webkit-scrollbar { display: none; }
+.choix-fond { display: flex; min-height: 44px; flex-shrink: 0; align-items: center; gap: 8px; padding: 0 16px; border: 1px solid var(--bordure); border-radius: 999px; background: var(--carte); color: var(--texte); font: 400 14px var(--police-texte); cursor: pointer; }
+.choix-fond.actif { border-color: var(--texte); background: var(--texte); color: var(--carte); }
+.echantillon { width: 16px; height: 16px; border: 1px solid rgba(0, 0, 0, .1); border-radius: 999px; }
+
+/* Étapes */
+.etapes { display: grid; gap: 16px; }
+.etape { padding: 20px; border: 1px solid var(--bordure); border-radius: 22px; background: var(--carte); }
+.titre-etape { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--texte); font-size: 14px; font-weight: 600; }
+.numero { display: flex; width: 24px; height: 24px; align-items: center; justify-content: center; border-radius: 999px; background: var(--texte); color: var(--carte); font-size: 12px; }
+.valeur { color: var(--texte-secondaire); font-weight: 400; }
+.saisie { display: block; width: 100%; margin-top: 12px; padding: 12px; border: 1px solid var(--bordure); border-radius: 16px; outline: none; background: var(--fond); color: var(--texte); font: 18px var(--police-texte); resize: none; }
+.saisie:focus { border-color: var(--accent); }
+.aide { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-top: 8px; color: var(--texte-secondaire); font-size: 12px; }
+.erreur { margin: 8px 0 0; color: var(--erreur); font-size: 14px; }
+.erreur a { font-weight: 600; }
+
+.choix { border: 1px solid var(--bordure); border-radius: 16px; background: var(--carte); color: var(--texte); font: inherit; cursor: pointer; }
+.choix.actif { border-color: var(--texte); background: var(--beige-clair); }
+.grille-polices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.grille-polices .choix { display: flex; min-height: 56px; flex-direction: column; align-items: center; justify-content: center; padding: 8px; }
+.exemple { font-size: 20px; line-height: 1.25; }
+.nom-police { margin-top: 2px; color: var(--texte-secondaire); font-size: 11px; }
+
+.couleurs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.choix-couleur { display: flex; width: 44px; height: 44px; align-items: center; justify-content: center; padding: 0; border: 2px solid transparent; border-radius: 999px; background: none; cursor: pointer; }
+.choix-couleur.actif { border-color: var(--texte); }
+.choix-couleur span { width: 28px; height: 28px; border-radius: 999px; }
+
+.grille-tailles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.taille { min-height: 56px; padding: 8px 12px; text-align: left; }
+.code { display: block; font-weight: 600; }
+.detail { color: var(--texte-secondaire); font-size: 12px; }
+.taille .detail { display: block; }
+.supports { display: grid; gap: 8px; margin-top: 12px; }
+.support { display: flex; min-height: 44px; width: 100%; align-items: center; justify-content: space-between; padding: 0 16px; font-size: 14px; }
+.support .detail { font-size: 14px; }
+.case { display: flex; min-height: 44px; align-items: center; gap: 12px; margin-top: 12px; font-size: 14px; cursor: pointer; }
+.case input { width: 16px; height: 16px; accent-color: var(--texte); }
+.case .detail { font-size: 14px; }
+
+/* Récapitulatif */
+.recapitulatif { padding: 20px; border-radius: 22px; background: var(--texte); color: var(--carte); }
+.clair { margin: 0; color: var(--cuivre-6, #d4a67f); }
+dl { display: grid; gap: 6px; margin: 12px 0 0; font-size: 14px; }
+dl > div { display: flex; justify-content: space-between; gap: 12px; }
+dt { color: var(--ligne-35, #d7c8bd); }
+dd { margin: 0; text-align: right; }
+.tronque { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.total { align-items: baseline; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, .15); border-top: 1px solid color-mix(in srgb, var(--carte) 15%, transparent); }
+.total dt { color: var(--carte); font-weight: 600; }
+.montant { font-family: var(--police-titre); font-size: 30px; font-variant-numeric: tabular-nums; }
+.note { margin: 0; padding-top: 4px; color: var(--gris-1, #bfb0a5); font-size: 11px; }
+.sans-prix { margin: 12px 0 0; color: var(--ligne-35, #d7c8bd); font-size: 14px; }
+.actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.ajouter { flex: 1; background: var(--beige); color: var(--texte); transition: background .2s; }
+.ajouter:hover:not(:disabled) { background: var(--carte); }
+.ajouter:disabled { opacity: .4; }
+.devis { border: 1px solid rgba(255, 255, 255, .3); border: 1px solid color-mix(in srgb, var(--carte) 30%, transparent); background: transparent; padding: 0 20px; transition: background .2s; }
+.devis:hover { background: rgba(255, 255, 255, .1); background: color-mix(in srgb, var(--carte) 10%, transparent); }
+.message-panier { margin: 12px 0 0; color: var(--ligne-24, #e8dccf); font-size: 14px; }
+.message-panier a { color: var(--carte); font-weight: 600; }
+.erreur-clair { color: var(--rouge-4, #f3b3ae); }
+
+@media (min-width: 640px) {
+  .titres h1 { font-size: 48px; }
+  .zone-apercu { position: static; margin: 0; padding: 0; background: none; }
+  .apercu { aspect-ratio: 4 / 3; border-radius: 28px; }
+  .fonds { flex-wrap: wrap; margin-top: 12px; }
+  .grille-polices { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grille-tailles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .actions { flex-direction: row; }
+}
+@media (min-width: 1024px) {
+  .page { padding-top: 40px; }
+  .mise-en-page { grid-template-columns: 1.15fr 1fr; align-items: start; }
+  /* En-tête du site sur ordinateur : 140 px, + 16 px d'espace */
+  .zone-apercu { position: sticky; top: 156px; }
+}

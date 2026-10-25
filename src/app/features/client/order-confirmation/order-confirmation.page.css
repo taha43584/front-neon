@@ -1,0 +1,35 @@
+.page { max-width: 900px; margin: 0 auto; padding: 48px 16px 64px; }
+.entete { max-width: 640px; margin: 0 auto; text-align: center; }
+.coche { display: inline-flex; width: 64px; height: 64px; align-items: center; justify-content: center; border-radius: 999px; background: var(--ligne-5, #e7efe1); color: var(--vert-5, #648058); font-size: 30px; }
+.entete .surtitre { margin-top: 28px; color: var(--cuivre-13, #9a6341); }
+h1 { font-size: 36px; letter-spacing: -0.05em; }
+.intro { margin: 20px 0 0; color: var(--gris-18, #75665c); line-height: 1.75; }
+.reference { display: inline-flex; gap: 8px; margin: 28px 0 0; padding: 12px 20px; border-radius: 999px; background: var(--ligne-1, #f3ede7); font-size: 14px; font-weight: 600; }
+.reference span { color: var(--cuivre-16, #8e5d3e); }
+.info { margin-top: 48px; padding: 32px; border-radius: 24px; background: var(--ligne-1, #f3ede7); color: var(--gris-18, #75665c); font-size: 14px; text-align: center; }
+
+.details { display: grid; gap: 24px; margin-top: 56px; }
+.recap { padding: 24px; border: 1px solid var(--ligne-19, #eee3da); border-radius: 24px; background: var(--carte); }
+.titre-bloc { padding-bottom: 16px; border-bottom: 1px solid var(--ligne-10, #f0e7e0); }
+.titre-bloc h2, .livraison h2 { font-family: var(--police-texte); font-size: 16px; font-weight: 600; letter-spacing: 0; }
+.titre-bloc p { margin: 4px 0 0; color: var(--gris-11, #7c6d64); font-size: 14px; }
+.ligne { display: flex; justify-content: space-between; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--ligne-10, #f0e7e0); }
+.nom { margin: 0; font-size: 14px; font-weight: 500; }
+.petit { margin: 4px 0 0; color: var(--gris-11, #7c6d64); font-size: 12px; }
+.petit.fort { color: var(--gris-21, #6d5e54); font-weight: 500; }
+.montant { margin: 0; flex-shrink: 0; font-size: 14px; font-weight: 600; }
+.total { display: flex; justify-content: space-between; margin: 16px 0 0; font-weight: 600; }
+.livraison { height: fit-content; padding: 24px; border-radius: 24px; background: var(--ligne-1, #f3ede7); font-size: 14px; }
+.livraison p { color: var(--gris-18, #75665c); line-height: 1.7; }
+.livraison .nom { margin-top: 16px; color: var(--texte); }
+
+.boutons { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 48px; }
+
+@media (min-width: 640px) {
+  .page { padding-left: 24px; padding-right: 24px; }
+  h1 { font-size: 48px; }
+  .recap { padding: 32px; }
+}
+@media (min-width: 768px) {
+  .details { grid-template-columns: 1fr 280px; }
+}

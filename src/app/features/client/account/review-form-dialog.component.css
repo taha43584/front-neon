@@ -1,0 +1,32 @@
+.fenetre { width: min(560px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 0; border: none; border-radius: 22px; background: var(--carte); color: var(--texte); box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25); }
+.fenetre::backdrop { background: rgba(36, 30, 26, 0.45); backdrop-filter: blur(3px); }
+.contenu { display: grid; gap: 12px; padding: 20px; }
+.haut { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+h2 { font-size: 24px; }
+.produit { margin: 4px 0 0; font-weight: 600; font-size: 14px; }
+.petit, .aide { margin: 0; color: var(--texte-secondaire); font-size: 12px; font-weight: 400; }
+.fermer { display: flex; width: 44px; height: 44px; flex-shrink: 0; align-items: center; justify-content: center; padding: 0; border: none; border-radius: 999px; background: var(--beige-clair); color: var(--texte); cursor: pointer; }
+.criteres { display: grid; gap: 4px; }
+.champ-texte { display: grid; gap: 2px; font-size: 14px; font-weight: 600; }
+.zone { width: 100%; height: auto; min-height: 104px; padding: 10px 14px; resize: vertical; line-height: 1.5; }
+.compteur { margin: -6px 0 0; color: var(--texte-secondaire); font-size: 12px; text-align: right; }
+.photos { margin: 0; padding: 0; border: none; }
+.photos legend { padding: 0; font-size: 14px; font-weight: 600; }
+.vignettes { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; padding: 0; list-style: none; }
+.vignette { position: relative; width: 76px; }
+.vignette img { width: 76px; height: 76px; border-radius: 10px; object-fit: cover; }
+.vignette.refusee img { opacity: 0.4; }
+.etat { position: absolute; inset: 0 0 auto; display: flex; height: 76px; align-items: center; justify-content: center; border-radius: 10px; background: rgba(255, 255, 255, 0.7); background: color-mix(in srgb, var(--carte) 70%, transparent); font-size: 11px; font-weight: 600; }
+.retirer { position: absolute; top: -10px; right: -10px; display: flex; width: 44px; height: 44px; align-items: center; justify-content: center; padding: 0; border: none; background: none; cursor: pointer; }
+.retirer app-icon { display: flex; width: 24px; height: 24px; align-items: center; justify-content: center; border-radius: 999px; background: var(--texte); color: var(--carte); }
+.erreur-photo { margin: 4px 0 0; color: var(--erreur); font-size: 11px; }
+.ajouter { display: flex; width: 76px; height: 76px; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 1px dashed var(--bordure); border-radius: 10px; color: var(--texte-secondaire); font-size: 12px; cursor: pointer; }
+.ajouter:hover, .ajouter:focus-within { border-color: var(--accent); color: var(--accent); }
+.identite { display: grid; gap: 6px; padding: 12px 14px; border-radius: 14px; background: var(--beige-clair); font-size: 14px; }
+.identite p { margin: 0; }
+.case { display: flex; min-height: 44px; align-items: center; gap: 10px; cursor: pointer; }
+.case input { width: 20px; height: 20px; accent-color: var(--accent); }
+.identite .aide app-icon { color: var(--vert-10, #24723a); }
+.erreur { margin: 0; color: var(--erreur); font-size: 14px; }
+.pied { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.bouton-contour { border: 1px solid rgba(42, 36, 32, .3); border: 1px solid color-mix(in srgb, var(--ombre, #2a2420) 30%, transparent); background: transparent; color: var(--texte); }

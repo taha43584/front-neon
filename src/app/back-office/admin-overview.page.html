@@ -1,0 +1,105 @@
+@switch (state.status()) {
+  @case ('loading') { <p class="info" role="status">Chargement des indicateurs…</p> }
+  @case ('error') {
+    <div class="erreur-etat" role="alert"><p>{{ state.error() }}</p><button type="button" class="b" (click)="state.reload()">Réessayer</button></div>
+  }
+  @default {
+    @let o = state.overview()!;
+    @let s = o.stats;
+    <div class="entete-page">
+      <div>
+        <h1>Vue générale</h1>
+        <p>Indicateurs calculés en temps réel à partir de la base de données.</p>
+      </div>
+    </div>
+
+    @if (toHandle()) {
+      <div class="bandeau-ambre" data-testid="admin-to-handle">
+        <strong>À traiter :</strong>
+        @if (s.pendingShops > 0) { <a routerLink="/admin/vendeurs" [queryParams]="{ statut: 'pending' }">{{ s.pendingShops }} demande(s) vendeur</a> }
+        @if (s.pendingProducts > 0) { <a routerLink="/admin/produits" [queryParams]="{ statut: 'pending' }">{{ s.pendingProducts }} produit(s) en attente</a> }
+        @if (s.pendingCategories > 0) { <a routerLink="/admin/categories">{{ s.pendingCategories }} catégorie(s) proposée(s)</a> }
+      </div>
+    }
+
+    <div class="kpis cinq" data-testid="admin-kpis">
+      <a class="kpi" routerLink="/admin/clients"><p>Clients</p><strong>{{ s.customers }}</strong><small>Comptes client inscrits</small></a>
+      <a class="kpi" routerLink="/admin/vendeurs"><p>Vendeurs</p><strong>{{ s.vendors }}</strong><small>{{ s.activeShops }} approuvé(s) · {{ s.suspendedShops }} suspendu(s)</small></a>
+      <a class="kpi" routerLink="/admin/vendeurs" [queryParams]="{ statut: 'pending' }"><p>Vendeurs en attente</p><strong [class.ambre]="s.pendingShops > 0">{{ s.pendingShops }}</strong><small>Demandes à examiner</small></a>
+      <a class="kpi" routerLink="/admin/vendeurs" [queryParams]="{ statut: 'active' }"><p>Vendeurs approuvés</p><strong class="vert">{{ s.activeShops }}</strong></a>
+      <a class="kpi" routerLink="/admin/produits"><p>Produits</p><strong>{{ s.products }}</strong><small>{{ s.publishedProducts }} publié(s)</small></a>
+      <a class="kpi" routerLink="/admin/produits" [queryParams]="{ statut: 'published' }"><p>Produits publiés</p><strong class="vert">{{ s.publishedProducts }}</strong></a>
+      <a class="kpi" routerLink="/admin/produits" [queryParams]="{ statut: 'pending' }"><p>Produits en attente</p><strong [class.ambre]="s.pendingProducts > 0">{{ s.pendingProducts }}</strong><small>Modération</small></a>
+      <a class="kpi" routerLink="/admin/commandes"><p>Commandes</p><strong>{{ s.orders }}</strong><small>{{ s.pendingOrders }} en attente</small></a>
+      <div class="kpi"><p>Chiffre d'affaires</p><strong>{{ s.revenueTnd | prixDt }}</strong><small>Commandes non annulées</small></div>
+      <div class="kpi"><p>Commissions</p><strong>{{ s.commissionTnd | prixDt }}</strong><small>Livré : {{ s.deliveredRevenueTnd | prixDt }}</small></div>
+    </div>
+
+    <section class="panneau graphique">
+      <div class="titre-panneau"><h2>Commandes et ventes — 30 derniers jours</h2></div>
+      @if (graph(); as g) {
+        <figure>
+          <svg [attr.viewBox]="'0 0 ' + chart.width + ' ' + chart.height" role="img" [attr.aria-label]="'30 derniers jours : ' + g.totalOrders + ' commande(s), ' + (g.totalRevenue | prixDt) + ' de ventes'">
+            @for (t of g.ticks; track t.label) {
+              <line [attr.x1]="chart.left" [attr.x2]="chart.width - chart.right" [attr.y1]="t.y" [attr.y2]="t.y" class="grille" />
+              <text [attr.x]="chart.left - 6" [attr.y]="t.y + 4" text-anchor="end" class="axe">{{ t.label }}</text>
+            }
+            @for (d of g.dates; track d.x) {
+              <text [attr.x]="d.x" [attr.y]="chart.height - 8" text-anchor="middle" class="axe">{{ d.label }}</text>
+            }
+            <path [attr.d]="g.area" class="aire" />
+            <path [attr.d]="g.revenue" class="ligne-ventes" />
+            <path [attr.d]="g.orders" class="ligne-commandes" />
+          </svg>
+          <figcaption><span class="pastille-ambre"></span> Ventes (DT) <span class="pastille-sombre"></span> Commandes</figcaption>
+        </figure>
+      } @else {
+        <p class="vide">Aucune commande sur les 30 derniers jours<small>Le graphique s'affichera dès que des commandes seront enregistrées.</small></p>
+      }
+    </section>
+
+    <div class="trois-colonnes">
+      <section class="panneau">
+        <div class="titre-panneau"><h2>Dernières commandes</h2><a class="lien" routerLink="/admin/commandes">Tout voir</a></div>
+        @if (o.latestOrders.length) {
+          <ul class="liste-simple">
+            @for (c of o.latestOrders; track c.id) {
+              <li><a class="ligne-liste" [routerLink]="['/admin/commandes', c.id]">
+                <span class="texte"><p class="fort">{{ c.reference }}</p><p class="sous">{{ c.shippingName }} · {{ c.createdAt | date: 'dd/MM/y' }}</p></span>
+                <span class="droite"><p class="fort">{{ c.totalTnd | prixDt }}</p><app-status-badge [status]="c.status" /></span>
+              </a></li>
+            }
+          </ul>
+        } @else { <p class="vide">Aucune commande</p> }
+      </section>
+
+      <section class="panneau">
+        <div class="titre-panneau"><h2>Demandes vendeurs récentes</h2><a class="lien" routerLink="/admin/vendeurs" [queryParams]="{ statut: 'pending' }">Examiner</a></div>
+        @if (o.vendorRequests.length) {
+          <ul class="liste-simple">
+            @for (v of o.vendorRequests; track v.id) {
+              <li><a class="ligne-liste" [routerLink]="['/admin/vendeurs', v.id]">
+                <span class="texte"><p class="fort">{{ v.name }}</p><p class="sous">{{ v.ownerName ?? '—' }} · {{ v.ownerEmail }}</p></span>
+                <span class="sous">{{ v.createdAt | date: 'dd/MM/y' }}</span>
+              </a></li>
+            }
+          </ul>
+        } @else { <p class="vide">Aucune demande en attente</p> }
+      </section>
+
+      <section class="panneau">
+        <div class="titre-panneau"><h2>Dernières inscriptions</h2></div>
+        @if (o.latestSignups.length) {
+          <ul class="liste-simple">
+            @for (u of o.latestSignups; track u.id) {
+              <li class="ligne-liste">
+                <span class="texte"><p class="fort">{{ u.name || 'Sans nom' }}</p><p class="sous">{{ u.email }}</p></span>
+                <span class="droite"><p class="sous">{{ roleLabel(u.role) }}</p><p class="sous">{{ u.createdAt | date: 'dd/MM/y' }}</p></span>
+              </li>
+            }
+          </ul>
+        } @else { <p class="vide">Aucune inscription</p> }
+      </section>
+    </div>
+  }
+}

@@ -1,0 +1,62 @@
+<div class="entete-page">
+  <div>
+    <h1>Clients</h1>
+    <p>Comptes client inscrits sur la marketplace.</p>
+  </div>
+  <div class="actions-page"><a routerLink="/admin/comptes" class="b"><app-icon name="user-plus" [size]="16" /> Créer un compte</a></div>
+</div>
+
+<section class="panneau">
+  <div class="filtres">
+    <div class="ligne-haut">
+      <div class="onglets" role="tablist" aria-label="Filtrer les clients">
+        @for (t of tabs; track t.value) {
+          <button type="button" role="tab" [attr.aria-selected]="status() === t.value" (click)="setStatus(t.value)">{{ t.label }}</button>
+        }
+      </div>
+      <div class="recherche-admin">
+        <input class="champ-admin" type="search" placeholder="Nom, e-mail ou téléphone" aria-label="Nom, e-mail ou téléphone" [value]="search()" (input)="setSearch($any($event.target).value)" data-testid="admin-search" />
+        @if (search()) { <button type="button" class="effacer" aria-label="Effacer la recherche" (click)="setSearch('')">✕</button> }
+      </div>
+    </div>
+  </div>
+
+  @switch (list.status()) {
+    @case ('loading') { <p class="info" role="status">Chargement…</p> }
+    @case ('error') { <div class="erreur-etat" role="alert"><p>{{ list.error() }}</p><button type="button" class="b" (click)="list.reload()">Réessayer</button></div> }
+    @default {
+      @if (!rows().length) {
+        <p class="vide">Aucun client trouvé @if (search()) { <small>Essayez une autre recherche.</small> }</p>
+      } @else {
+        <div class="tableau">
+          <table data-testid="admin-clients-table">
+            <thead><tr>
+              <th>Client</th>
+              <th>Téléphone</th>
+              <th>Ville</th>
+              <th class="droite">Commandes</th>
+              <th class="droite">Total dépensé</th>
+              <th>Inscription</th>
+              <th>Statut</th>
+            </tr></thead>
+            <tbody>
+              @for (c of rows(); track c.id) {
+                <tr>
+                  <td><a class="nom" [routerLink]="['/admin/clients', c.id]">{{ fullName(c) }}</a><span class="sous">{{ c.email }}</span></td>
+                  <td>{{ c.phone || '—' }}</td>
+                  <td>{{ c.city || '—' }}</td>
+                  <td class="droite">{{ c.orderCount }}</td>
+                  <td class="droite">{{ c.totalSpent | prixDt }}</td>
+                  <td>{{ c.createdAt | date: 'dd/MM/y' }}</td>
+                  <td><app-status-badge [status]="c.suspended ? 'suspended' : 'active'" [label]="c.suspended ? 'Suspendu' : 'Actif'" /></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @let d = list.data()!;
+        <app-admin-pagination [page]="d.page" [pageCount]="d.pageCount" [total]="d.total" (pageChange)="page.set($event)" />
+      }
+    }
+  }
+</section>

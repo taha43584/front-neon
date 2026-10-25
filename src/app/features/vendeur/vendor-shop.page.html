@@ -1,0 +1,79 @@
+@if (state.shop(); as shop) {
+  <div class="titre-page">
+    <div>
+      <h1>Ma boutique</h1>
+      <p>Informations affichées sur votre page boutique publique. Le statut de votre boutique est géré par l'administration.</p>
+    </div>
+    <a class="bouton bouton-clair petit" [routerLink]="['/boutique', shop.slug]">Voir ma page publique</a>
+  </div>
+
+  <app-shop-images-editor [shop]="shop" (changed)="state.reload()" />
+
+  <form class="bloc formulaire" [formGroup]="form" novalidate (ngSubmit)="submit()" data-testid="shop-form">
+    <label class="champ-bloc large">
+      <span class="label">Nom de la boutique <span class="requis">*</span></span>
+      <input class="champ" formControlName="name" maxlength="191" [attr.aria-invalid]="!!error('name')" aria-describedby="err-name" data-testid="shop-name" />
+      @if (error('name'); as e) { <small id="err-name" class="erreur">{{ e }}</small> }
+    </label>
+    <label class="champ-bloc large">
+      <span class="label">Slogan</span>
+      <input class="champ" formControlName="tagline" maxlength="500" />
+    </label>
+    <label class="champ-bloc large">
+      <span class="label">Présentation</span>
+      <textarea class="champ" rows="4" formControlName="about" maxlength="2000"></textarea>
+    </label>
+    <label class="champ-bloc">
+      <span class="label">Ville</span>
+      <input class="champ" formControlName="city" maxlength="128" />
+    </label>
+    <label class="champ-bloc">
+      <span class="label">Horaires</span>
+      <input class="champ" formControlName="openingHours" maxlength="191" placeholder="Ex. : lun.–sam. 9h–18h" />
+    </label>
+    <label class="champ-bloc">
+      <span class="label">Téléphone</span>
+      <input class="champ" formControlName="phone" maxlength="64" inputmode="tel" />
+    </label>
+    <label class="champ-bloc">
+      <span class="label">WhatsApp</span>
+      <input class="champ" formControlName="whatsapp" maxlength="64" inputmode="tel" />
+    </label>
+    <label class="champ-bloc large">
+      <span class="label">Adresse (non publiée)</span>
+      <input class="champ" formControlName="address" maxlength="500" />
+    </label>
+    <label class="champ-bloc large">
+      <span class="label">Informations de livraison (publiées)</span>
+      <textarea class="champ" rows="3" formControlName="deliveryInfo" maxlength="2000" placeholder="Zones, délais, frais…"></textarea>
+    </label>
+
+    <div class="champ-bloc">
+      <label class="label" for="field-socialFacebook">Page Facebook</label>
+      <div class="avec-icone">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-7.5h2.5l.4-3h-2.9V8.6c0-.9.3-1.5 1.5-1.5H16.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.8 1.4-3.8 3.9v2.3H8v3h2.5V21h3z"/></svg>
+        <input id="field-socialFacebook" class="champ" formControlName="socialFacebook" maxlength="191" placeholder="https://www.facebook.com/maboutique" [attr.aria-invalid]="!!error('socialFacebook')" [attr.aria-describedby]="error('socialFacebook') ? 'field-socialFacebook-error' : null" data-testid="shop-facebook" />
+      </div>
+      @if (error('socialFacebook'); as e) { <small id="field-socialFacebook-error" class="erreur">{{ e }}</small> }
+    </div>
+    <div class="champ-bloc">
+      <label class="label" for="field-socialInstagram">Compte Instagram</label>
+      <div class="avec-icone">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        <input id="field-socialInstagram" class="champ" formControlName="socialInstagram" maxlength="191" placeholder="@maboutique ou https://www.instagram.com/maboutique" [attr.aria-invalid]="!!error('socialInstagram')" [attr.aria-describedby]="error('socialInstagram') ? 'field-socialInstagram-error' : null" data-testid="shop-instagram" />
+      </div>
+      @if (error('socialInstagram'); as e) { <small id="field-socialInstagram-error" class="erreur">{{ e }}</small> }
+    </div>
+    <label class="champ-bloc large">
+      <span class="label">Site web</span>
+      <input class="champ" formControlName="socialWebsite" maxlength="191" />
+    </label>
+
+    <div class="large">
+      @if (message(); as m) {
+        <p class="message" [class.erreur-bloc]="m.error" [attr.role]="m.error ? 'alert' : 'status'" data-testid="shop-form-message">{{ m.text }}</p>
+      }
+      <button type="submit" class="bouton" [disabled]="saving()" data-testid="shop-save">{{ saving() ? 'Enregistrement…' : 'Enregistrer' }}</button>
+    </div>
+  </form>
+}

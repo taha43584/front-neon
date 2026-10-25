@@ -1,0 +1,159 @@
+@switch (status()) {
+  @case ('loading') { <p class="bloc vide-bloc" role="status">Chargement de votre offre néon…</p> }
+  @case ('error') { <p class="bloc vide-bloc" role="alert">Votre offre néon n'a pas pu être chargée.</p> }
+  @default {
+    @let d = data()!;
+    <form class="neon-page" [formGroup]="form" novalidate (ngSubmit)="save()" data-testid="vendor-neon">
+      <section class="bloc">
+        <div class="entete-neon">
+          <div>
+            <h1 class="titre-neon" data-testid="vendor-neon-title">Offre néon de la boutique « {{ d.shopName }} »</h1>
+            <p class="petit texte-intro">Activez l'offre pour apparaître dans le configurateur « Créer mon néon ». Les prix sont recalculés par le serveur à chaque commande et figés dans la ligne de commande.</p>
+          </div>
+          <label class="interrupteur">
+            <input type="checkbox" formControlName="enabled" data-testid="neon-enabled" />
+            {{ values().enabled ? 'Offre activée' : 'Offre désactivée' }}
+          </label>
+        </div>
+
+        <!-- Encadré de visibilité : calculé par le serveur (boutique active, offre activée et complète) -->
+        @if (d.visibility.visible) {
+          <div class="visibilite ok" role="status" data-testid="vendor-neon-visibility" data-visible="true">
+            <span aria-hidden="true">✓</span>
+            <span class="gras">Visible sur /neon</span>
+            <a [routerLink]="['/neon', d.shopSlug]" class="lien-neon">Voir ma page néon ↗</a>
+          </div>
+        } @else {
+          <div class="visibilite attention" role="status" data-testid="vendor-neon-visibility" data-visible="false">
+            <p class="gras"><app-icon name="triangle-alert" [size]="16" /> Pas encore visible sur /neon. Il manque :</p>
+            <ul>@for (m of d.visibility.missing; track m) { <li>{{ m }}</li> }</ul>
+          </div>
+        }
+
+        <div class="mur" [style.background]="background" aria-hidden="true">
+          <app-neon-text text="Votre texte" fontKey="pacifico" [colorHex]="previewColor()" script="latin" [size]="36" />
+        </div>
+      </section>
+
+      <section class="bloc">
+        <h2>Tailles et prix</h2>
+        <p class="petit">Largeur du néon et prix de base (DT) pour chaque taille.</p>
+        <div formArrayName="sizes" class="tailles">
+          @for (size of sizes.controls; track size; let i = $index) {
+            <div class="taille" [formGroupName]="i">
+              <input class="champ" formControlName="code" maxlength="8" [attr.aria-label]="'Code de la taille ' + (i + 1)" (input)="upperCode(i)" />
+              <label class="avec-unite"><span class="masque">Largeur en cm</span><input class="champ" formControlName="widthCm" inputmode="numeric" /><span class="unite">cm</span></label>
+              <label class="avec-unite"><span class="masque">Prix en DT</span><input class="champ" formControlName="priceTnd" inputmode="decimal" placeholder="Prix" /><span class="unite">DT</span></label>
+              <button type="button" class="retirer" [disabled]="sizes.length <= 1" [attr.aria-label]="'Retirer la taille ' + (size.value.code || i + 1)" (click)="removeSize(i)">✕</button>
+            </div>
+          }
+        </div>
+        @if (sizes.length < maxSizes) { <button type="button" class="ajouter" (click)="addSize()">+ Ajouter une taille</button> }
+
+        <div class="deux-champs">
+          <label class="champ-bloc">Lettres incluses dans le prix
+            <input class="champ" formControlName="includedLetters" inputmode="numeric" />
+            <small>Seules les lettres comptent (ni chiffres, ni espaces, ni ponctuation).</small>
+          </label>
+          <label class="champ-bloc">Supplément par lettre au-delà (DT)
+            <input class="champ" formControlName="extraLetterPriceTnd" inputmode="decimal" />
+          </label>
+        </div>
+      </section>
+
+      <section class="bloc">
+        <h2>Couleurs proposées</h2>
+        <div class="couleurs">
+          @for (c of colors; track c.key) {
+            <button type="button" class="couleur" [class.active]="hasColor(c.key)" [attr.aria-pressed]="hasColor(c.key)" (click)="toggleColor(c.key)">
+              <span class="pastille-couleur" [style.background]="c.hex" [style.box-shadow]="'0 0 8px ' + c.hex" aria-hidden="true"></span> {{ c.name }}
+            </button>
+          }
+        </div>
+      </section>
+
+      <section class="bloc">
+        <h2>Supports</h2>
+        <div formArrayName="supports" class="supports">
+          @for (s of supports.controls; track s.value.code; let i = $index) {
+            <div class="support" [formGroupName]="i">
+              <label class="case"><input type="checkbox" formControlName="enabled" /> {{ supportNames[s.controls.code.value] }}</label>
+              <label class="supplement">Supplément
+                <input class="champ" formControlName="surchargeTnd" inputmode="decimal" aria-label="Supplément du support en DT" [readonly]="!s.controls.enabled.value" [class.inactif]="!s.controls.enabled.value" [attr.aria-disabled]="!s.controls.enabled.value" /> DT
+              </label>
+            </div>
+          }
+        </div>
+      </section>
+
+      <section class="bloc deux-champs options-neon">
+        <div>
+          <label class="case gras"><input type="checkbox" formControlName="outdoorEnabled" /> Option « Usage extérieur »</label>
+          @if (values().outdoorEnabled) {
+            <div class="exterieur">
+              <select class="champ" formControlName="outdoorSurchargeType" aria-label="Type de supplément extérieur">
+                <option value="percent">Pourcentage</option>
+                <option value="fixed">Montant fixe</option>
+              </select>
+              <input class="champ court" formControlName="outdoorSurchargeValue" inputmode="decimal" aria-label="Valeur du supplément extérieur" />
+              <span>{{ values().outdoorSurchargeType === 'percent' ? '%' : 'DT' }}</span>
+            </div>
+          }
+        </div>
+        <div>
+          <label class="case gras"><input type="checkbox" formControlName="arabicEnabled" /> J'accepte les néons en arabe</label>
+          <p class="petit">Polices Reem Kufi et Aref Ruqaa, écriture de droite à gauche.</p>
+        </div>
+        <div class="large">
+          <p class="gras">Délai de fabrication (jours)</p>
+          <div class="delai">
+            <input class="champ court" formControlName="productionDaysMin" inputmode="numeric" placeholder="min" aria-label="Délai minimum en jours" />
+            à
+            <input class="champ court" formControlName="productionDaysMax" inputmode="numeric" placeholder="max" aria-label="Délai maximum en jours" />
+            jours
+          </div>
+        </div>
+      </section>
+
+      @if (errors().length) {
+        <div class="erreurs" role="alert" data-testid="vendor-neon-errors">
+          <p class="gras">L'offre n'a pas été enregistrée :</p>
+          <ul>@for (e of errors(); track e) { <li>{{ e }}</li> }</ul>
+        </div>
+      }
+      @if (saved(); as s) {
+        @if (s.visible) {
+          <p class="enregistre ok" role="status" data-testid="vendor-neon-saved">Offre néon enregistrée : visible sur /neon</p>
+        } @else {
+          <p class="enregistre attention" role="status" data-testid="vendor-neon-saved">Offre néon enregistrée, mais pas encore visible sur /neon : {{ d.visibility.missing.join(' ') }}</p>
+        }
+      }
+      <div><button type="submit" class="bouton" [disabled]="saving()" data-testid="neon-save">{{ saving() ? 'Enregistrement…' : "Enregistrer l'offre néon" }}</button></div>
+    </form>
+
+    <section class="bloc devis" data-testid="vendor-neon-quotes">
+      <h2>Demandes de devis (logo)</h2>
+      @if (quotes().length) {
+        <ul class="liste-devis">
+          @for (q of quotes(); track q.id) {
+            <li [attr.data-testid]="'quote-' + q.id">
+              @if (q.logoUrl) {
+                <a [href]="q.logoUrl" target="_blank" rel="noreferrer" class="logo-devis"><img [src]="q.logoUrl" [alt]="'Logo envoyé par ' + (q.clientName ?? 'le client')" /></a>
+              }
+              <div class="texte-devis">
+                <p class="gras">{{ q.clientName ?? q.clientEmail }} <span class="petit">· {{ q.createdAt | date: 'dd/MM/y' }}</span></p>
+                <p class="petit">{{ quoteDetails(q) }}</p>
+                @if (q.message) { <p class="message-devis">{{ q.message }}</p> }
+              </div>
+              <select class="champ statut-devis" aria-label="Statut de la demande" [value]="q.status" (change)="setQuoteStatus(q, $event)" data-testid="quote-status">
+                @for (s of quoteStatuses; track s[0]) { <option [value]="s[0]" [selected]="s[0] === q.status">{{ s[1] }}</option> }
+              </select>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="petit">Aucune demande pour le moment.</p>
+      }
+    </section>
+  }
+}

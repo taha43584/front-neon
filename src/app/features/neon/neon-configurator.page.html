@@ -1,0 +1,170 @@
+@switch (status()) {
+  @case ('loading') {
+    <div class="chargement" role="status" aria-label="Chargement…"><span class="rond" aria-hidden="true"></span></div>
+  }
+  @case ('error') {
+    <div class="indisponible" role="alert">
+      <h1>Atelier momentanément inaccessible</h1>
+      <p>Vérifiez votre connexion puis réessayez.</p>
+      <button type="button" class="bouton" (click)="load()">Réessayer</button>
+    </div>
+  }
+  @case ('unavailable') {
+    <!-- Slug inconnu, boutique inactive, offre désactivée ou incomplète -->
+    <div class="indisponible" data-testid="neon-workshop-unavailable">
+      <h1>Atelier indisponible</h1>
+      <p>Cet atelier ne propose pas (ou plus) le néon personnalisé.</p>
+      <a routerLink="/neon" class="bouton">Voir les autres ateliers <span aria-hidden="true">→</span></a>
+    </div>
+  }
+  @default {
+    @let w = workshop()!;
+    @let o = offer()!;
+    <div class="conteneur page">
+      <a routerLink="/neon" class="retour"><span aria-hidden="true">←</span> Voir les autres ateliers</a>
+      <div class="entete-atelier" data-testid="neon-workshop-header">
+        <app-shop-logo class="logo-atelier" [name]="w.shopName" [logoUrl]="w.shopLogoUrl" [size]="64" />
+        <div class="titres">
+          <h1>Créer mon néon</h1>
+          <p>Réalisé par <a [routerLink]="['/boutique', w.shopSlug]" class="nom-atelier">{{ w.shopName }}</a>@if (w.city) { · {{ w.city }}}</p>
+        </div>
+      </div>
+
+      <div class="mise-en-page">
+        <!-- Aperçu en direct ; sur téléphone il reste visible sous l'en-tête pendant les choix -->
+        <section class="zone-apercu" aria-label="Aperçu du néon">
+          <div class="apercu" [style.background]="backgroundStyles[background()]" data-testid="neon-preview">
+            <!-- Un seul élément dont la « clé » change avec la police ou la couleur : il est recréé, l'allumage se rejoue -->
+            @for (k of [replayKey()]; track k) {
+              <div class="neon-allume texte-apercu">
+                <app-neon-text [text]="previewText()" [fontKey]="fontKey()" [colorHex]="color().hex" [script]="script()" size="clamp(1.8rem, 7vw, 5.5rem)" />
+              </div>
+            }
+            @if (size() && heightCm()) {
+              <p class="dimensions" data-testid="neon-dimensions">≈ {{ size()!.widthCm }} × {{ heightCm() }} cm</p>
+            }
+          </div>
+          <div class="fonds" role="group" aria-label="Fond de l'aperçu">
+            @for (b of backgrounds; track b) {
+              <button type="button" class="choix-fond" [class.actif]="background() === b" [attr.aria-pressed]="background() === b" (click)="background.set(b)">
+                <span class="echantillon" [style.background]="backgroundStyles[b]" aria-hidden="true"></span>{{ backgroundLabels[b] }}
+              </button>
+            }
+          </div>
+        </section>
+
+        <!-- Étapes -->
+        <div class="etapes">
+          <section class="etape">
+            <label for="neon-text" class="titre-etape"><span class="numero" aria-hidden="true">1</span> Votre texte</label>
+            <textarea id="neon-text" class="saisie" rows="3" dir="auto" [value]="text()" (input)="onText($any($event.target))"
+              placeholder="Votre texte (3 lignes maximum)" aria-describedby="neon-text-help" data-testid="neon-text"></textarea>
+            <div id="neon-text-help" class="aide" aria-live="polite">
+              <span>{{ lettersInfo() }}</span>
+              <span>{{ lineLengths() }}</span>
+            </div>
+            @if (textError()) {
+              <p class="erreur" role="alert" data-testid="neon-text-error">{{ textError() }}</p>
+            } @else if (arabicRefused()) {
+              <p class="erreur" role="alert" data-testid="neon-text-error">{{ w.shopName }} ne réalise pas de néons en arabe. <a routerLink="/neon">Voir les autres ateliers</a></p>
+            }
+          </section>
+
+          <section class="etape">
+            <p class="titre-etape" id="titre-police"><span class="numero" aria-hidden="true">2</span> Police</p>
+            <div class="grille-polices" role="radiogroup" aria-labelledby="titre-police">
+              @for (f of fonts(); track f.key) {
+                <button type="button" role="radio" class="choix" [class.actif]="fontKey() === f.key" [attr.aria-checked]="fontKey() === f.key" (click)="fontKey.set(f.key)">
+                  <span class="exemple" [style.font-family]="f.family" [attr.dir]="script() === 'arabic' ? 'rtl' : 'ltr'" [attr.lang]="script() === 'arabic' ? 'ar' : null">{{ script() === 'arabic' ? 'مرحبا' : 'Néon' }}</span>
+                  <span class="nom-police">{{ f.name }}</span>
+                </button>
+              }
+            </div>
+          </section>
+
+          <section class="etape">
+            <p class="titre-etape" id="titre-couleur"><span class="numero" aria-hidden="true">3</span> Couleur <span class="valeur">— {{ color().name }}</span></p>
+            <div class="couleurs" role="radiogroup" aria-labelledby="titre-couleur">
+              @for (c of colors(); track c.key) {
+                <button type="button" role="radio" class="choix-couleur" [class.actif]="colorKey() === c.key" [attr.aria-checked]="colorKey() === c.key" [attr.aria-label]="c.name" [title]="c.name" (click)="colorKey.set(c.key)">
+                  <span [style.background]="c.hex" [style.box-shadow]="'0 0 10px ' + c.hex"></span>
+                </button>
+              }
+            </div>
+          </section>
+
+          <section class="etape">
+            <p class="titre-etape" id="titre-taille"><span class="numero" aria-hidden="true">4</span> Taille</p>
+            <div class="grille-tailles" role="radiogroup" aria-labelledby="titre-taille">
+              @for (s of o.sizes; track s.code) {
+                <button type="button" role="radio" class="choix taille" [class.actif]="sizeCode() === s.code" [attr.aria-checked]="sizeCode() === s.code" (click)="sizeCode.set(s.code)">
+                  <span class="code">{{ s.code }}</span>
+                  <span class="detail">{{ s.widthCm }} cm · {{ s.priceTnd | prixDt }}</span>
+                </button>
+              }
+            </div>
+          </section>
+
+          <section class="etape">
+            <p class="titre-etape" id="titre-support"><span class="numero" aria-hidden="true">5</span> Support</p>
+            <div class="supports" role="radiogroup" aria-labelledby="titre-support">
+              @for (s of o.supports; track s.code) {
+                <button type="button" role="radio" class="choix support" [class.actif]="supportCode() === s.code" [attr.aria-checked]="supportCode() === s.code" (click)="supportCode.set(s.code)">
+                  <span>{{ supportName(s.code) }}</span>
+                  <span class="detail">{{ s.surchargeTnd ? '+ ' + (s.surchargeTnd | prixDt) : 'Inclus' }}</span>
+                </button>
+              }
+            </div>
+            @if (o.outdoorEnabled) {
+              <label class="case">
+                <input type="checkbox" [checked]="outdoor()" (change)="outdoor.set($any($event.target).checked)" />
+                Usage extérieur <span class="detail">({{ o.outdoorSurchargeType === 'percent' ? '+ ' + o.outdoorSurchargeValue + ' %' : '+ ' + (o.outdoorSurchargeValue | prixDt) }})</span>
+              </label>
+            }
+          </section>
+
+          <!-- Récapitulatif -->
+          <section class="recapitulatif toujours-sombre" aria-live="polite" data-testid="neon-summary">
+            <p class="surtitre clair">Récapitulatif</p>
+            @if (pricedOk(); as p) {
+              <dl>
+                <div><dt>Dimensions</dt><dd>≈ {{ p.size.widthCm }} × {{ p.heightCm }} cm</dd></div>
+                <div><dt>Lettres</dt><dd>{{ p.letters }}@if (p.extraLetters) { (dont {{ p.extraLetters }} en supplément)}</dd></div>
+                <div><dt>Atelier</dt><dd class="tronque">{{ w.shopName }}</dd></div>
+                @if (delay()) { <div><dt>Délai de fabrication</dt><dd>{{ delay() }}</dd></div> }
+                <div class="total">
+                  <dt>Total</dt>
+                  <!-- Le nombre qui défile est décoratif ; les lecteurs d'écran lisent le prix final -->
+                  <dd class="montant" aria-hidden="true" data-testid="neon-total">{{ (animatedTotal() ?? p.priceTnd) | prixDt }}</dd>
+                  <span class="masque">{{ p.priceTnd | prixDt }}</span>
+                </div>
+                <p class="note">Prix recalculé et confirmé à l'ajout au panier et à la commande.</p>
+              </dl>
+            } @else {
+              <p class="sans-prix">{{ pricedError() ?? (analysis().ok ? 'Choisissez vos options.' : 'Écrivez votre texte pour voir le prix.') }}</p>
+            }
+            <div class="actions">
+              <button type="button" class="bouton ajouter" [disabled]="!pricedOk() || adding()" (click)="addToCart()" data-testid="neon-add-to-cart">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0" /></svg>
+                {{ adding() ? 'Vérification du prix…' : 'Ajouter au panier' }}
+              </button>
+              <button #quoteButton type="button" class="bouton devis" (click)="openQuote()" data-testid="neon-quote-open">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
+                Envoyer mon logo pour un devis
+              </button>
+            </div>
+            @if (cartMessage(); as m) {
+              <p class="message-panier" [class.erreur-clair]="!m.ok" role="status" data-testid="neon-cart-message">
+                {{ m.ok ? '✓ ' : '' }}{{ m.text }}@if (m.ok) { · <a routerLink="/panier">Voir le panier</a> }
+              </p>
+            }
+          </section>
+        </div>
+      </div>
+    </div>
+
+    @if (quoteOpen()) {
+      <app-neon-quote-dialog [shopSlug]="w.shopSlug" [shopName]="w.shopName" [sizes]="sizeCodes()" [outdoorEnabled]="o.outdoorEnabled" [isClient]="isClient()" (closed)="quoteOpen.set(false); quoteButton.focus()" />
+    }
+  }
+}

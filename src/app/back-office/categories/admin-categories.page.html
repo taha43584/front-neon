@@ -1,0 +1,183 @@
+<div class="onglets onglets-page" role="tablist" aria-label="Type de catégories">
+  <button type="button" role="tab" [attr.aria-selected]="tab() === 'site'" (click)="tab.set('site')">Catégories du site</button>
+  <button type="button" role="tab" [attr.aria-selected]="tab() === 'global'" (click)="tab.set('global')">Catégories globales</button>
+</div>
+@if (message()) { <p class="message" role="status" data-testid="admin-message">{{ message() }}</p> }
+
+@if (tab() === 'site') {
+  <div class="entete-page">
+    <div>
+      <h1>Catégories du site</h1>
+      <p>Ce que voient les visiteurs : catégories des vendeurs et catégories globales, regroupées.</p>
+    </div>
+  </div>
+  <section class="panneau">
+    <div class="titre-panneau"><h2>Catégories du site ({{ visibleCount() }} visibles, {{ hiddenCount() }} masquées)</h2></div>
+    <p class="explication">
+      Catégories créées par les vendeurs et catégories globales, regroupées par nom (sans majuscules, accents ni espaces en trop).
+      Seules celles qui contiennent au moins une création publiée d'une boutique active sont visibles sur le site. Masquer une catégorie ne supprime rien.
+    </p>
+    @if (siteError()) { <div class="erreur-etat" role="alert"><p>{{ siteError() }}</p></div> }
+    @else if (!site()) { <p class="info" role="status">Chargement…</p> }
+    @else if (!site()!.length) { <p class="vide">Aucune catégorie avec des créations publiées</p> }
+    @else {
+      <div class="tableau">
+        <table>
+          <thead><tr><th>Catégorie</th><th class="droite">Créations</th><th class="droite">Boutiques</th><th>État</th><th class="droite">Action</th></tr></thead>
+          <tbody>
+            @for (r of site(); track r.slug) {
+              <tr [class.masquee]="r.hidden" [attr.data-testid]="'site-category-' + r.slug">
+                <td>
+                  <div class="produit-cellule">
+                    @if (r.image) { <img class="vignette" [src]="r.image" [alt]="r.name" loading="lazy" /> } @else { <span class="vignette vide"></span> }
+                    <div><span class="fort">{{ r.name }}</span><span class="sous">/categorie/{{ r.slug }}</span></div>
+                  </div>
+                </td>
+                <td class="droite">{{ r.productCount }}</td>
+                <td class="droite">{{ r.shopCount }}</td>
+                <td>
+                  @if (r.hidden) {
+                    <app-status-badge status="suspended" label="Masquée" />
+                    <span class="sous motif">{{ r.reason }}@if (r.hiddenBy) { · par {{ r.hiddenBy }} }@if (r.hiddenAt) { · le {{ r.hiddenAt | date: 'dd/MM/y' }} }</span>
+                  } @else { <app-status-badge status="active" label="Visible" /> }
+                </td>
+                <td>
+                  <div class="groupe-actions">
+                    @if (!r.hidden) {
+                      <button type="button" class="b" [attr.aria-label]="'Renommer ' + r.name" (click)="openRename(r)">Renommer</button>
+                      @if (site()!.length > 1) { <button type="button" class="b" [attr.aria-label]="'Fusionner ' + r.name" (click)="openMerge(r)">Fusionner</button> }
+                      <button type="button" class="b rouge" (click)="askHide(r)">Masquer</button>
+                    } @else {
+                      <button type="button" class="b" (click)="askHide(r)">Réafficher</button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+} @else {
+  <div class="entete-page">
+    <div>
+      <h1>Catégories</h1>
+      <p>Arborescence du catalogue public (catégories et sous-catégories).</p>
+    </div>
+    <button type="button" class="b noir" (click)="openEdit()">+ Nouvelle catégorie</button>
+  </div>
+  @if (globalError()) { <div class="erreur-etat" role="alert"><p>{{ globalError() }}</p></div> }
+  @else if (!globals()) { <p class="info" role="status">Chargement…</p> }
+  @else {
+    <section class="panneau">
+      <div class="titre-panneau"><h2>Propositions des vendeurs ({{ pending().length }})</h2></div>
+      @if (pending().length) {
+        <div class="tableau">
+          <table>
+            <thead><tr><th>Nom proposé</th><th>Catégorie parente</th><th>Proposée par</th><th class="droite">Produits</th><th>Date</th><th class="droite">Décision</th></tr></thead>
+            <tbody>
+              @for (c of pending(); track c.id) {
+                <tr>
+                  <td class="fort">{{ c.name }}</td>
+                  <td>{{ c.parentId ? (nameOf().get(c.parentId) ?? '—') : 'Catégorie principale' }}</td>
+                  <td>{{ c.shopName ?? '—' }}</td>
+                  <td class="droite">{{ c.productCount }}</td>
+                  <td>{{ c.createdAt | date: 'dd/MM/y' }}</td>
+                  <td><div class="groupe-actions">
+                    <button type="button" class="b vert" [disabled]="busy()" (click)="moderate(c, 'approved')">Valider</button>
+                    <button type="button" class="b rouge" [disabled]="busy()" (click)="moderate(c, 'rejected')">Refuser</button>
+                  </div></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else { <p class="vide">Aucune proposition en attente</p> }
+    </section>
+
+    <section class="panneau">
+      <div class="titre-panneau"><h2>Catalogue ({{ roots().length }} catégories principales)</h2></div>
+      @if (tree().length) {
+        <div class="tableau">
+          <table>
+            <thead><tr><th>Catégorie</th><th class="droite">Produits</th><th>État</th><th>Visible</th><th class="droite">Actions</th></tr></thead>
+            <tbody>
+              @for (row of tree(); track row.c.id) {
+                <tr [class.inactive]="!row.c.active">
+                  <td><div [class.sous-niveau]="row.level === 1"><span [class.fort]="row.level === 0">{{ row.level ? '↳ ' : '' }}{{ row.c.name }}</span>@if (row.c.description) { <span class="sous coupe">{{ row.c.description }}</span> }</div></td>
+                  <td class="droite">{{ row.c.productCount }}</td>
+                  <td><app-status-badge [status]="row.c.active ? 'approved' : 'inactive'" [label]="row.c.active ? 'Active' : 'Désactivée'" /></td>
+                  <td>
+                    <label class="interrupteur">
+                      <input type="checkbox" role="switch" [checked]="row.c.active === 1" [attr.aria-label]="(row.c.active ? 'Désactiver ' : 'Activer ') + row.c.name" (change)="setActive(row.c, $any($event.target).checked)" />
+                      <span aria-hidden="true"></span>
+                    </label>
+                  </td>
+                  <td><div class="groupe-actions">
+                    @if (!row.level) { <button type="button" class="b" (click)="openEdit(undefined, row.c.id)">+ Sous-catégorie</button> }
+                    <button type="button" class="b icone" [attr.aria-label]="'Modifier ' + row.c.name" (click)="openEdit(row.c)"><app-icon name="pencil" [size]="16" /></button>
+                    <button type="button" class="b icone rouge" [attr.aria-label]="'Supprimer ' + row.c.name" (click)="askDelete(row.c)">✕</button>
+                  </div></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else { <p class="vide">Aucune catégorie</p> }
+    </section>
+  }
+}
+
+<!-- Masquer / réafficher -->
+<app-confirm-dialog [request]="hideRequest()" [busy]="busy()" [serverError]="actionError()" (confirmed)="applyHide($event)" (cancelled)="hideTarget.set(null)" />
+
+<!-- Renommer -->
+<app-admin-dialog [open]="!!renaming()" [title]="'Renommer « ' + (renaming()?.name ?? '') + ' »'" description="Le nouveau nom s'applique à toutes les boutiques qui utilisent cette catégorie. Aucun produit n'est modifié." [busy]="busy()" (closed)="renaming.set(null)">
+  <form class="formulaire-fenetre" (submit)="$event.preventDefault(); applyRename()">
+    <input class="champ-admin plein" [formControl]="renameControl" maxlength="60" aria-label="Nouveau nom de la catégorie" data-testid="rename-input" />
+    @if (actionError()) { <p class="erreur" role="alert">{{ actionError() }}</p> }
+    <div class="actions"><button type="button" class="b" [disabled]="busy()" (click)="renaming.set(null)">Annuler</button><button type="submit" class="b noir" [disabled]="busy() || !renameControl.value.trim()">Renommer</button></div>
+  </form>
+</app-admin-dialog>
+
+<!-- Fusionner -->
+<app-admin-dialog [open]="!!merging()" [title]="'Fusionner « ' + (merging()?.name ?? '') + ' »'" [description]="'Ses ' + (merging()?.productCount ?? 0) + ' produit(s) rejoindront la catégorie choisie, dans chaque boutique. Aucun produit n\'est supprimé ; « ' + (merging()?.name ?? '') + ' » disparaît du site.'" [busy]="busy()" (closed)="merging.set(null)">
+  <form class="formulaire-fenetre" (submit)="$event.preventDefault(); applyMerge()">
+    <select class="champ-admin plein" [formControl]="mergeControl" aria-label="Catégorie cible de la fusion" data-testid="merge-select">
+      <option value="">Fusionner dans…</option>
+      @for (x of mergeTargets(); track x.slug) { <option [value]="x.slug">{{ x.name }} ({{ x.productCount }})</option> }
+    </select>
+    @if (actionError()) { <p class="erreur" role="alert">{{ actionError() }}</p> }
+    <div class="actions"><button type="button" class="b" [disabled]="busy()" (click)="merging.set(null)">Annuler</button><button type="submit" class="b noir" [disabled]="busy() || !mergeControl.value">Fusionner</button></div>
+  </form>
+</app-admin-dialog>
+
+<!-- Créer / modifier une catégorie globale -->
+<app-admin-dialog [open]="!!editing()" [title]="editing()?.id ? 'Modifier la catégorie' : 'Nouvelle catégorie'" [busy]="busy()" (closed)="editing.set(null)">
+  <form class="formulaire-fenetre" [formGroup]="editForm" (ngSubmit)="saveEdit()" novalidate>
+    <label>Nom <input class="champ-admin plein" formControlName="name" maxlength="128" /></label>
+    <label>Description <span class="sous en-ligne">(facultative)</span><textarea class="champ-admin" formControlName="description" rows="3" maxlength="2000"></textarea></label>
+    <label>Catégorie parente
+      <select class="champ-admin plein" formControlName="parentId">
+        <option value="">Aucune (catégorie principale)</option>
+        @for (r of roots(); track r.id) { @if (r.id !== editing()?.id) { <option [value]="'' + r.id">{{ r.name }}</option> } }
+      </select>
+    </label>
+    <label class="case"><input type="checkbox" formControlName="active" /> Visible sur le site</label>
+    @if (editError()) { <p class="erreur" role="alert">{{ editError() }}</p> }
+    <div class="actions"><button type="button" class="b" [disabled]="busy()" (click)="editing.set(null)">Annuler</button><button type="submit" class="b noir" [disabled]="busy()">Enregistrer</button></div>
+  </form>
+</app-admin-dialog>
+
+<!-- Supprimer -->
+<app-confirm-dialog [request]="deleteRequest()" [busy]="busy()" [serverError]="actionError()" (confirmed)="applyDelete()" (cancelled)="toDelete.set(null)">
+  @if (toDelete(); as c) {
+    @if (c.productCount > 0) {
+      <select class="champ-admin plein remplacement" aria-label="Catégorie de remplacement" [value]="reassignTo()" (change)="reassignTo.set($any($event.target).value)">
+        <option value="">Choisir une catégorie…</option>
+        @for (o of reassignOptions(); track o.id) { <option [value]="o.id">{{ o.parentId ? (nameOf().get(o.parentId) + ' › ') : '' }}{{ o.name }}</option> }
+      </select>
+    }
+  }
+</app-confirm-dialog>

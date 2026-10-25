@@ -1,0 +1,113 @@
+<div class="page">
+  @if (auth.loading()) {
+    <p class="chargement" role="status">Chargement…</p>
+  } @else if (auth.user(); as user) {
+    <div class="deja">
+      <h1>Vous êtes déjà connecté</h1>
+      <p>Connecté en tant que {{ user.name || 'utilisateur' }}. Déconnectez-vous pour créer un autre compte.</p>
+      <a class="bouton" [routerLink]="accountTarget().href">{{ accountTarget().label }}</a>
+    </div>
+  } @else if (mode() === 'choice') {
+    <div class="centre">
+      <p class="surtitre">Inscription</p>
+      <h1>Quel compte souhaitez-vous créer ?</h1>
+      <p class="intro">La visite du site est libre. Un compte est nécessaire pour commander ou pour vendre sur Elegance Deco.</p>
+    </div>
+    <div class="choix">
+      @for (c of choices; track c.href) {
+        <a class="carte-choix" [class.sombre]="c.dark" [class.toujours-sombre]="c.dark" [routerLink]="c.href" [attr.data-testid]="'register-choice-' + (c.dark ? 'vendor' : 'client')">
+          <span class="icone"><app-icon [name]="c.icon" [size]="24" /></span>
+          <h2>{{ c.title }}</h2>
+          <p>{{ c.text }}</p>
+          <ul>@for (p of c.points; track p) { <li><app-icon name="check" [size]="16" class="coche" />{{ p }}</li> }</ul>
+          <span class="cta">{{ c.cta }} <app-icon name="arrow-right" [size]="16" /></span>
+        </a>
+      }
+    </div>
+    <p class="deja-inscrit">Déjà inscrit ? <a routerLink="/connexion">Se connecter</a></p>
+  } @else {
+    <div class="formulaire">
+      <a routerLink="/inscription" class="changer"><app-icon name="arrow-left" [size]="14" /> Changer de type de compte</a>
+      @if (mode() === 'client') {
+        <p class="surtitre">Compte Client</p>
+        <h1>Créer votre compte Client</h1>
+        <p class="intro gauche">Vos coordonnées serviront à pré-remplir vos prochaines commandes. Vous pourrez les modifier à tout moment depuis votre espace.</p>
+      } @else {
+        <p class="surtitre">Compte Vendeur</p>
+        <h1>Ouvrir votre boutique</h1>
+        <p class="intro gauche">Votre demande sera examinée par l'administration d'Elegance Deco. La publication de produits sera possible après validation.</p>
+        <div class="encart"><app-icon name="shield-check" [size]="16" class="accent" /><span>Après l'inscription, votre compte est créé avec le statut <strong>« en attente de validation »</strong>. Vous serez informé dans votre espace vendeur dès que votre boutique sera approuvée.</span></div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate data-testid="register-form">
+        <!-- Gabarits déclarés DANS le formulaire : formControlName y trouve le FormGroup parent -->
+        <ng-template #champ let-f>
+          <div class="champ-bloc">
+            <label [for]="f.name">{{ f.label }}</label>
+            <input class="champ" [id]="f.name" [formControlName]="f.name" [type]="f.type || 'text'" [attr.autocomplete]="f.autocomplete || null" [placeholder]="f.placeholder || ''"
+              [attr.aria-invalid]="!!errors()[f.name]" [attr.aria-describedby]="errors()[f.name] ? f.name + '-error' : null" [attr.data-testid]="'register-' + f.name" />
+            @if (errors()[f.name]) {
+              <p class="erreur-champ" [id]="f.name + '-error'"><app-icon name="circle-alert" [size]="14" />{{ errors()[f.name] }}</p>
+            } @else if (f.hint) {
+              <p class="aide">{{ f.hint }}</p>
+            }
+          </div>
+        </ng-template>
+        
+        <ng-template #motsDePasse>
+          <div class="champ-bloc">
+            <label for="password">Mot de passe</label>
+            <div class="avec-oeil">
+              <input class="champ" id="password" formControlName="password" [type]="showPassword() ? 'text' : 'password'" autocomplete="new-password"
+                [attr.aria-invalid]="!!errors()['password']" [attr.aria-describedby]="errors()['password'] ? 'password-error' : null" data-testid="register-password" />
+              <button type="button" class="oeil" [attr.aria-label]="showPassword() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'" (click)="showPassword.set(!showPassword())">
+                <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" [size]="16" />
+              </button>
+            </div>
+            @if (errors()['password']) {
+              <p class="erreur-champ" id="password-error"><app-icon name="circle-alert" [size]="14" />{{ errors()['password'] }}</p>
+            } @else {
+              <p class="aide">8 caractères minimum, avec au moins une lettre et un chiffre</p>
+            }
+          </div>
+          <div class="champ-bloc">
+            <label for="passwordConfirm">Confirmation du mot de passe</label>
+            <input class="champ" id="passwordConfirm" formControlName="passwordConfirm" [type]="showPassword() ? 'text' : 'password'" autocomplete="new-password"
+              [attr.aria-invalid]="!!errors()['passwordConfirm']" [attr.aria-describedby]="errors()['passwordConfirm'] ? 'passwordConfirm-error' : null" data-testid="register-passwordConfirm" />
+            @if (errors()['passwordConfirm']) { <p class="erreur-champ" id="passwordConfirm-error"><app-icon name="circle-alert" [size]="14" />{{ errors()['passwordConfirm'] }}</p> }
+          </div>
+        </ng-template>
+        @if (formError()) { <div class="erreur-formulaire" role="alert"><app-icon name="circle-alert" [size]="16" /><span>{{ formError() }}</span></div> }
+
+        @if (mode() === 'client') {
+          <div class="grille">
+            @for (f of clientFields; track f.name) { <ng-container *ngTemplateOutlet="champ; context: { $implicit: f }" /> }
+            <ng-container *ngTemplateOutlet="motsDePasse" />
+          </div>
+          <button type="submit" class="bouton envoyer" [disabled]="sending()" data-testid="register-submit">{{ sending() ? 'Création du compte…' : 'Créer mon compte Client' }}</button>
+        } @else {
+          <fieldset>
+            <legend>Vos informations</legend>
+            <div class="grille">@for (f of vendorPerson; track f.name) { <ng-container *ngTemplateOutlet="champ; context: { $implicit: f }" /> }</div>
+          </fieldset>
+          <fieldset class="separe">
+            <legend>Votre boutique</legend>
+            <div class="grille">@for (f of vendorShop; track f.name) { <ng-container *ngTemplateOutlet="champ; context: { $implicit: f }" /> }</div>
+          </fieldset>
+          <fieldset class="separe">
+            <legend>Sécurité</legend>
+            <div class="grille"><ng-container *ngTemplateOutlet="motsDePasse" /></div>
+          </fieldset>
+          <div class="separe">
+            <label class="conditions" [class.en-erreur]="errors()['acceptTerms']">
+              <input type="checkbox" formControlName="acceptTerms" [attr.aria-describedby]="errors()['acceptTerms'] ? 'acceptTerms-error' : null" data-testid="register-acceptTerms" />
+              <span>J'accepte les <a [href]="termsPath" target="_blank" rel="noopener">conditions générales d'utilisation et les règles applicables aux vendeurs</a> de Marketplace Elegance Deco.</span>
+            </label>
+            @if (errors()['acceptTerms']) { <p class="erreur-champ" id="acceptTerms-error"><app-icon name="circle-alert" [size]="14" />{{ errors()['acceptTerms'] }}</p> }
+          </div>
+          <button type="submit" class="bouton envoyer" [disabled]="sending()" data-testid="register-submit">{{ sending() ? 'Envoi de la demande…' : 'Créer mon compte Vendeur' }}</button>
+        }
+      </form>
+    </div>
+  }
+</div>

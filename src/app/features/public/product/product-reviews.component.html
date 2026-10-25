@@ -1,0 +1,147 @@
+<section id="avis" class="avis-clients" aria-labelledby="titre-avis" data-testid="product-reviews">
+  <h2 id="titre-avis">Avis des clients</h2>
+
+  @if (status() === 'loading') {
+    <div class="squelette bloc-squelette" role="status" aria-label="Chargement des avis"></div>
+  } @else if (status() === 'error') {
+    <p class="petit">Les avis n'ont pas pu être chargés. <button type="button" class="lien-bouton" (click)="load()">Réessayer</button></p>
+  } @else if (overview(); as o) {
+    <!-- Onglets : motif ARIA (flèches ← →) -->
+    <div class="onglets" role="tablist" aria-label="Avis affichés">
+      <button type="button" role="tab" id="onglet-avis-product" aria-controls="panneau-avis" [attr.aria-selected]="tab() === 'product'" [attr.tabindex]="tab() === 'product' ? 0 : -1" (keydown)="onTabKey($event)" (click)="selectTab('product')">Ce produit ({{ o.product.count }})</button>
+      <button type="button" role="tab" id="onglet-avis-shop" aria-controls="panneau-avis" [attr.aria-selected]="tab() === 'shop'" [attr.tabindex]="tab() === 'shop' ? 0 : -1" (keydown)="onTabKey($event)" (click)="selectTab('shop')">Tout l'atelier ({{ o.shop.count }})</button>
+    </div>
+
+    <div id="panneau-avis" class="panneau" role="tabpanel" [attr.aria-labelledby]="'onglet-avis-' + tab()">
+      @if (summary(); as s) {
+        @if (s.count === 0) {
+          <p class="vide-avis">Aucun avis publié pour le moment. Les avis viennent uniquement d'acheteurs dont la commande a été livrée.</p>
+        } @else {
+          <div class="grille">
+            <!-- Résumé (≤ 280 px) : note, étoiles, répartition 5 → 1, 3 critères -->
+            <aside class="resume" aria-label="Résumé des notes" data-testid="reviews-summary">
+              <p class="note"><strong>{{ formatNote(s.average) }}</strong><span>/ 5</span></p>
+              <app-stars [value]="s.average ?? 0" [size]="18" />
+              <p class="verifies">{{ s.count }} avis d'acheteur{{ s.count > 1 ? 's' : '' }} vérifié{{ s.count > 1 ? 's' : '' }}</p>
+              <ul class="barres">
+                @for (d of s.distribution; track d.stars) {
+                  <li>
+                    <span class="etiquette">{{ d.stars }}★</span>
+                    <span class="barre" aria-hidden="true"><span [style.width.%]="(d.count / maxBar()) * 100"></span></span>
+                    <span class="nombre"><span class="masque-lecteur">{{ d.stars }} étoile{{ d.stars > 1 ? 's' : '' }} : </span>{{ d.count }}</span>
+                  </li>
+                }
+              </ul>
+              @if (s.criteriaCount) {
+                <dl class="criteres">
+                  @for (c of criteria; track c.key) {
+                    <div><dt>{{ c.label }}</dt><dd><app-stars [value]="s.criteria[c.key] ?? 0" [size]="12" /> {{ formatNote(s.criteria[c.key]) }}</dd></div>
+                  }
+                </dl>
+              }
+            </aside>
+
+            <div class="liste">
+              <!-- Photos des clients -->
+              @if (photos().length) {
+                <div class="photos-clients">
+                  <h3>Photos des clients <span>— Comment la pièce est arrivée chez eux</span></h3>
+                  <ul class="miniatures" data-testid="customer-photos">
+                    @for (p of photos(); track p.id; let i = $index) {
+                      <li><button type="button" class="miniature" [attr.aria-label]="'Agrandir la photo de ' + p.author" (click)="openGallery(i)"><img [src]="p.url" alt="" loading="lazy" /></button></li>
+                    }
+                  </ul>
+                </div>
+              }
+
+              <!-- Filtres + tri -->
+              <div class="outils">
+                <div class="pastilles" role="group" aria-label="Filtrer les avis">
+                  @for (f of filters; track f.value) {
+                    <button type="button" class="pastille petite" [class.active]="filter() === f.value" [attr.aria-pressed]="filter() === f.value" (click)="toggleFilter(f.value)">{{ f.label }}</button>
+                  }
+                </div>
+                <label class="tri"><span class="masque-lecteur">Trier les avis</span>
+                  <select class="champ" [value]="sort()" (change)="setSort($any($event.target).value)" aria-label="Trier les avis" data-testid="reviews-sort">
+                    @for (s of sorts; track s.value) { <option [value]="s.value">{{ s.label }}</option> }
+                  </select>
+                </label>
+              </div>
+
+              <!-- Cartes d'avis -->
+              @if (items().length) {
+                <ul class="cartes" [attr.aria-busy]="listLoading()">
+                  @for (r of items(); track r.id) {
+                    <li class="carte" data-testid="review-card">
+                      <div class="entete">
+                        <span class="initiale" aria-hidden="true">{{ initial(r.author) }}</span>
+                        <div class="qui">
+                          <p class="auteur">{{ r.author }}@if (r.authorGovernorate) {<span class="lieu"> · {{ r.authorGovernorate }}</span>}</p>
+                          <p class="date"><time [attr.datetime]="r.createdAt">{{ r.createdAt | date: 'd MMM y' }}</time></p>
+                        </div>
+                        <span class="verifie" data-testid="verified-badge"><app-icon name="circle-check" [size]="14" /> Achat vérifié</span>
+                      </div>
+                      <div class="ligne-note">
+                        <app-stars [value]="r.rating" [size]="15" />
+                        @if (tab() === 'shop') { <a class="produit" [routerLink]="['/produit', r.productSlug]">{{ r.productName }}</a> }
+                      </div>
+                      @if (r.purchasedVariant) { <p class="achete">Acheté : {{ r.purchasedVariant }}</p> }
+                      <p class="texte">{{ r.body }}</p>
+                      @if (r.photos.length) {
+                        <ul class="photos-avis">
+                          @for (p of r.photos; track p.id; let i = $index) {
+                            <li><button type="button" class="photo-avis" [attr.aria-label]="'Agrandir la photo ' + (i + 1) + ' de ' + r.author" (click)="openReviewPhotos(r, i)"><img [src]="p.url" alt="" loading="lazy" /></button></li>
+                          }
+                        </ul>
+                      }
+                      @if (r.qualityRating !== null) {
+                        <p class="notes-criteres">
+                          @for (c of criteria; track c.key; let last = $last) {
+                            <span>{{ c.label }} {{ criterionValue(r, c.key) }}/5</span>@if (!last) {<span aria-hidden="true"> · </span>}
+                          }
+                        </p>
+                      }
+                      @if (r.vendorReply) {
+                        <div class="reponse" data-testid="vendor-reply">
+                          <p class="titre-reponse">Réponse de l'atelier@if (r.vendorReplyAt) { · <time>{{ r.vendorReplyAt | date: 'd MMM y' }}</time>}</p>
+                          <p>{{ r.vendorReply }}</p>
+                        </div>
+                      }
+                      @if (!r.mine) {
+                        <div class="actions">
+                          <button type="button" class="action" [class.actif]="r.votedByMe" [attr.aria-pressed]="r.votedByMe" (click)="toggleHelpful(r)" data-testid="helpful-button">Utile ({{ r.helpfulCount }})</button>
+                          @if (r.reportedByMe) {
+                            <span class="action signale">Signalé</span>
+                          } @else {
+                            <button type="button" class="action" [attr.aria-expanded]="reportingId() === r.id" (click)="openReport(r)">Signaler</button>
+                          }
+                        </div>
+                        @if (reportingId() === r.id) {
+                          <form class="signalement" novalidate (submit)="$event.preventDefault(); sendReport(r)">
+                            <label [for]="'motif-' + r.id">Pourquoi signalez-vous cet avis ?</label>
+                            <textarea [id]="'motif-' + r.id" class="champ" rows="2" [maxLength]="reportMax" [value]="reportReason()" (input)="reportReason.set($any($event.target).value)"></textarea>
+                            @if (reportError()) { <p class="erreur" role="alert">{{ reportError() }}</p> }
+                            <div class="boutons-signalement">
+                              <button type="submit" class="bouton petit-bouton">Envoyer</button>
+                              <button type="button" class="lien-bouton" (click)="reportingId.set(null)">Annuler</button>
+                            </div>
+                          </form>
+                        }
+                      }
+                    </li>
+                  }
+                </ul>
+                @if (hasMore()) {
+                  <button type="button" class="bouton bouton-contour plus" [disabled]="listLoading()" (click)="more()" data-testid="more-reviews">{{ listLoading() ? 'Chargement…' : "Voir plus d'avis" }}</button>
+                }
+              } @else if (!listLoading()) {
+                <p class="petit">Aucun avis ne correspond à ce filtre.</p>
+              }
+            </div>
+          </div>
+        }
+      }
+    </div>
+  }
+  <app-photo-viewer [photos]="viewerPhotos()" />
+</section>

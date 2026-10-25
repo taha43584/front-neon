@@ -1,0 +1,95 @@
+<div class="entete-page">
+  <div>
+    <a routerLink="/admin/clients" class="retour"><app-icon name="arrow-left" [size]="16" /> Clients</a>
+    <h1>Gestion des comptes</h1>
+    <p>Créez, consultez et gérez tous les comptes de la marketplace.</p>
+  </div>
+  <div class="actions-page"><button type="button" class="b sombre" (click)="openCreate()" data-testid="create-account"><app-icon name="plus" [size]="16" /> Créer un compte</button></div>
+</div>
+@if (message()) { <p class="message" role="status" data-testid="admin-message">{{ message() }}</p> }
+@if (actionError()) { <p class="bandeau-rouge" role="alert">{{ actionError() }}</p> }
+
+<div class="kpis trois">
+  <div class="kpi"><p class="avec-icone"><app-icon name="users" [size]="16" /> Total</p><strong>{{ counts().total }}</strong></div>
+  <div class="kpi"><p class="avec-icone"><app-icon name="store" [size]="16" /> Vendeurs</p><strong>{{ counts().vendors }}</strong></div>
+  <div class="kpi"><p class="avec-icone"><app-icon name="ban" [size]="16" /> Suspendus</p><strong>{{ counts().suspended }}</strong></div>
+</div>
+
+<section class="panneau espace-haut">
+  <div class="filtres">
+    <div class="onglets" role="tablist" aria-label="Filtrer les comptes">
+      @for (f of filters; track f.label) {
+        <button type="button" role="tab" [attr.aria-selected]="role() === f.value" (click)="role.set(f.value)">{{ f.label }}</button>
+      }
+    </div>
+  </div>
+  @switch (status()) {
+    @case ('loading') { <p class="info" role="status">Chargement des comptes…</p> }
+    @case ('error') { <div class="erreur-etat" role="alert"><p>{{ error() }}</p><button type="button" class="b" (click)="load()">Réessayer</button></div> }
+    @default {
+      @if (!accounts().length) {
+        <div class="vide"><app-icon name="users" [size]="32" /><p>Aucun compte trouvé pour ce filtre.</p></div>
+      } @else {
+        <div class="tableau">
+          <table data-testid="admin-accounts-table">
+            <thead><tr><th>Nom</th><th>Email</th><th>Téléphone</th><th>Rôle</th><th>Inscription</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody>
+              @for (a of accounts(); track a.id) {
+                <tr>
+                  <td><span class="fort">{{ a.name || 'Sans nom' }}</span><span class="sous">#{{ a.id }}</span></td>
+                  <td>{{ a.email || '—' }}</td>
+                  <td>{{ a.phone || '—' }}</td>
+                  <td><span class="role" [class]="'role ' + a.role">{{ roleLabels[a.role] || a.role }}</span></td>
+                  <td>{{ a.createdAt | date: 'dd/MM/y' }}</td>
+                  <td>@if (a.suspended) { <span class="suspendu"><app-icon name="ban" [size]="12" /> Suspendu</span> } @else { <span class="actif">Actif</span> }</td>
+                  <td>
+                    @if (a.role !== 'admin') {
+                      <button type="button" class="b" [class.vert-contour]="a.suspended" [class.rouge-contour]="!a.suspended" [disabled]="busyId() === a.id" (click)="toggleSuspend(a)">{{ a.suspended ? 'Réactiver' : 'Suspendre' }}</button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+  }
+</section>
+
+<app-admin-dialog [open]="creating()" title="Créer un compte" [busy]="createBusy()" (closed)="closeCreate()">
+  @if (generatedPassword(); as pwd) {
+    <div class="reussi" role="status">
+      <p class="avec-icone vert-texte"><app-icon name="circle-check" [size]="18" /> <strong>Compte créé !</strong></p>
+      <p>Mot de passe généré (communiqué à l'utilisateur par email) :</p>
+      <code class="mot-de-passe" data-testid="generated-password">{{ pwd }}</code>
+      <button type="button" class="b sombre plein" (click)="closeCreate()">Fermer</button>
+    </div>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="create()" novalidate class="form-compte" data-testid="create-account-form">
+      <div>
+        <p class="etiquette">Type de compte</p>
+        <div class="types" role="radiogroup" aria-label="Type de compte">
+          <button type="button" role="radio" class="type" [class.choisi]="newRole() === 'customer'" [attr.aria-checked]="newRole() === 'customer'" (click)="newRole.set('customer')"><app-icon name="user-round" [size]="16" /> Client</button>
+          <button type="button" role="radio" class="type" [class.choisi]="newRole() === 'seller'" [attr.aria-checked]="newRole() === 'seller'" (click)="newRole.set('seller')"><app-icon name="store" [size]="16" /> Vendeur</button>
+        </div>
+      </div>
+      <div class="grille-champs">
+        <label>Nom complet *<input class="champ-admin" formControlName="name" placeholder="Fatma Ben Ali" maxlength="191" /></label>
+        <label>Email *<input class="champ-admin" type="email" formControlName="email" placeholder="fatma@email.com" maxlength="320" /></label>
+        <label>Téléphone<input class="champ-admin" type="tel" formControlName="phone" placeholder="+216 XX XXX XXX" maxlength="64" /></label>
+        <label>Mot de passe <span class="sous-texte">(optionnel — généré si vide)</span><input class="champ-admin" type="password" formControlName="password" placeholder="min. 8 caractères" maxlength="128" autocomplete="new-password" /></label>
+      </div>
+      @if (newRole() === 'seller') {
+        <div class="boutique">
+          <p class="avec-icone fort"><app-icon name="store" [size]="16" /> Boutique du vendeur</p>
+          <label>Nom de la boutique *<input class="champ-admin" formControlName="shopName" placeholder="Ex: Artisanat Tunisien" maxlength="191" /></label>
+          <label>Description de la boutique<textarea class="champ-admin zone" formControlName="shopDescription" rows="3" maxlength="2000" placeholder="Décrivez l'univers et les créations de cette boutique…"></textarea></label>
+          <p class="sous">✓ La boutique sera créée avec le statut <strong>approuvé</strong> directement.</p>
+        </div>
+      }
+      @if (createError()) { <p class="bandeau-rouge" role="alert">{{ createError() }}</p> }
+      <button type="submit" class="b sombre plein" [disabled]="createBusy()" data-testid="create-account-submit">{{ createBusy() ? 'Création en cours…' : 'Créer le compte' }}</button>
+    </form>
+  }
+</app-admin-dialog>

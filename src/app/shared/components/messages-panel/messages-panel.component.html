@@ -1,0 +1,90 @@
+<section class="messagerie" data-testid="messages-panel">
+  <div class="grille">
+    <aside class="liste">
+      <div class="liste-entete">
+        <div><p class="surtitre-petit">Messages privés</p><h2>Vos échanges</h2></div>
+        <app-icon name="message-circle" class="accent" />
+      </div>
+      @switch (listStatus()) {
+        @case ('loading') { <p class="info" role="status">Chargement…</p> }
+        @case ('error') { <p class="info" role="alert">Vos conversations n'ont pas pu être chargées. <button type="button" class="lien" (click)="loadList()">Réessayer</button></p> }
+        @default {
+          @if (conversations().length) {
+            <ul class="conversations">
+              @for (c of conversations(); track c.id) {
+                <li>
+                  <button type="button" class="conversation" [class.active]="selectedId() === c.id" [attr.aria-current]="selectedId() === c.id ? 'true' : null" (click)="open(c.id)" data-testid="conversation-row">
+                    <span class="ligne">
+                      <span class="noms">
+                        <span class="participant">{{ c.participantName }}</span>
+                        <span class="boutique"><app-icon name="store" [size]="12" /> {{ c.shopName }}</span>
+                      </span>
+                      @if (c.unreadCount) { <span class="non-lus" [attr.aria-label]="c.unreadCount + ' message(s) non lu(s)'">{{ c.unreadCount }}</span> }
+                    </span>
+                    <span class="date">{{ c.lastMessageAt | date: 'dd/MM/yyyy' }}</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="info">Aucune conversation pour le moment. Contactez une boutique depuis sa page pour démarrer un échange.</p>
+          }
+        }
+      }
+    </aside>
+
+    <div class="fil">
+      @if (composingFirst()) {
+        <div class="nouveau">
+          <div class="icone-carre"><app-icon name="store" /></div>
+          <p class="surtitre-petit">Nouveau message</p>
+          <h3>Échangez avec {{ target()?.name ?? 'la boutique' }}</h3>
+          <p class="explication">Décrivez votre projet, vos dimensions ou une demande de personnalisation. La boutique pourra vous répondre directement ici.</p>
+          @if (target() === undefined) {
+            <p class="info" role="status">Vérification de la boutique…</p>
+          } @else if (target()) {
+            <form class="form-premier" (submit)="$event.preventDefault(); startConversation()">
+              <label class="masque-lecteur" for="premier-message">Votre message</label>
+              <textarea id="premier-message" class="zone" [formControl]="firstMessage" maxlength="4000" placeholder="Bonjour, j'aimerais échanger au sujet de…" data-testid="first-message"></textarea>
+              <button type="submit" class="bouton" [disabled]="sending() || !firstMessage.value.trim()" data-testid="first-message-send">{{ sending() ? 'Envoi…' : 'Envoyer le premier message' }} <app-icon name="send" [size]="16" /></button>
+            </form>
+          } @else {
+            <p class="encadre">Cette boutique n'est pas encore connectée à la messagerie. Vous pouvez consulter sa collection et revenir plus tard.</p>
+          }
+        </div>
+      } @else if (selected() && thread(); as t) {
+        @let c = selected()!;
+        <div class="fil-entete">
+          <div>
+            <p class="boutique-fil"><app-icon name="store" [size]="14" class="accent" />{{ c.shopName }}</p>
+            <h3>{{ c.participantName }}</h3>
+            <p class="sujet">{{ c.subject ?? 'Échange privé' }}</p>
+          </div>
+          <span class="badge-prive">Conversation privée</span>
+        </div>
+        <div class="bulles" aria-live="polite" data-testid="thread">
+          @for (m of t.messages; track m.id) {
+            <div class="bulle-ligne" [class.moi]="m.senderId === myId()">
+              <div class="bulle">
+                <p class="texte">{{ m.body }}</p>
+                <p class="heure">{{ m.createdAt | date: 'dd/MM/yy HH:mm' }}</p>
+              </div>
+            </div>
+          } @empty {
+            <p class="info centre">Aucun message dans cette conversation.</p>
+          }
+        </div>
+        <form class="reponse" (submit)="$event.preventDefault(); reply()">
+          <label class="masque-lecteur" for="reponse">Votre réponse</label>
+          <textarea id="reponse" class="zone petite" [formControl]="draft" maxlength="4000" placeholder="Écrire une réponse…" data-testid="reply-input"></textarea>
+          <button type="submit" class="envoyer" aria-label="Envoyer le message" [disabled]="sending() || !draft.value.trim()" data-testid="reply-send"><app-icon name="send" [size]="16" /></button>
+        </form>
+      } @else {
+        <div class="aucune">
+          <app-icon name="user-round" [size]="32" class="accent" />
+          <p>Sélectionnez une conversation pour lire vos échanges.</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>

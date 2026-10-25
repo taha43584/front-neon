@@ -1,0 +1,203 @@
+<!-- Accueil téléphone (A-10d, réorganisé en A-10g) : stories, encadré, par catégorie, néon, en vidéo, ateliers,
+     vus récemment, pour vous, services (en-tête et recherche : app-site-header ; barre du bas : app-mobile-nav) -->
+<h1 class="masque-lecteur">{{ siteName() }} — {{ tagline() }}</h1>
+
+@if (status() === 'loading') {
+  <ul class="tel-ateliers" role="status" aria-label="Chargement des ateliers">
+    @for (i of [0, 1, 2, 3, 4]; track i) { <li aria-hidden="true"><span class="squelette tel-rond-attente"></span><span class="squelette ligne-cercle"></span></li> }
+  </ul>
+  <section class="tel-section" aria-label="Chargement des créations"><app-load-state status="loading" [count]="4" /></section>
+}
+@if (status() === 'error') {
+  <section class="tel-section"><app-load-state status="error" (retry)="retry.emit()" /></section>
+}
+
+@if (home(); as data) {
+  <!-- 1. Stories des ateliers (A-10e) : un cercle par atelier qui a des créations récentes ; contour accent = pas encore vue -->
+  @if (stories().length) {
+    <ul class="tel-ateliers" aria-label="Stories des ateliers" data-testid="tel-stories">
+      @for (g of stories(); track g.shop.slug; let i = $index) {
+        <li>
+          <button type="button" class="tel-atelier pression" [class.vue]="isSeen(g)" aria-haspopup="dialog"
+            [attr.aria-label]="'Story de ' + g.shop.name + (isSeen(g) ? ', déjà vue' : ', nouvelle') + ' : ' + g.items.length + ' création' + (g.items.length > 1 ? 's' : '')"
+            (click)="openStory.set(i)">
+            <span class="tel-rond"><app-shop-logo [name]="g.shop.name" [logoUrl]="g.shop.logoUrl" [size]="62" /></span>
+            <span class="tel-nom-atelier" aria-hidden="true">{{ g.shop.name }}</span>
+          </button>
+        </li>
+      }
+    </ul>
+    <!-- Visionneuse : son code n'est téléchargé qu'à la première story ouverte -->
+    @if (openStory() !== null) {
+      @defer (on immediate) {
+        <app-stories-viewer [groups]="stories()" [start]="openStory()!" (seen)="markSeen($event)" (closed)="openStory.set(null)" />
+      }
+    }
+  }
+
+  <!-- 2. Encadré de présentation (A-10g) : uniquement des garanties vraies -->
+  <section class="tel-presentation" aria-labelledby="tel-titre-presentation" data-testid="tel-presentation">
+    <p class="tel-surtitre">Décoration · Néons · Sur mesure</p>
+    <h2 id="tel-titre-presentation">Votre déco, fabriquée par des ateliers tunisiens.</h2>
+    <p class="tel-presentation-texte">Choisissez un modèle ou faites-le à vos mesures. Vous payez à la livraison.</p>
+    <div class="tel-presentation-boutons">
+      @if (hasNeon()) { <a routerLink="/neon" class="tel-bouton fonce pression">Créer mon néon</a> }
+      <a routerLink="/boutiques" class="tel-bouton contour pression">Les ateliers</a>
+    </div>
+    <ul class="tel-garanties" aria-label="Nos garanties">
+      @for (g of guarantees(); track g.label) {
+        <li><span class="tel-garantie-icone"><app-icon [name]="g.icon" [size]="20" /></span>{{ g.label }}</li>
+      }
+    </ul>
+  </section>
+
+  <!-- 3. Par catégorie : 6 catégories réelles les plus fournies, photo carrée, nom SOUS la photo -->
+  @if (categoryGrid().length) {
+    <section class="tel-section" aria-labelledby="tel-titre-categories">
+      <div class="tel-entete-section">
+        <h2 id="tel-titre-categories" class="tel-titre">Par catégorie</h2>
+        <a routerLink="/produits" class="tel-tout-voir">Tout voir <span aria-hidden="true">›</span></a>
+      </div>
+      <ul class="tel-categories" data-testid="tel-categories">
+        @for (c of categoryGrid(); track c.slug) {
+          <li>
+            <a class="tel-categorie pression" [routerLink]="['/categorie', c.slug]">
+              <span class="tel-categorie-photo">@if (c.image; as image) { <img [ngSrc]="image" alt="" fill sizes="33vw" /> } @else { <app-icon name="layout-grid" [size]="24" /> }</span>
+              <span class="tel-categorie-nom">{{ c.name }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  <!-- 4. Carte néon sombre (seulement si un atelier propose le néon) : texte lumineux qui « respire » -->
+  @if (hasNeon()) {
+    <section class="tel-neon toujours-sombre" aria-labelledby="tel-titre-neon" data-testid="tel-neon">
+      <p class="tel-neon-mot" aria-hidden="true">Néon</p>
+      <h2 id="tel-titre-neon">Votre texte, en lumière</h2>
+      <p class="tel-neon-texte">Composez votre néon, l'atelier le fabrique.</p>
+      <a routerLink="/neon" class="tel-neon-bouton pression">Créer</a>
+    </section>
+  }
+
+  <!-- 5. En vidéo : tuiles 9:16 (132 × 220) en défilement horizontal aimanté ; cachée sans vidéo -->
+  @if (videos().length) {
+    <section class="tel-section" aria-labelledby="tel-titre-videos">
+      <div class="tel-entete-section"><h2 id="tel-titre-videos" class="tel-titre">En vidéo</h2></div>
+      <div #rangVideos class="tel-videos" data-testid="tel-videos">
+        @defer (on viewport(rangVideos); prefetch on idle) {
+          @for (v of videos(); track v.product.slug; let i = $index) { <app-workshop-video [item]="v" format="verticale" [priority]="i < 3" /> }
+        } @placeholder {
+          @for (v of videos(); track v.product.slug) { <div class="tel-video-attente"></div> }
+        }
+      </div>
+    </section>
+  }
+
+  <!-- 6. Ateliers à découvrir : cartes de 270 px qui défilent (3 photos, logo, ville, créations, spécialités, note réelle) -->
+  @if (workshopCards().length) {
+    <section class="tel-section" aria-labelledby="tel-titre-ateliers">
+      <div class="tel-entete-section">
+        <h2 id="tel-titre-ateliers" class="tel-titre">Ateliers à découvrir</h2>
+        <a routerLink="/boutiques" class="tel-tout-voir">Tout voir <span aria-hidden="true">›</span></a>
+      </div>
+      <ul class="tel-cartes-ateliers" data-testid="tel-cartes-ateliers">
+        @for (s of workshopCards(); track s.id) {
+          <li class="tel-carte-atelier">
+            <div class="tel-mosaique" [attr.data-photos]="s.photos.length">
+              @for (photo of s.photos; track $index) { <img [ngSrc]="photo" alt="" width="270" height="150" /> }
+            </div>
+            <div class="tel-carte-atelier-corps">
+              <app-shop-logo class="tel-carte-atelier-logo" [name]="s.name" [logoUrl]="s.logoUrl" [size]="52" />
+              <p class="tel-carte-atelier-nom">{{ s.name }}</p>
+              <p class="tel-carte-atelier-infos">
+                @if (s.city) { <span><app-icon name="map-pin" [size]="14" /> {{ s.city }}</span> }
+                <span>{{ s.productCount }} création{{ s.productCount > 1 ? 's' : '' }}</span>
+                @if (s.reviewCount > 0 && s.rating !== null) { <span class="tel-note">★ {{ s.rating.toLocaleString('fr-FR', { maximumFractionDigits: 1 }) }} ({{ s.reviewCount }} avis)</span> }
+              </p>
+              @if (s.categories.length) {
+                <ul class="tel-etiquettes" aria-label="Spécialités">
+                  @for (c of s.categories; track c.slug) { <li>{{ c.name }}</li> }
+                </ul>
+              }
+              <a class="tel-visiter" [routerLink]="['/boutique', s.slug]" [attr.aria-label]="'Visiter ' + s.name">Visiter <span aria-hidden="true">›</span></a>
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  <!-- 7. Vus récemment (A-10e, cet appareil) — infos et prix relus sur le serveur ; cachée si vide -->
+  @if (recent().length) {
+    <section class="tel-section" aria-labelledby="tel-titre-vus">
+      <div class="tel-entete-section">
+        <h2 id="tel-titre-vus" class="tel-titre">Vus récemment</h2>
+        <button type="button" class="tel-effacer" (click)="recentlyViewed.clear()" data-testid="tel-vus-effacer">Effacer</button>
+      </div>
+      <ul class="tel-vus" data-testid="tel-vus">
+        @for (p of recent(); track p.slug) {
+          <li>
+            <a class="tel-vu pression" [routerLink]="['/produit', p.slug]">
+              <span class="tel-vu-photo">@if (p.image) { <img [ngSrc]="p.image" [alt]="p.name" fill sizes="120px" /> }</span>
+              <span class="tel-vu-nom">{{ p.name }}</span>
+              <span class="tel-vu-prix">@if (p.unit) { <span class="petit">dès </span> }<strong>{{ p.priceTnd | prixDt }}</strong>@if (p.unit) {<span class="petit"> / {{ p.unit }}</span>}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  <!-- 8. Pour vous : puces de catégories + « Filtrer », grille de 2 colonnes (photos carrées) -->
+  @if (forYou().length || chip() !== null) {
+    <section class="tel-section" aria-labelledby="tel-titre-pour-vous">
+      <div class="tel-entete-section">
+        <h2 id="tel-titre-pour-vous" class="tel-titre">Pour vous</h2>
+        <a routerLink="/produits" class="tel-tout-voir">Tout voir <span aria-hidden="true">›</span></a>
+      </div>
+      <div class="tel-outils-pour-vous">
+        @if (chips().length) {
+          <div class="tel-puces" role="group" aria-label="Filtrer « Pour vous » par catégorie" data-testid="tel-puces">
+            <button type="button" class="tel-puce pression" [class.choisie]="chip() === null" [attr.aria-pressed]="chip() === null" (click)="selectChip(null)">Tout</button>
+            @for (c of chips(); track c.slug) {
+              <button type="button" class="tel-puce pression" [class.choisie]="chip() === c.slug" [attr.aria-pressed]="chip() === c.slug" (click)="selectChip(c.slug)">{{ c.name }}</button>
+            }
+          </div>
+        }
+        <!-- A-10e : filtres en panneau ; « Voir N résultats » ouvre le catalogue avec ces filtres dans l'adresse -->
+        <app-filter-sheet [options]="sheetOptions" [value]="emptyFilters" [counter]="countFor" (apply)="openCatalog($event)" />
+      </div>
+      @if (chipError()) { <p class="tel-erreur" role="alert">Impossible de charger cette catégorie. <button type="button" class="tel-reessayer" (click)="selectChip(chip())">Réessayer</button></p> }
+      <div class="tel-grille" data-testid="tel-pour-vous" [attr.aria-busy]="chipLoading()" [class.attente]="chipLoading()">
+        @for (p of forYou(); track p.slug; let i = $index) {
+          <app-carte-pour-vous appReveal [product]="p" [priority]="i < 2" />
+        }
+      </div>
+    </section>
+  } @else if (data.totals.products === 0) {
+    <section class="tel-section">
+      <div class="vide vide-accueil">
+        <p class="titre">Le catalogue se construit</p>
+        <p>Aucune création n'est encore publiée. Les produits des boutiques validées apparaîtront ici automatiquement.</p>
+        <a routerLink="/inscription/vendeur" class="bouton">Devenir vendeur</a>
+      </div>
+    </section>
+  }
+
+  <!-- 9. Services : seulement ce qui existe vraiment (le devis « sur mesure » général n'existe pas encore : BACK-A-FAIRE n° 26) -->
+  @if (hasNeon()) {
+    <section class="tel-section" aria-labelledby="tel-titre-services">
+      <div class="tel-entete-section"><h2 id="tel-titre-services" class="tel-titre">Services</h2></div>
+      <ul class="tel-services" data-testid="tel-services">
+        <li>
+          <a routerLink="/neon" class="tel-service pression">
+            <span class="tel-service-icone"><app-icon name="lightbulb" [size]="24" /></span>
+            <span><span class="tel-service-titre">Créer mon néon</span><span class="tel-service-texte">Composez votre texte, choisissez la couleur : un atelier le fabrique.</span></span>
+          </a>
+        </li>
+      </ul>
+    </section>
+  }
+}

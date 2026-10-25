@@ -1,0 +1,46 @@
+<div class="page">
+  <a routerLink="/" class="retour"><app-icon name="arrow-left" [size]="16" /> Retour à l'accueil</a>
+  <div class="mise-en-page">
+    <section class="presentation">
+      <div class="icone"><app-icon name="sparkles" /></div>
+      <p class="surtitre-ia">Assistant Déco IA</p>
+      <h1>Une idée claire pour votre espace.</h1>
+      <p class="intro">Un premier échange pour cadrer vos envies, identifier les bonnes matières et explorer les créations des boutiques partenaires.</p>
+      <div class="conseils">
+        <p class="fort">Pour une réponse plus précise</p>
+        <p>Indiquez la pièce, ses dimensions approximatives, l'ambiance recherchée et votre budget indicatif.</p>
+        <label>Style recherché
+          <select class="champ" [formControl]="style">@for (s of styles; track s) { <option [value]="s">{{ s }}</option> }</select>
+        </label>
+        <label>Budget indicatif
+          <select class="champ" [formControl]="budget">@for (b of budgets; track b) { <option [value]="b">{{ b }}</option> }</select>
+        </label>
+      </div>
+    </section>
+
+    <div class="discussion" data-testid="assistant-chat">
+      <div #zone class="messages" aria-live="polite">
+        @for (m of messages(); track $index) {
+          @if (m.role !== 'system') {
+            <div class="message" [class.utilisateur]="m.role === 'user'">
+              @if (m.role === 'assistant') { <span class="avatar ia"><app-icon name="sparkles" [size]="16" /></span> }
+              <div class="bulle">{{ m.content }}</div>
+              @if (m.role === 'user') { <span class="avatar"><app-icon name="user-round" [size]="16" /></span> }
+            </div>
+          }
+        }
+        @if (loading()) {
+          <div class="message" role="status" aria-label="L'assistant écrit…">
+            <span class="avatar ia"><app-icon name="sparkles" [size]="16" /></span>
+            <div class="bulle"><span class="points" aria-hidden="true"><span></span><span></span><span></span></span></div>
+          </div>
+        }
+      </div>
+      <form class="saisie" (submit)="$event.preventDefault(); send()">
+        <label class="masque-lecteur" for="assistant-message">Votre message</label>
+        <textarea id="assistant-message" class="zone-texte" rows="1" [formControl]="input" maxlength="4000" placeholder="Ex. Je cherche une ambiance chaleureuse pour mon entrée…" (keydown)="onKeydown($event)" data-testid="assistant-input"></textarea>
+        <button type="submit" class="envoyer" aria-label="Envoyer le message" [disabled]="loading() || !input.value.trim()" data-testid="assistant-send"><app-icon name="send" [size]="16" /></button>
+      </form>
+    </div>
+  </div>
+</div>

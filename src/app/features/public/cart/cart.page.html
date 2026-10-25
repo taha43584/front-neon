@@ -1,0 +1,87 @@
+<div class="page">
+  <nav class="ariane" aria-label="Fil d'Ariane"><a routerLink="/">Accueil</a><span>/</span><span class="courant">Panier</span></nav>
+  <h1>Votre panier</h1>
+
+  @if (!cart.isEmpty()) {
+    <div class="mise-en-page">
+      <div class="lignes">
+        @if (quote()?.hasProblems) {
+          <p class="alerte" role="alert"><app-icon name="triangle-alert" [size]="16" /> Certains articles ne sont plus disponibles dans la quantité demandée. Modifiez ou retirez-les pour continuer.</p>
+        }
+        @if (quoteState().status === 'error') {
+          <p class="alerte" role="alert">Les prix n'ont pas pu être vérifiés. Vérifiez votre connexion.</p>
+        }
+
+        @for (group of groups(); track group.shopName) {
+          <section class="boutique">
+            <p class="nom-boutique">{{ group.shopName }}</p>
+            @for (entry of group.lines; track entry.item.lineId) {
+              @let item = entry.item;
+              @let q = line(entry.index);
+              <div class="ligne" data-testid="cart-line">
+                <a class="vignette" [routerLink]="link(item)" [attr.aria-label]="item.name">
+                  @if (item.neon) {
+                    <span class="vignette-neon" aria-hidden="true">{{ item.neon.text }}</span>
+                  } @else {
+                    <img [src]="q?.imageUrl || item.image" [alt]="item.name" />
+                  }
+                </a>
+                <div class="infos">
+                  <a class="nom" [routerLink]="link(item)">{{ item.name }}</a>
+                  @if (item.customSummary) { <p class="detail fort" data-testid="cart-measures">{{ item.customSummary }}</p> }
+                  @if (item.selectedColor) { <p class="detail">Couleur : {{ item.selectedColor }}</p> }
+                  @if (item.personalization) { <p class="detail accent">{{ item.personalization }}</p> }
+                  <p class="prix">
+                    @if (!q) {
+                      <span class="detail">Vérification du prix…</span>
+                    } @else if (q.available) {
+                      <strong [class.promo]="q.unitPriceTnd < q.regularPriceTnd">{{ q.unitPriceTnd | prixDt }}</strong>
+                      @if (q.unitPriceTnd < q.regularPriceTnd) { <span class="barre">{{ q.regularPriceTnd | prixDt }}</span> }
+                    }
+                  </p>
+                  @if (q?.problem) { <p class="probleme">{{ q?.problem }}</p> }
+                  <div class="actions">
+                    <div class="quantite">
+                      <button type="button" (click)="cart.updateQuantity(item.lineId, item.quantity - 1)" [attr.aria-label]="'Diminuer la quantité de ' + item.name">−</button>
+                      <span aria-label="Quantité" data-testid="cart-quantity">{{ item.quantity }}</span>
+                      <button type="button" (click)="cart.updateQuantity(item.lineId, item.quantity + 1)" [disabled]="!!q && item.quantity >= q.maxQuantity" [attr.aria-label]="'Augmenter la quantité de ' + item.name">+</button>
+                    </div>
+                    <div class="droite">
+                      @if (q?.available) { <span class="sous-total">{{ q!.unitPriceTnd * item.quantity | prixDt }}</span> }
+                      <button type="button" class="retirer" (click)="cart.remove(item.lineId)">Retirer</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </section>
+        }
+      </div>
+
+      <aside class="resume" aria-live="polite">
+        <p class="surtitre">Résumé</p>
+        <dl>
+          <div><dt>Articles</dt><dd>{{ cart.count() }}</dd></div>
+          <div><dt>Sous-total</dt><dd>{{ quote() ? (quote()!.subtotalTnd | prixDt) : '…' }}</dd></div>
+          <div><dt>Livraison</dt><dd class="petit">Selon la boutique</dd></div>
+        </dl>
+        <p class="total"><span>Total</span><strong data-testid="cart-total">{{ quote() ? (quote()!.totalTnd | prixDt) : '…' }}</strong></p>
+        @if (canCheckout()) {
+          <a routerLink="/checkout" class="bouton plein" data-testid="go-checkout">Passer la commande →</a>
+        } @else {
+          <button type="button" class="bouton plein" disabled>Passer la commande</button>
+        }
+        <p class="petit">Paiement à la livraison. Les prix sont recalculés par le serveur à la validation de la commande.</p>
+      </aside>
+    </div>
+  } @else {
+    <div class="vide-panier">
+      <span class="icone"><app-icon name="shopping-bag" [size]="24" /></span>
+      <h2>Votre panier est vide</h2>
+      <p>Ajoutez une création pour commencer votre projet déco.</p>
+      <a routerLink="/produits" class="bouton">Découvrir le catalogue →</a>
+    </div>
+  }
+
+  <a routerLink="/produits" class="lien">← Continuer mes achats</a>
+</div>

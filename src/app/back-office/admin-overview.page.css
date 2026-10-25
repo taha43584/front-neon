@@ -1,0 +1,15 @@
+.graphique { margin-top: 24px; }
+figure { margin: 0; padding: 16px 8px 12px; }
+svg { display: block; width: 100%; height: auto; }
+.grille { stroke: var(--ardoise-ligne-1, #e2e8f0); stroke-dasharray: 3 3; }
+.axe { fill: var(--bleu-3, #64748b); font-size: 11px; }
+.aire { fill: rgba(245, 158, 11, 0.2); fill: color-mix(in srgb, var(--cuivre-4, #f59e0b) 20%, transparent); }
+.ligne-ventes { fill: none; stroke: var(--cuivre-11, #b95a00); stroke-width: 2; }
+.ligne-commandes { fill: none; stroke: var(--bleu-11, #0f172a); stroke-width: 1.5; }
+figcaption { display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--bleu-3, #64748b); font-size: 12px; }
+.pastille-ambre, .pastille-sombre { display: inline-block; width: 10px; height: 10px; margin-left: 10px; border-radius: 2px; background: var(--cuivre-11, #b95a00); }
+.pastille-sombre { background: var(--bleu-11, #0f172a); }
+.trois-colonnes { display: grid; gap: 24px; margin-top: 24px; }
+.trois-colonnes .panneau + .panneau { margin-top: 0; }
+.ligne-liste .droite p { margin: 0; }
+@media (min-width: 1280px) { .trois-colonnes { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

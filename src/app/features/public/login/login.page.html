@@ -1,0 +1,92 @@
+<section class="page-connexion">
+  <div class="carte">
+    @switch (mode()) {
+    @case ('forgot') {
+    <p class="surtitre">Connexion</p>
+    <h1>Mot de passe oublié</h1>
+    <p class="intro">Indiquez votre email pour réinitialiser votre accès.</p>
+    @if (forgotSent()) {
+      <div class="succes" role="status" data-testid="forgot-sent">
+        <p class="fort">Demande envoyée !</p>
+        <p>Si cet email existe, un token de réinitialisation valable 1 heure a été transmis.</p>
+      </div>
+      <button type="button" class="bouton" (click)="setMode('reset')">J'ai mon token de réinitialisation</button>
+      <button type="button" class="lien" (click)="setMode('login')">Retour à la connexion</button>
+    } @else {
+      <form [formGroup]="forgotForm" (ngSubmit)="sendForgot()" novalidate>
+        <p class="explication">Saisissez l'adresse email associée à votre compte. Nous générerons un token de réinitialisation sécurisé.</p>
+        <label for="forgot-email">Votre email</label>
+        <input id="forgot-email" type="email" formControlName="email" autocomplete="email" placeholder="exemple@domaine.tn" data-testid="forgot-email" />
+        @if (errorMessage()) { <p class="erreur-serveur" role="alert">{{ errorMessage() }}</p> }
+        <button class="bouton" type="submit" [disabled]="sending()">{{ sending() ? 'Envoi en cours…' : 'Envoyer le lien de réinitialisation' }}</button>
+        <div class="liens-bas">
+          <button type="button" class="lien" (click)="setMode('login')">← Retour à la connexion</button>
+          <button type="button" class="lien discret" (click)="setMode('reset')">J'ai déjà un token</button>
+        </div>
+      </form>
+    }
+    }
+    @case ('reset') {
+    <p class="surtitre">Connexion</p>
+    <h1>Nouveau mot de passe</h1>
+    <p class="intro">Saisissez votre token reçu et votre nouveau mot de passe.</p>
+    @if (resetDone()) {
+      <div class="succes" role="status" data-testid="reset-done"><p class="fort">Mot de passe réinitialisé !</p><p>Vous pouvez maintenant vous connecter.</p></div>
+      <button type="button" class="bouton" (click)="setMode('login')">Se connecter</button>
+    } @else {
+      <form [formGroup]="resetForm" (ngSubmit)="sendReset()" novalidate>
+        <label for="reset-token">Token de réinitialisation</label>
+        <input id="reset-token" class="token" formControlName="token" placeholder="Collez le token reçu" autocomplete="one-time-code" aria-describedby="reset-token-aide" data-testid="reset-token" />
+        <p id="reset-token-aide" class="aide-token">{{ tokenLength }} caractères attendus (lettres, chiffres, « - » et « _ »), sans apostrophes.</p>
+        <label for="reset-password">Nouveau mot de passe</label>
+        <input id="reset-password" type="password" formControlName="newPassword" autocomplete="new-password" data-testid="reset-password" />
+        <label for="reset-confirm">Confirmer le mot de passe</label>
+        <input id="reset-confirm" type="password" formControlName="confirm" autocomplete="new-password" data-testid="reset-confirm" />
+        @if (errorMessage()) { <p class="erreur-serveur" role="alert">{{ errorMessage() }}</p> }
+        <button class="bouton" type="submit" [disabled]="sending()">{{ sending() ? 'Réinitialisation…' : 'Réinitialiser le mot de passe' }}</button>
+        <button type="button" class="lien" (click)="setMode('login')">← Retour à la connexion</button>
+      </form>
+    }
+    }
+    @default {
+    <p class="surtitre">Connexion</p>
+    <h1>Bon retour parmi nous</h1>
+    <p class="intro">Connectez-vous avec votre compte Elegance Deco (client, vendeur ou admin).</p>
+    @if (sessionExpired) {
+      <p class="info" role="status" data-testid="session-expired">Votre session a expiré. Reconnectez-vous pour continuer.</p>
+    } @else if (returnUrl !== '/') {
+      <p class="info" role="status">Connectez-vous pour accéder à cette page ; vous y serez ramené ensuite.</p>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <label for="email">Adresse e-mail</label>
+      <input id="email" type="email" formControlName="email" autocomplete="email"
+             [attr.aria-invalid]="form.controls.email.invalid && form.controls.email.touched" />
+      @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+        <p class="erreur-champ">L'adresse e-mail est obligatoire.</p>
+      } @else if (form.controls.email.touched && form.controls.email.hasError('email')) {
+        <p class="erreur-champ">Adresse e-mail invalide.</p>
+      }
+
+      <label for="password">Mot de passe</label>
+      <input id="password" type="password" formControlName="password" autocomplete="current-password"
+             [attr.aria-invalid]="form.controls.password.invalid && form.controls.password.touched" />
+      @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+        <p class="erreur-champ">Le mot de passe est obligatoire.</p>
+      }
+
+      @if (errorMessage()) {
+        <p class="erreur-serveur" role="alert">{{ errorMessage() }}</p>
+      }
+
+      <button type="button" class="lien droite" (click)="setMode('forgot')" data-testid="forgot-link">Mot de passe oublié ?</button>
+
+      <button class="bouton" type="submit" [disabled]="sending()">
+        {{ sending() ? 'Connexion…' : 'Se connecter' }}
+      </button>
+    </form>
+    <p class="inscription">Pas encore de compte ? <a routerLink="/inscription" data-testid="register-link">Créer un compte</a></p>
+    }
+    }
+  </div>
+</section>

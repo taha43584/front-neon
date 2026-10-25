@@ -1,0 +1,16 @@
+.grille-produit { display: grid; gap: 24px; }
+.colonne-infos { display: flex; min-width: 0; flex-direction: column; gap: 24px; }
+.colonne-infos .panneau + .panneau { margin-top: 0; }
+.medias { padding: 16px; }
+.grande { display: block; width: 100%; aspect-ratio: 1; border: 1px solid var(--ardoise-ligne-1, #e2e8f0); border-radius: 8px; background: var(--surface-6, #f8fafc); object-fit: contain; }
+.miniatures { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.miniatures button { min-height: 44px; overflow: hidden; padding: 0; border: 2px solid transparent; border-radius: 6px; background: none; cursor: pointer; }
+.miniatures button.active { border-color: var(--cuivre-4, #f59e0b); }
+.miniatures img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
+video, iframe { display: block; width: 100%; margin-top: 16px; border: none; border-radius: 8px; background: #000; }
+iframe { aspect-ratio: 16 / 9; }
+.lien-texte { display: inline-flex; min-height: 44px; align-items: center; color: var(--cuivre-18, #b45309); }
+.description { margin: 0; padding: 20px; color: var(--bleu-9, #334155); font-size: 14px; line-height: 1.7; white-space: pre-line; }
+.description.bordure { border-top: 1px solid var(--surface-20, #f1f5f9); color: var(--bleu-8, #475569); }
+@media (min-width: 640px) { .champs-fiche.deux { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1024px) { .grille-produit { grid-template-columns: 2fr 3fr; } }

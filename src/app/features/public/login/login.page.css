@@ -1,0 +1,78 @@
+.page-connexion {
+  display: flex;
+  justify-content: center;
+  padding: 48px 16px;
+}
+
+.carte {
+  width: 100%;
+  max-width: 440px;
+}
+
+h1 { font-size: 32px; }
+
+.intro {
+  margin: 8px 0 24px;
+  color: var(--texte-secondaire);
+  font-size: 14px;
+}
+
+form { display: flex; flex-direction: column; }
+
+label {
+  margin-top: 14px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+input {
+  height: 48px;
+  margin-top: 6px;
+  padding: 0 14px;
+  border: 1px solid var(--bordure);
+  border-radius: 14px;
+  background: var(--fond);
+  font: 16px var(--police-texte);
+}
+input:focus { outline: none; border-color: var(--accent); }
+input[aria-invalid="true"] { border-color: var(--erreur); }
+
+.erreur-champ {
+  margin: 6px 0 0;
+  color: var(--erreur);
+  font-size: 13px;
+}
+
+.erreur-serveur {
+  margin: 18px 0 0;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--surface-16, #fdf3f3);
+  color: var(--erreur);
+  font-size: 14px;
+}
+
+.bouton { margin-top: 24px; }
+
+.info {
+  margin: -8px 0 16px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--beige-clair);
+  color: var(--surtitre);
+  font-size: 14px;
+}
+
+.lien { display: inline-flex; min-height: 44px; align-items: center; padding: 0; border: none; background: none; color: var(--cuivre-13, #9a6341); font: 600 13px var(--police-texte); cursor: pointer; }
+.lien:hover { text-decoration: underline; }
+.lien.discret { color: var(--gris-15, #77695f); font-weight: 400; }
+.lien.droite { align-self: flex-end; margin-top: 4px; }
+.liens-bas { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; }
+.explication { margin: 0; color: var(--gris-15, #77695f); font-size: 14px; line-height: 1.6; }
+.succes { margin: 0 0 8px; padding: 16px; border: 1px solid var(--vert-2, #c3e6cb); border-radius: 16px; background: var(--surface-14, #f0f9f0); color: var(--vert-6, #4a7c50); font-size: 14px; }
+.succes p { margin: 0; }
+.succes .fort { color: var(--vert-7, #2e7d32); font-weight: 600; }
+.token { font-family: ui-monospace, monospace; font-size: 14px; }
+.aide-token { margin: -4px 0 8px; color: var(--texte-secondaire); font-size: 12px; }
+.inscription { margin: 24px 0 0; color: var(--texte-secondaire); font-size: 14px; text-align: center; }
+.inscription a { display: inline-flex; min-height: 44px; align-items: center; color: var(--cuivre-13, #9a6341); font-weight: 600; }

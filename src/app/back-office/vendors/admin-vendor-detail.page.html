@@ -1,0 +1,97 @@
+<a class="retour" routerLink="/admin/vendeurs">‹ Vendeurs</a>
+@switch (status()) {
+  @case ('loading') { <p class="info" role="status">Chargement…</p> }
+  @case ('error') { <div class="erreur-etat" role="alert"><p>{{ error() }}</p></div> }
+  @default {
+    @let d = data()!;
+    @let shop = d.shop;
+    <div class="entete-page">
+      <div>
+        <h1>{{ shop.name }}</h1>
+        <p>Demande déposée le {{ shop.createdAt | date: 'dd/MM/y HH:mm' }}</p>
+      </div>
+      <div class="actions-page">
+        <app-status-badge [status]="shop.status" />
+        @if (shop.status !== 'active') { <button type="button" class="b vert" (click)="ask('active')" data-testid="vendor-approve">{{ shop.status === 'suspended' ? 'Réactiver' : 'Approuver' }}</button> }
+        @if (shop.status === 'pending') { <button type="button" class="b rouge" (click)="ask('rejected')" data-testid="vendor-reject">Refuser</button> }
+        @if (shop.status === 'active') { <button type="button" class="b rouge" (click)="ask('suspended')" data-testid="vendor-suspend">Suspendre</button> }
+      </div>
+    </div>
+    @if (message()) { <p class="message" role="status" data-testid="admin-message">{{ message() }}</p> }
+    @if (shop.rejectionReason && (shop.status === 'rejected' || shop.status === 'suspended')) {
+      <div class="bandeau-rouge" data-testid="vendor-reason"><strong>Motif {{ shop.status === 'rejected' ? 'du refus' : 'de la suspension' }} :</strong> {{ shop.rejectionReason }}</div>
+    }
+
+    <div class="kpis quatre">
+      <div class="kpi"><p>Produits</p><strong>{{ d.stats.productCount }}</strong><small>{{ d.stats.publishedCount }} publié(s)</small></div>
+      <div class="kpi"><p>Commandes</p><strong>{{ d.stats.orderCount }}</strong></div>
+      <div class="kpi"><p>Ventes</p><strong>{{ d.stats.revenueTnd | prixDt }}</strong><small>{{ d.stats.unitsSold }} article(s)</small></div>
+      <div class="kpi"><p>Commissions</p><strong>{{ d.stats.commissionTnd | prixDt }}</strong></div>
+    </div>
+
+    <div class="grille-fiche trois espace-haut">
+      <section class="panneau">
+        <div class="titre-panneau"><h2>Informations du vendeur</h2></div>
+        <dl class="champs-fiche">
+          <div><dt>Responsable</dt><dd>{{ ownerName() || '—' }}</dd></div>
+          <div><dt>E-mail</dt><dd>{{ owner()?.email || '—' }}</dd></div>
+          <div><dt>Téléphone</dt><dd>{{ shop.phone || owner()?.phone || '—' }}</dd></div>
+          <div><dt>WhatsApp</dt><dd>@if (shop.whatsapp) { {{ shop.whatsapp }}{{ shop.showWhatsapp ? ' · public' : ' · privé' }} } @else { — }</dd></div>
+          <div><dt>Ville / adresse</dt><dd>{{ place() || '—' }}</dd></div>
+          <div><dt>Conditions de vente</dt><dd>@if (shop.termsAccepted) { Acceptées · version {{ shop.termsVersion ?? '?' }}@if (shop.termsAcceptedAt) { · le {{ shop.termsAcceptedAt | date: 'dd/MM/y HH:mm' }} } } @else { Non acceptées }</dd></div>
+          <div><dt>Compte</dt><dd>@let o = owner();
+          {{ o ? (o.suspended ? 'Compte utilisateur suspendu' : 'Compte utilisateur actif') : 'Compte introuvable' }}</dd></div>
+          @if (shop.about) { <div><dt>Présentation</dt><dd>{{ shop.about }}</dd></div> }
+          @if (shop.deliveryInfo) { <div><dt>Livraison</dt><dd>{{ shop.deliveryInfo }}</dd></div> }
+        </dl>
+      </section>
+
+      <section class="panneau">
+        <div class="titre-panneau"><h2>Produits ({{ d.products.length }})</h2><a class="lien" routerLink="/admin/produits" [queryParams]="{ boutique: shop.id }">Gérer</a></div>
+        @if (d.products.length) {
+          <div class="tableau">
+            <table>
+              <thead><tr><th>Produit</th><th>Catégorie</th><th class="droite">Prix</th><th class="droite">Stock</th><th>Statut</th></tr></thead>
+              <tbody>
+                @for (p of d.products.slice(0, 15); track p.id) {
+                  <tr>
+                    <td><a class="nom produit-cellule" [routerLink]="['/admin/produits', p.id]">@if (p.imageUrl) { <img class="vignette" [src]="p.imageUrl" [alt]="p.name" loading="lazy" /> } @else { <span class="vignette vide"></span> }{{ p.name }}</a></td>
+                    <td>{{ p.category }}</td>
+                    <td class="droite">{{ (p.promoPriceTnd ?? p.priceTnd) | prixDt }}</td>
+                    <td class="droite">{{ p.stock ?? '—' }}</td>
+                    <td><app-status-badge [status]="p.status" /></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else { <p class="vide">Aucun produit</p> }
+      </section>
+    </div>
+
+    <section class="panneau espace-haut">
+      <div class="titre-panneau"><h2>Commandes contenant ses produits ({{ d.orders.length }})</h2><a class="lien" routerLink="/admin/commandes" [queryParams]="{ boutique: shop.id }">Tout voir</a></div>
+      @if (d.orders.length) {
+        <div class="tableau">
+          <table>
+            <thead><tr><th>Référence</th><th>Date</th><th>Ville</th><th class="droite">Articles</th><th class="droite">Montant vendeur</th><th>Statut commande</th></tr></thead>
+            <tbody>
+              @for (o of d.orders.slice(0, 15); track o.orderId) {
+                <tr>
+                  <td><a class="nom" [routerLink]="['/admin/commandes', o.orderId]">{{ o.reference }}</a></td>
+                  <td>{{ o.createdAt | date: 'dd/MM/y' }}</td>
+                  <td>{{ o.shippingCity }}</td>
+                  <td class="droite">{{ o.quantity }}</td>
+                  <td class="droite">{{ o.amount | prixDt }}</td>
+                  <td><app-status-badge [status]="o.orderStatus" /></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else { <p class="vide">Aucune commande</p> }
+    </section>
+  }
+}
+
+<app-confirm-dialog [request]="request()" [busy]="busy()" [serverError]="actionError()" (confirmed)="apply($event)" (cancelled)="action.set(null)" />

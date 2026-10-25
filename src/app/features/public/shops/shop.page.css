@@ -1,0 +1,55 @@
+.page { padding-top: 32px; padding-bottom: 32px; }
+.chargement { padding: 80px 24px; font-family: var(--police-titre); font-size: 30px; text-align: center; }
+.introuvable { padding: 80px 24px; text-align: center; }
+.introuvable .grand { margin: 0; font-family: var(--police-titre); font-size: 36px; }
+.introuvable p { color: var(--gris-11, #7c6d64); font-size: 14px; }
+.lien-retour { display: inline-flex; min-height: 44px; align-items: center; gap: 8px; margin-top: 24px; color: var(--cuivre-26, #745641); font-size: 14px; font-weight: 600; text-decoration: none; }
+
+.vitrine { overflow: hidden; margin-top: 24px; border: 1px solid var(--ligne-19, #eee3da); border-radius: 1.75rem; background: var(--carte); }
+.couverture { position: relative; aspect-ratio: 16 / 5; min-height: 128px; background: var(--ligne-13, #efe6dd); }
+.couverture img { width: 100%; height: 100%; object-fit: cover; }
+.corps { position: relative; padding: 0 20px 24px; }
+.haut { display: flex; flex-direction: column; gap: 16px; }
+.identite { display: flex; align-items: flex-start; gap: 16px; }
+.logo { margin-top: -48px; border: 4px solid var(--carte); border-radius: 999px; box-shadow: 0 1px 3px rgba(0, 0, 0, .1); }
+.titres { min-width: 0; padding-top: 12px; }
+h1 { font-size: 30px; letter-spacing: -0.04em; }
+.accroche { margin: 0; color: var(--gris-11, #7c6d64); font-size: 14px; }
+.reseaux { margin-top: 8px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.actions .bouton { min-height: 44px; padding: 0 18px; }
+.bouton-contour { border: 1px solid var(--ligne-32, #decfc4); background: var(--carte); color: var(--texte); }
+.bouton-contour.fonce { border-color: var(--texte); }
+.rouge { color: var(--promo); }
+.details { display: grid; gap: 24px; margin-top: 24px; }
+.presentation { margin: 0; color: var(--gris-21, #6d5e54); line-height: 1.75rem; white-space: pre-line; }
+.chiffres-boutique { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 16px 0 0; color: var(--gris-11, #7c6d64); font-size: 14px; }
+.etiquettes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.etiquettes span { padding: 4px 12px; border-radius: 999px; background: var(--surface-32, #f5eee8); color: var(--gris-21, #6d5e54); font-size: 12px; }
+.coordonnees { display: grid; gap: 10px; align-content: start; margin: 0; padding: 20px; border-radius: 16px; background: var(--surface-10, #fbf8f4); color: var(--encre-1, #5d5047); font-size: 14px; list-style: none; }
+.coordonnees li { display: flex; gap: 10px; }
+.coordonnees app-icon { margin-top: 2px; }
+.coordonnees a { color: inherit; }
+.accent { color: var(--cuivre-16, #8e5d3e); }
+.vert { color: var(--vert-4, #059669); }
+.multi { white-space: pre-line; }
+
+.titre-creations { display: flex; flex-direction: column; justify-content: space-between; gap: 16px; margin-top: 48px; }
+.titre-creations h2 { font-size: 30px; letter-spacing: -0.04em; }
+.onglets { display: flex; flex-wrap: wrap; gap: 8px; }
+.grille-boutique { margin-top: 24px; }
+.prepare { margin-top: 24px; padding: 24px; border-radius: 16px; background: var(--surface-32, #f5eee8); color: var(--gris-11, #7c6d64); font-size: 14px; }
+
+@media (min-width: 640px) {
+  .corps { padding: 0 32px 24px; }
+  .haut { flex-direction: row; align-items: flex-start; justify-content: space-between; }
+  .logo { margin-top: -64px; }
+  .titres { padding-top: 16px; }
+  h1 { font-size: 36px; }
+  .actions { padding-top: 16px; }
+  .titre-creations { flex-direction: row; align-items: flex-end; }
+}
+@media (min-width: 1024px) {
+  .page { padding-top: 40px; padding-bottom: 40px; }
+  .details { grid-template-columns: 1.4fr 1fr; }
+}

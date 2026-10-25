@@ -1,0 +1,113 @@
+<div class="titre-page">
+  <div>
+    <h1>Mes produits</h1>
+    <p>{{ products().length }} produit(s) dans votre boutique</p>
+  </div>
+  <a routerLink="/espace-vendeur/ajouter" class="bouton" data-testid="add-product">+ Ajouter un produit</a>
+</div>
+
+@if (message(); as m) {
+  <p class="message" [class.erreur]="!m.ok" role="status" data-testid="products-message">{{ m.text }}</p>
+}
+
+<div class="filtres">
+  <input class="champ recherche" type="search" [value]="search()" (input)="setFilter(() => search.set($any($event.target).value))" placeholder="Rechercher un produit ou une catégorie" aria-label="Rechercher un produit" />
+  <div class="statuts" role="group" aria-label="Filtrer par statut">
+    @for (key of statusFilters; track key) {
+      @if (key !== 'rejected' || counts()['rejected'] > 0) {
+        <button type="button" class="pastille" [class.active]="status() === key" (click)="setFilter(() => status.set(key))">
+          {{ key === 'all' ? 'Tous' : productStatus[key].label }} ({{ counts()[key] }})
+        </button>
+      }
+    }
+  </div>
+  <select class="champ" [value]="category()" (change)="setFilter(() => category.set($any($event.target).value))" aria-label="Filtrer par catégorie">
+    <option value="all">Toutes les catégories</option>
+    @for (c of categories(); track c.id) { <option [value]="c.id">{{ c.name }} ({{ countIn(c.id) }})</option> }
+    <option value="none">Sans catégorie ({{ countIn(null) }})</option>
+  </select>
+</div>
+
+@if (products().length === 0) {
+  <div class="vide-grand">
+    <p class="titre">Aucun produit pour le moment</p>
+    <p>Ajoutez votre première création avec ses photos pour la proposer aux clients.</p>
+    <a routerLink="/espace-vendeur/ajouter" class="bouton">+ Ajouter un produit</a>
+  </div>
+} @else if (filtered().length === 0) {
+  <div class="vide-grand"><p>Aucun produit ne correspond à ces filtres.</p></div>
+} @else {
+  <!-- Ordinateur : tableau -->
+  <div class="tableau-cadre">
+    <table>
+      <thead><tr><th>Produit</th><th>Catégorie</th><th>Prix</th><th>Stock</th><th>Statut</th><th>Créé le</th><th class="droite-txt">Actions</th></tr></thead>
+      <tbody>
+        @for (p of visible(); track p.id) {
+          <tr [attr.data-testid]="'product-row-' + p.slug">
+            <td><span class="produit">@if (p.imageUrl) { <img [src]="p.imageUrl" [alt]="p.name" class="vignette" /> } <strong>{{ p.name }}</strong></span></td>
+            <td [class.attenue]="!p.shopCategoryId">{{ categoryOf(p) }}</td>
+            <td>
+              <strong>{{ price(p).paid | prixDt }}</strong>
+              @if (price(p).paid !== price(p).regular) { <span class="barre">{{ price(p).regular | prixDt }}</span> }
+            </td>
+            <td class="petit">{{ stockLabel(p) }}</td>
+            <td>
+              <span [class]="'badge ' + (productStatus[p.status]?.tone ?? 'gris')">{{ productStatus[p.status]?.label ?? p.status }}</span>
+              @if (p.moderationNote && (p.status === 'rejected' || p.status === 'draft')) { <small class="note-admin">Administration : {{ p.moderationNote }}</small> }
+            </td>
+            <td class="petit">{{ p.createdAt | date: 'dd/MM/yyyy' }}</td>
+            <td>
+              <div class="actions">
+                @if (p.status === 'published') { <a [routerLink]="['/produit', p.slug]" class="action" [attr.aria-label]="'Voir la fiche publique de ' + p.name">Voir</a> }
+                <a [routerLink]="['/espace-vendeur/modifier', p.id]" class="action">Modifier</a>
+                <button type="button" class="action" [class.publier]="p.status !== 'published' && p.status !== 'pending'" [disabled]="busyId() === p.id" (click)="toggle(p)">
+                  {{ p.status === 'published' ? 'Dépublier' : p.status === 'pending' ? 'Retirer' : 'Publier' }}
+                </button>
+                <button type="button" class="action supprimer" (click)="askDelete(p)" [attr.aria-label]="'Supprimer ' + p.name">Supprimer</button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Téléphone : cartes -->
+  <div class="cartes">
+    @for (p of visible(); track p.id) {
+      <div class="carte-produit-vendeur" [attr.data-testid]="'product-card-' + p.slug">
+        <div class="haut">
+          @if (p.imageUrl) { <img [src]="p.imageUrl" [alt]="p.name" class="vignette grande" /> }
+          <div class="texte">
+            <p class="nom">{{ p.name }}</p>
+            <p class="petit">{{ categoryOf(p) }}</p>
+            <p><strong>{{ price(p).paid | prixDt }}</strong>@if (price(p).paid !== price(p).regular) { <span class="barre">{{ price(p).regular | prixDt }}</span> }</p>
+            <p class="ligne-badges"><span [class]="'badge ' + (productStatus[p.status]?.tone ?? 'gris')">{{ productStatus[p.status]?.label ?? p.status }}</span><span class="petit">{{ stockLabel(p) }}</span></p>
+          </div>
+        </div>
+        <div class="actions">
+          <a [routerLink]="['/espace-vendeur/modifier', p.id]" class="action">Modifier</a>
+          <button type="button" class="action" [class.publier]="p.status !== 'published' && p.status !== 'pending'" [disabled]="busyId() === p.id" (click)="toggle(p)">{{ p.status === 'published' ? 'Dépublier' : p.status === 'pending' ? 'Retirer' : 'Publier' }}</button>
+          <button type="button" class="action supprimer" (click)="askDelete(p)" [attr.aria-label]="'Supprimer ' + p.name">Supprimer</button>
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (pageCount() > 1) {
+    <div class="pagination">
+      <button type="button" class="pastille" [disabled]="currentPage() === 0" (click)="page.set(currentPage() - 1)" aria-label="Page précédente">‹</button>
+      <span>Page {{ currentPage() + 1 }} / {{ pageCount() }}</span>
+      <button type="button" class="pastille" [disabled]="currentPage() >= pageCount() - 1" (click)="page.set(currentPage() + 1)" aria-label="Page suivante">›</button>
+    </div>
+  }
+}
+
+<dialog #deleteBox class="dialogue" aria-labelledby="titre-suppression" (close)="toDelete.set(null)">
+  <h2 id="titre-suppression">Supprimer « {{ toDelete()?.name }} » ?</h2>
+  <p>Le produit, ses photos et sa vidéo seront supprimés définitivement. Les commandes déjà passées conservent leur historique. Cette action est irréversible.</p>
+  <div class="boutons">
+    <button type="button" class="bouton bouton-clair" (click)="closeDelete()">Annuler</button>
+    <button type="button" class="bouton danger" [disabled]="busyId() !== null" (click)="confirmDelete()" data-testid="confirm-delete">{{ busyId() !== null ? 'Suppression…' : 'Supprimer définitivement' }}</button>
+  </div>
+</dialog>

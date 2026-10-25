@@ -1,0 +1,87 @@
+/* Version COMPACTE (maquette A-10c) : titre 24 px, résumé ≤ 280 px, cartes serrées, texte 14 px */
+:host { display: block; }
+/* Lien « (N avis) » : la section s'arrête sous l'en-tête collant au lieu de passer dessous */
+.avis-clients { scroll-margin-top: 96px; }
+@media (min-width: 1024px) { .avis-clients { scroll-margin-top: 150px; } }
+h2 { font-size: 24px; letter-spacing: -0.02em; }
+.bloc-squelette { height: 220px; margin-top: 16px; border-radius: 20px; }
+.lien-bouton { min-height: 44px; padding: 0 4px; border: none; background: none; color: var(--surtitre); font: 600 14px var(--police-texte); text-decoration: underline; cursor: pointer; }
+.vide-avis { margin: 16px 0 0; color: var(--texte-secondaire); font-size: 14px; }
+
+/* Onglets */
+.onglets { display: flex; gap: 4px; margin-top: 14px; border-bottom: 1px solid var(--bordure); overflow-x: auto; }
+.onglets button { min-height: 44px; flex-shrink: 0; padding: 0 14px; border: none; border-bottom: 2px solid transparent; background: none; color: var(--texte-secondaire); font: 600 14px var(--police-texte); cursor: pointer; }
+.onglets button[aria-selected="true"] { border-bottom-color: var(--texte); color: var(--texte); }
+.panneau { padding-top: 18px; }
+
+.grille { display: grid; gap: 20px; }
+
+/* Résumé */
+.resume { padding: 16px; border: 1px solid var(--bordure); border-radius: 18px; background: var(--carte); }
+.note { display: flex; align-items: baseline; gap: 4px; margin: 0; }
+.note strong { font-family: var(--police-titre); font-size: 36px; font-weight: 500; line-height: 1; }
+.note span { color: var(--texte-secondaire); font-size: 14px; }
+.verifies { margin: 6px 0 0; color: var(--texte-secondaire); font-size: 13px; }
+.barres { display: grid; gap: 4px; margin: 12px 0 0; padding: 0; list-style: none; }
+.barres li { display: grid; grid-template-columns: 26px 1fr 22px; align-items: center; gap: 8px; font-size: 12px; }
+.etiquette { color: var(--texte-secondaire); }
+.barre { height: 6px; overflow: hidden; border-radius: 999px; background: var(--beige-clair); }
+.barre span { display: block; height: 100%; border-radius: 999px; background: var(--cuivre-10, #c0873f); }
+.nombre { color: var(--texte-secondaire); text-align: right; }
+.criteres { display: grid; gap: 6px; margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--bordure); }
+.criteres div { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; }
+.criteres dt { color: var(--texte-secondaire); }
+.criteres dd { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 600; }
+
+/* Photos des clients : défilement horizontal sur téléphone */
+.photos-clients h3 { font-family: var(--police-texte); font-size: 15px; font-weight: 600; letter-spacing: 0; }
+.photos-clients h3 span { color: var(--texte-secondaire); font-weight: 400; }
+.miniatures { display: flex; gap: 8px; margin: 10px -16px 0; padding: 0 16px 4px; overflow-x: auto; list-style: none; scroll-padding: 0 16px; scroll-snap-type: x mandatory; }
+.miniatures li { flex-shrink: 0; scroll-snap-align: start; }
+.miniature, .photo-avis { display: block; overflow: hidden; padding: 0; border: 1px solid var(--bordure); border-radius: 10px; background: var(--beige-clair); cursor: zoom-in; }
+.miniature { width: 76px; height: 76px; }
+.photo-avis { width: 60px; height: 60px; }
+.miniature img, .photo-avis img { width: 100%; height: 100%; object-fit: cover; }
+
+.outils { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 16px; }
+.pastilles { display: flex; gap: 6px; overflow-x: auto; }
+.pastille.petite { padding: 0 14px; font-size: 13px; }
+.tri .champ { height: 44px; font-size: 14px; }
+
+/* Cartes serrées */
+.cartes { display: grid; gap: 10px; margin: 12px 0 0; padding: 0; list-style: none; }
+.carte { padding: 14px 16px; border: 1px solid var(--bordure); border-radius: 16px; background: var(--carte); }
+.entete { display: flex; align-items: center; gap: 10px; }
+.initiale { display: flex; width: 34px; height: 34px; flex-shrink: 0; align-items: center; justify-content: center; border-radius: 999px; background: var(--beige); color: var(--surtitre); font-weight: 700; }
+.qui { min-width: 0; flex: 1; }
+.auteur { overflow: hidden; margin: 0; font-size: 14px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.lieu { color: var(--texte-secondaire); font-weight: 400; }
+.date { margin: 0; color: var(--texte-secondaire); font-size: 12px; }
+.verifie { display: inline-flex; flex-shrink: 0; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; background: var(--surface-30, #e7f4ea); color: var(--vert-10, #24723a); font-size: 12px; font-weight: 600; }
+.ligne-note { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.produit { color: var(--surtitre); font-size: 13px; font-weight: 600; }
+.achete { margin: 4px 0 0; color: var(--texte-secondaire); font-size: 13px; }
+.texte { margin: 6px 0 0; font-size: 14px; line-height: 1.6; white-space: pre-line; }
+.photos-avis { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
+.notes-criteres { margin: 8px 0 0; color: var(--texte-secondaire); font-size: 12px; }
+.reponse { margin-top: 10px; padding: 8px 12px; border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; background: var(--beige-clair); font-size: 13px; }
+.reponse p { margin: 0; }
+.titre-reponse { margin-bottom: 2px !important; color: var(--surtitre); font-weight: 600; }
+.actions { display: flex; gap: 4px; margin-top: 6px; }
+.action { display: inline-flex; min-height: 44px; align-items: center; padding: 0 10px; border: none; border-radius: 999px; background: none; color: var(--texte-secondaire); font: 600 13px var(--police-texte); cursor: pointer; }
+.action:hover { background: var(--beige-clair); }
+.action.actif { color: var(--surtitre); }
+.action.signale { cursor: default; }
+.signalement { display: grid; gap: 6px; margin-top: 6px; font-size: 13px; }
+.signalement .champ { height: auto; padding: 8px 12px; font-size: 14px; }
+.boutons-signalement { display: flex; align-items: center; gap: 8px; }
+.petit-bouton { min-height: 44px; padding: 0 18px; }
+.erreur { margin: 0; color: var(--erreur); }
+.plus { margin-top: 12px; }
+.bouton-contour { border: 1px solid rgba(42, 36, 32, .3); border: 1px solid color-mix(in srgb, var(--ombre, #2a2420) 30%, transparent); background: transparent; color: var(--texte); }
+
+@media (min-width: 900px) {
+  .grille { grid-template-columns: minmax(0, 280px) minmax(0, 1fr); align-items: start; gap: 28px; }
+  .resume { position: sticky; top: 150px; }
+  .miniatures { flex-wrap: wrap; margin: 10px 0 0; padding: 0; overflow: visible; }
+}

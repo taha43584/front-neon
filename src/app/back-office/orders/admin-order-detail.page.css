@@ -1,0 +1,13 @@
+.grille-commande { display: grid; gap: 24px; }
+.colonne { display: flex; min-width: 0; flex-direction: column; gap: 24px; }
+.colonne .panneau + .panneau { margin-top: 0; }
+.options { max-width: 170px; color: var(--bleu-3, #64748b); font-size: 12px; white-space: normal; }
+.mesures { display: block; margin-bottom: 2px; color: var(--bleu-10, #1e293b); font-weight: 600; }
+.ligne-neon td { padding-top: 0; }
+.ligne-neon:hover { background: none !important; }
+.gris { color: var(--bleu-3, #64748b); }
+.total { font-size: 18px; font-weight: 600; }
+.lien-texte { display: inline-flex; min-height: 44px; align-items: center; color: var(--cuivre-18, #b45309); }
+.commission { padding: 12px 20px; font-size: 14px; }
+.commission p { margin: 0; }
+@media (min-width: 1024px) { .grille-commande { grid-template-columns: 2fr 1fr; } }

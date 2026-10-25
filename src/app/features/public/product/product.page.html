@@ -1,0 +1,435 @@
+@switch (status()) {
+  @case ('loading') {
+    @if (viewport.phone()) {
+      <!-- Téléphone (A-10d) : mêmes places que la fiche (photo 4/5 pleine largeur, puis la feuille) → aucun décalage -->
+      <div class="tel-fiche" role="status" aria-label="Chargement de la création">
+        <div class="tel-photo squelette"></div>
+        <div class="tel-feuille"><div class="squelette ligne large"></div><div class="squelette ligne"></div><div class="squelette ligne courte"></div></div>
+      </div>
+    } @else {
+    <div class="conteneur page" role="status" aria-label="Chargement de la création">
+      <div class="fiche">
+        <div class="squelette galerie-vide"></div>
+        <div><div class="squelette ligne large"></div><div class="squelette ligne"></div><div class="squelette ligne courte"></div></div>
+      </div>
+    </div>
+    }
+  }
+  @case ('notfound') {
+    <div class="message-page">
+      <h1>Création introuvable</h1>
+      <p>Ce produit n'est pas (ou plus) disponible dans le catalogue.</p>
+      <a routerLink="/produits" class="lien">← Retour au catalogue</a>
+    </div>
+  }
+  @case ('error') {
+    <div class="message-page" role="alert">
+      <h1>Création momentanément indisponible</h1>
+      <p>Vérifiez votre connexion puis réessayez.</p>
+      <button type="button" class="bouton" (click)="load(slug())">Réessayer</button>
+    </div>
+  }
+  @default {
+    @if (data(); as d) {
+      @let p = d.product;
+      <!-- Formulaire du sur mesure : le MÊME pour l'ordinateur et le téléphone (A-10d) -->
+      <ng-template #formulaireMesures>
+      <!-- Sur mesure : estimation en direct + confirmation par le serveur -->
+      @if (customMode(); as mode) {
+        <form class="mesures" [formGroup]="measureForm" (ngSubmit)="confirmPrice()" data-testid="custom-measure">
+          <p class="label avec-icone"><app-icon name="ruler" [size]="16" /> Vos mesures</p>
+          <div class="champs-mesures">
+            <label>
+              <span>{{ mode === 'per_m2' ? 'Largeur (cm)' : 'Longueur (cm)' }} <span class="requis">*</span></span>
+              <input class="champ" type="text" inputmode="numeric" formControlName="width" [placeholder]="p.minWidthCm ?? 'cm'" [attr.aria-invalid]="!!fieldError('width')" data-testid="measure-width" />
+              <small [class.erreur]="fieldError('width')">{{ fieldError('width') ?? limits(p.minWidthCm, p.maxWidthCm) }}</small>
+            </label>
+            @if (mode === 'per_m2') {
+              <label>
+                <span>Hauteur (cm) <span class="requis">*</span></span>
+                <input class="champ" type="text" inputmode="numeric" formControlName="height" [placeholder]="p.minHeightCm ?? 'cm'" [attr.aria-invalid]="!!fieldError('height')" data-testid="measure-height" />
+                <small [class.erreur]="fieldError('height')">{{ fieldError('height') ?? limits(p.minHeightCm, p.maxHeightCm) }}</small>
+              </label>
+            }
+          </div>
+
+          @if (p.options.length) {
+            <fieldset>
+              <legend class="label">Options <span class="petit">(facultatif)</span></legend>
+              @for (o of p.options; track o.id) {
+                <label class="option" [class.cochee]="selectedOptionIds().includes(o.id)">
+                  <span><input type="checkbox" [checked]="selectedOptionIds().includes(o.id)" (change)="toggleOption(o.id)" /> {{ o.name }}</span>
+                  <span class="petit">+ {{ o.amountTnd | prixDt }}{{ o.surchargeType === 'per_m2' ? ' / ' + unit() : '' }}</span>
+                </label>
+              }
+            </fieldset>
+          }
+
+          <div class="recap" aria-live="polite" data-testid="custom-summary">
+            @if (estimate(); as e) {
+              @if (e.ok) {
+                <dl>
+                  <div><dt>{{ mode === 'per_m2' ? 'Surface' : 'Longueur' }}</dt><dd>{{ area(e.areaM2) }}@if (e.minAreaApplied) { (facturé {{ area(e.billedAreaM2) }}) }</dd></div>
+                  <div><dt>Prix au {{ unit() }}</dt><dd>{{ e.unitPriceTnd | prixDt }}</dd></div>
+                  @for (o of e.options; track o.name) {
+                    <div><dt>{{ o.name }}</dt><dd>+ {{ o.amountTnd | prixDt }}{{ o.surchargeType === 'per_m2' ? ' / ' + unit() : '' }}</dd></div>
+                  }
+                  @if (e.minPriceApplied) { <p class="petit">Prix minimum de ce produit appliqué.</p> }
+                  @if (e.promoPercent) { <div class="promo"><dt>Remise</dt><dd>− {{ e.promoPercent }} %</dd></div> }
+                  <div class="total">
+                    <dt>Estimation</dt>
+                    <dd>
+                      @if (e.promoPercent) { <span class="barre">{{ e.regularPriceTnd | prixDt }}</span> }
+                      <strong class="chiffres" data-testid="custom-total" [attr.data-final]="e.priceTnd | prixDt" aria-hidden="true">{{ (animatedTotal() ?? e.priceTnd) | prixDt }}</strong>
+                      <span class="masque-lecteur">{{ e.priceTnd | prixDt }}</span>
+                    </dd>
+                  </div>
+                </dl>
+                <button type="submit" class="bouton plein" [disabled]="serverCheck().status === 'checking'" data-testid="confirm-price">
+                  {{ serverCheck().status === 'checking' ? 'Vérification…' : 'Confirmer le prix avec le serveur' }}
+                </button>
+                @switch (serverCheck().status) {
+                  @case ('ok') {
+                    <p class="confirme" data-testid="server-price">✓ Prix confirmé par le serveur : <strong>{{ $any(serverCheck()).priceTnd | prixDt }}</strong></p>
+                  }
+                  @case ('refused') { <p class="erreur">{{ $any(serverCheck()).message }}</p> }
+                  @case ('error') { <p class="erreur">Le prix n'a pas pu être vérifié. Réessayez.</p> }
+                }
+                <p class="petit">Estimation calculée dans votre navigateur ; le prix final est toujours celui du serveur (panier et commande).</p>
+              } @else {
+                <p class="petit">{{ touched() && e.field !== 'config' ? e.error : 'Indiquez vos mesures pour voir le prix.' }}</p>
+              }
+            }
+          </div>
+        </form>
+      }
+      </ng-template>
+
+      <!-- ===================== Téléphone (< 768 px) : fiche « façon application » (A-10d) ===================== -->
+      @if (viewport.phone()) {
+        <div class="tel-fiche">
+          <!-- 9. Photo pleine largeur 4/5 ; une photo par écran (défilement aimanté), points de galerie -->
+          <div class="tel-photo">
+            @for (k of [p.slug]; track k) {
+              <div #defil class="tel-defil" role="region" aria-roledescription="galerie" [attr.aria-label]="'Photos de ' + p.name" tabindex="0" (scroll)="onGalleryScroll(defil)" data-testid="tel-galerie">
+                @for (img of images(); track img.url; let i = $index) {
+                  <div class="tel-diapo"><img [ngSrc]="img.url" [alt]="p.name + ' — photo ' + (i + 1) + ' sur ' + images().length" fill [priority]="i === 0" sizes="100vw" /></div>
+                } @empty {
+                  <span class="sans-photo">Aucune photo</span>
+                }
+              </div>
+            }
+            <div class="tel-boutons-photo">
+              <button type="button" class="tel-rond pression" aria-label="Retour" (click)="back()" data-testid="tel-retour"><app-icon name="arrow-left" [size]="20" /></button>
+              <span class="tel-espace"></span>
+              <button type="button" class="tel-rond pression" aria-label="Partager cette création" (click)="share()" data-testid="tel-partager"><app-icon name="share-2" [size]="19" /></button>
+              <button type="button" class="tel-rond pression favori-tel" [class.actif]="favorite()" [attr.aria-pressed]="favorite()" [attr.aria-label]="favorite() ? 'Retirer des favoris' : 'Ajouter aux favoris'" (click)="toggleFavorite()" data-testid="product-favorite">
+                @for (k of [heartPop()]; track k) { <span class="coeur" [class.pop]="k > 0"><app-icon name="heart" [size]="20" [filled]="favorite()" /></span> }
+              </button>
+            </div>
+            @if (hasPromo()) { <span class="badge-promo tel-badge">−{{ ((1 - p.effectivePriceTnd / p.regularPriceTnd) * 100).toFixed(0) }} %</span> }
+            @if (images().length > 1) {
+              <!-- A-10e : points cliquables (la galerie reste utilisable sans geste) ; le point actif s'allonge -->
+              <div class="tel-points" role="group" aria-label="Choisir une photo" data-testid="tel-points">
+                @for (img of images(); track img.url; let i = $index) {
+                  <button type="button" [class.actif]="i === activeImage()" [attr.aria-label]="'Photo ' + (i + 1) + ' sur ' + images().length" [attr.aria-current]="i === activeImage() ? 'true' : null" (click)="goToImage(i)"><span></span></button>
+                }
+              </div>
+            }
+          </div>
+          @if (shareMessage(); as m) { <p class="tel-toast" role="status">{{ m }}</p> }
+
+          <!-- 10. Feuille de contenu qui monte sur la photo -->
+          <div class="tel-feuille">
+            <a class="tel-atelier" [routerLink]="['/boutique', p.shopSlug]">
+              <app-shop-logo [name]="p.shopName" [logoUrl]="p.shopLogoUrl" [size]="36" />
+              <span class="tel-atelier-texte">
+                <span class="tel-atelier-nom">{{ p.shopName }}</span>
+                <!-- Vrai pour toute fiche affichée : le serveur ne publie que les produits des boutiques « active »,
+                     c'est-à-dire examinées et validées par l'équipe (getPublicProductData) -->
+                <span class="tel-verifie"><app-icon name="shield-check" [size]="14" /> Atelier vérifié</span>
+              </span>
+            </a>
+            @if (d.reviewCount && d.rating !== null) {
+              <button type="button" class="note-produit tel-note" (click)="scrollToReviews()" data-testid="rating-link">
+                <app-stars [value]="d.rating" [size]="14" />
+                <strong>{{ d.rating.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }}</strong>
+                <span class="souligne">({{ d.reviewCount }} avis)</span>
+              </button>
+            }
+            <h1 class="tel-nom">{{ p.name }}</h1>
+            @if (customMode()) {
+              <p class="tel-prix"><span class="petit">à partir de </span>{{ p.unitPriceTnd | prixDt }}<span class="petit"> / {{ unit() }}</span>
+                @if (p.promoPercent !== null) { <span class="pastille-promo">− {{ p.promoPercent }} %</span> }</p>
+            } @else {
+              <p class="tel-prix" [class.promo]="hasPromo()">{{ p.effectivePriceTnd | prixDt }}@if (hasPromo()) { <span class="barre">{{ p.regularPriceTnd | prixDt }}</span> }</p>
+            }
+            <p [class]="'dispo ' + p.availability">
+              {{ availabilityLabels[p.availability] }}@if (p.availability === 'in_stock' && p.stock !== null) { · {{ p.stock }} disponible{{ p.stock > 1 ? 's' : '' }} }
+            </p>
+
+            <!-- Puces de variantes (pastille de couleur seulement pour une couleur connue) -->
+            @for (key of variantKeys(); track key) {
+              <div class="tel-variantes" role="group" [attr.aria-label]="variantLabels[key]">
+                <p class="label">{{ variantLabels[key] }} <span class="requis">*</span>@if (choices()[key]; as c) { <span class="petit"> : {{ c }}</span> }</p>
+                <div class="tel-puces">
+                  @for (v of p.variants[key]; track v) {
+                    <button type="button" class="tel-puce pression" [class.actif]="choices()[key] === v" [attr.aria-pressed]="choices()[key] === v" (click)="choose(key, v)">
+                      @if (swatch(key, v); as color) { <span class="tel-pastille" [style.background]="color" aria-hidden="true"></span> }
+                      {{ v }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+
+            <ng-container *ngTemplateOutlet="formulaireMesures" />
+
+            <label class="personnalisation">
+              <span class="label">Votre personnalisation <span class="petit">(optionnel)</span></span>
+              <input class="champ" [formControl]="personalization" maxlength="300" placeholder="Texte, dimensions ou précisions" />
+            </label>
+            <div class="tel-quantite-ligne">
+              <span class="label" id="tel-quantite">Quantité</span>
+              <div class="quantite" role="group" aria-labelledby="tel-quantite">
+                <button type="button" (click)="changeQuantity(-1)" aria-label="Diminuer la quantité">−</button>
+                <span data-testid="product-quantity">{{ quantity() }}</span>
+                <button type="button" (click)="changeQuantity(1)" [disabled]="quantity() >= maxQuantity()" aria-label="Augmenter la quantité">+</button>
+              </div>
+            </div>
+
+            <!-- Livraison et paiement à la livraison -->
+            <ul class="tel-livraison" aria-label="Livraison et paiement" data-testid="trust-box">
+              <li><app-icon name="truck" [size]="20" /><span><strong>Livraison</strong> {{ p.delivery || p.preparationTime || 'Partout en Tunisie, selon les délais de la boutique' }}</span></li>
+              <li><app-icon name="shield-check" [size]="20" /><span><strong>Paiement à la livraison</strong> Vous réglez à la réception.</span></li>
+            </ul>
+
+            <!-- A-10e : question à l'atelier sur WhatsApp — seulement si l'atelier a rendu son numéro public -->
+            @if (whatsapp(); as wa) {
+              <aside class="tel-whatsapp" aria-label="Question sur ce produit" data-testid="tel-whatsapp">
+                <p class="tel-whatsapp-titre">Une question sur ce produit ?</p>
+                <a class="tel-whatsapp-lien pression" [href]="wa" target="_blank" rel="noopener noreferrer">
+                  <app-icon name="message-circle" [size]="20" /> Écrire à l'atelier sur WhatsApp
+                  <span class="masque-lecteur">(ouvre WhatsApp)</span>
+                </a>
+              </aside>
+            }
+
+            <!-- Accordéons (grid-template-rows 0fr → 1fr) ; contenu fermé = inerte (ni focus ni lecteur d'écran) -->
+            <div class="tel-accordeons">
+              <div class="tel-accordeon" [class.ouvert]="detailsOpen()">
+                <h2><button type="button" [attr.aria-expanded]="detailsOpen()" aria-controls="tel-details" (click)="detailsOpen.set(!detailsOpen())">Détails <app-icon name="chevron-down" [size]="18" /></button></h2>
+                <div id="tel-details" class="tel-panneau" [attr.inert]="detailsOpen() ? null : ''">
+                  <div>
+                    @if (p.description) { <p class="tel-description">{{ p.description }}</p> }
+                    <dl class="tel-caracteristiques">
+                      @if (p.material) { <div><dt>Matériau</dt><dd>{{ p.material }}</dd></div> }
+                      @if (p.dimensions) { <div><dt>Dimensions</dt><dd>{{ p.dimensions }}</dd></div> }
+                      @if (p.category) { <div><dt>Catégorie</dt><dd>{{ p.category }}</dd></div> }
+                    </dl>
+                  </div>
+                </div>
+              </div>
+              <div class="tel-accordeon" [class.ouvert]="deliveryOpen()">
+                <h2><button type="button" [attr.aria-expanded]="deliveryOpen()" aria-controls="tel-livraison-retours" (click)="deliveryOpen.set(!deliveryOpen())">Livraison et retours <app-icon name="chevron-down" [size]="18" /></button></h2>
+                <div id="tel-livraison-retours" class="tel-panneau" [attr.inert]="deliveryOpen() ? null : ''">
+                  <div>
+                    <p>{{ p.delivery || 'Livraison partout en Tunisie, selon les délais de la boutique.' }}</p>
+                    @if (p.preparationTime) { <p>Délai de préparation : {{ p.preparationTime }}</p> }
+                    <p>Paiement à la livraison : prix et stock sont vérifiés à la commande.</p>
+                    <p>Retours : voir les <a routerLink="/conditions-de-vente">conditions de vente</a>.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            @if (cartMessage(); as m) {
+              <p class="message-panier" [class.erreur]="!m.ok" role="status" data-testid="cart-message">
+                {{ m.ok ? '✓ ' : '' }}{{ m.text }}@if (m.ok) { · <a routerLink="/panier">Voir le panier</a> }
+              </p>
+            }
+
+            <!-- Avis A-10c (version compacte), chargés à l'approche -->
+            <div class="tel-bloc" id="zone-avis">
+              @defer (on viewport) {
+                <app-product-reviews [productSlug]="p.slug" />
+              } @placeholder {
+                <div class="avis-attente"><h2>Avis des clients</h2></div>
+              }
+            </div>
+          </div>
+
+          <!-- 11. Barre d'achat fixe : total au prix du SERVEUR + « Ajouter au panier » (54 px) -->
+          <div class="tel-barre-achat" data-testid="tel-barre-achat">
+            <p class="tel-total" aria-live="polite">
+              <span class="petit">Total</span>
+              @if (phoneTotal(); as total) { <strong>{{ total | prixDt }}</strong> }
+              @else { <strong class="tel-total-attente">{{ customMode() ? 'Confirmez vos mesures' : '—' }}</strong> }
+            </p>
+            <button type="button" class="tel-ajouter pression" (click)="addToCart()" [disabled]="p.availability === 'out_of_stock' || adding() || (!!customMode() && !estimate()?.ok)" data-testid="add-to-cart">
+              {{ p.availability === 'out_of_stock' ? 'Indisponible' : adding() ? 'Vérification…' : 'Ajouter au panier' }}
+            </button>
+          </div>
+        </div>
+      } @else {
+      <!-- ===================== Ordinateur et tablette : mise en page A-10, inchangée ===================== -->
+      <div class="conteneur page">
+        <nav class="ariane" aria-label="Fil d'Ariane">
+          <a routerLink="/">Accueil</a><span>/</span>
+          @if (p.category) { <a routerLink="/produits" [queryParams]="{ category: p.category }">{{ p.category }}</a><span>/</span> }
+          <span class="courant">{{ p.name }}</span>
+        </nav>
+
+        <div class="fiche">
+          <!-- Galerie -->
+          <div>
+            <div class="galerie">
+              @if (currentImage(); as img) {
+                <!-- Image principale de la page (LCP) : demandée en priorité ; un élément par photo (track) -->
+                @for (photo of [img]; track photo.url) {
+                  <img [ngSrc]="photo.url" [alt]="p.name + ' — photo ' + (activeImage() + 1)" fill [priority]="activeImage() === 0" data-testid="gallery-main" />
+                }
+              } @else {
+                <span class="sans-photo">Aucune photo</span>
+              }
+              @if (hasPromo()) { <span class="badge-promo">Promo −{{ ((1 - p.effectivePriceTnd / p.regularPriceTnd) * 100).toFixed(0) }} %</span> }
+              <!-- Cœur favori sur la grande photo, comme React (« pop » rejoué à chaque clic) -->
+              <button type="button" class="favori" [class.actif]="favorite()" [attr.aria-pressed]="favorite()" [attr.aria-label]="favorite() ? 'Retirer des favoris' : 'Ajouter aux favoris'" (click)="toggleFavorite()" data-testid="product-favorite">
+                @for (k of [heartPop()]; track k) { <span class="coeur" [class.pop]="k > 0"><app-icon name="heart" [size]="20" [filled]="favorite()" /></span> }
+              </button>
+              @if (images().length > 1) {
+                <button type="button" class="fleche gauche" (click)="showImage(-1)" aria-label="Photo précédente">‹</button>
+                <button type="button" class="fleche droite" (click)="showImage(1)" aria-label="Photo suivante">›</button>
+              }
+            </div>
+            @if (images().length > 1) {
+              <div class="vignettes">
+                @for (img of images(); track img.url; let i = $index) {
+                  <button type="button" [class.active]="i === activeImage()" (click)="activeImage.set(i)" [attr.aria-label]="'Afficher la photo ' + (i + 1)"><img [ngSrc]="img.url" alt="" fill /></button>
+                }
+              </div>
+            }
+            @if (p.video) {
+              <video class="video" [src]="p.video.url" controls preload="metadata" playsinline></video>
+            }
+          </div>
+
+          <!-- Informations -->
+          <div>
+            @if (p.category) { <p class="surtitre">{{ p.category }}</p> }
+            <h1>{{ p.name }}</h1>
+            <p class="meta">
+              <app-shop-logo [name]="p.shopName" [logoUrl]="p.shopLogoUrl" [size]="28" />
+              <span>par <a [routerLink]="['/boutique', p.shopSlug]" class="lien-boutique">{{ p.shopName }}</a></span>
+            </p>
+            <!-- Note près du prix : « ★ 4,5 (12 avis) » mène à la section des avis -->
+            @if (d.reviewCount && d.rating !== null) {
+              <button type="button" class="note-produit" (click)="scrollToReviews()" data-testid="rating-link">
+                <app-stars [value]="d.rating" [size]="15" />
+                <strong>{{ d.rating.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }}</strong>
+                <span class="souligne">({{ d.reviewCount }} avis)</span>
+              </button>
+            } @else {
+              <p class="note-produit sans-avis">Nouvelle création · aucun avis pour le moment</p>
+            }
+
+            @if (customMode()) {
+              <p class="prix">
+                <span class="petit">à partir de </span>{{ p.unitPriceTnd | prixDt }}<span class="petit"> / {{ unit() }}</span>
+                @if (p.promoPercent !== null) { <span class="pastille-promo">− {{ p.promoPercent }} %</span> }
+              </p>
+            } @else {
+              <p class="prix" [class.promo]="hasPromo()">
+                {{ p.effectivePriceTnd | prixDt }}
+                @if (hasPromo()) { <span class="barre">{{ p.regularPriceTnd | prixDt }}</span> }
+              </p>
+            }
+            <p class="dispo" [class]="'dispo ' + p.availability">
+              {{ availabilityLabels[p.availability] }}@if (p.availability === 'in_stock' && p.stock !== null) { · {{ p.stock }} disponible{{ p.stock > 1 ? 's' : '' }} }
+            </p>
+
+            <p class="description">{{ p.description }}</p>
+
+            @for (key of variantKeys(); track key) {
+              <div class="variantes" role="group" [attr.aria-label]="variantLabels[key]">
+                <p class="label">{{ variantLabels[key] }} <span class="requis">*</span></p>
+                <div class="choix">
+                  @for (v of p.variants[key]; track v) {
+                    <button type="button" [class.actif]="choices()[key] === v" [attr.aria-pressed]="choices()[key] === v" (click)="choose(key, v)">{{ v }}</button>
+                  }
+                </div>
+              </div>
+            }
+
+            <ng-container *ngTemplateOutlet="formulaireMesures" />
+
+            <label class="personnalisation">
+              <span class="label">Votre personnalisation <span class="petit">(optionnel)</span></span>
+              <input class="champ" [formControl]="personalization" maxlength="300" placeholder="Texte, dimensions ou précisions" />
+            </label>
+
+            <div class="achat">
+              <div class="quantite" role="group" aria-label="Quantité">
+                <button type="button" (click)="changeQuantity(-1)" aria-label="Diminuer la quantité">−</button>
+                <span data-testid="product-quantity">{{ quantity() }}</span>
+                <button type="button" (click)="changeQuantity(1)" [disabled]="quantity() >= maxQuantity()" aria-label="Augmenter la quantité">+</button>
+              </div>
+              <button type="button" class="bouton ajouter" (click)="addToCart()" [disabled]="p.availability === 'out_of_stock' || adding() || (!!customMode() && !estimate()?.ok)" data-testid="add-to-cart">
+                {{ p.availability === 'out_of_stock' ? 'Indisponible' : adding() ? 'Vérification du prix…' : 'Ajouter au panier' }}
+              </button>
+            </div>
+            <button type="button" class="bouton bouton-contour" (click)="buyNow()" [disabled]="p.availability === 'out_of_stock' || adding() || (!!customMode() && !estimate()?.ok)" data-testid="buy-now">Commander maintenant →</button>
+            @if (cartMessage(); as m) {
+              <p class="message-panier" [class.erreur]="!m.ok" role="status" data-testid="cart-message">
+                {{ m.ok ? '✓ ' : '' }}{{ m.text }}@if (m.ok) { · <a routerLink="/panier">Voir le panier</a> }
+              </p>
+            }
+
+            <!-- Encadré de confiance -->
+            <ul class="confiance" aria-label="Vos garanties" data-testid="trust-box">
+              <li><app-icon name="shield-check" [size]="18" /><span><strong>Paiement à la livraison</strong> Vous réglez à la réception ; prix et stock vérifiés à la commande.</span></li>
+              <li><app-icon name="circle-check" [size]="18" /><span><strong>Avis d'acheteurs vérifiés</strong> Seuls les clients dont la commande a été livrée peuvent donner un avis.</span></li>
+              <li><app-icon name="truck" [size]="18" /><span><strong>Livraison estimée</strong> {{ p.delivery || p.preparationTime || 'Partout en Tunisie, selon les délais de la boutique' }}</span></li>
+            </ul>
+            @if (p.delivery && p.preparationTime) { <p class="petit preparation">Délai de préparation : {{ p.preparationTime }}</p> }
+          </div>
+        </div>
+
+        <!-- Autres créations de la boutique -->
+        <section class="bloc">
+          <div class="boutique-entete">
+            <app-shop-logo [name]="p.shopName" [logoUrl]="p.shopLogoUrl" [size]="56" />
+            <div><p class="surtitre">La boutique</p><h2>{{ p.shopName }}</h2>@if (p.shopTagline) { <p class="petit">{{ p.shopTagline }}</p> }</div>
+            <a [routerLink]="['/boutique', p.shopSlug]" class="decouvrir">Découvrir la boutique <app-icon name="arrow-right" [size]="16" /></a>
+          </div>
+          @if (d.otherProducts.length) {
+            <div class="autres">
+              @for (item of d.otherProducts; track item.id) {
+                <a [routerLink]="['/produit', item.slug]" class="autre">
+                  <div class="autre-photo"><img [ngSrc]="item.imageUrl" [alt]="item.name" fill /></div>
+                  <p class="autre-nom">{{ item.name }}</p>
+                  <p class="petit">{{ paidPrice(item) | prixDt }}</p>
+                </a>
+              }
+            </div>
+          } @else {
+            <p class="petit">C'est actuellement la seule création publiée par cette boutique.</p>
+          }
+        </section>
+
+        <!-- Avis des clients (A-10c) -->
+        <!-- @defer : le code des avis (et sa validation zod) n'est téléchargé qu'à l'approche de la section -->
+        <div class="bloc" id="zone-avis">
+          @defer (on viewport) {
+            <app-product-reviews [productSlug]="p.slug" />
+          } @placeholder {
+            <div class="avis-attente"><h2>Avis des clients</h2></div>
+          }
+        </div>
+
+        <a routerLink="/produits" class="lien">← Retour au catalogue</a>
+      </div>
+    }
+    }
+  }
+}

@@ -1,0 +1,4 @@
+# Jamais dans git : empreinte du mot de passe, journaux, lien du moment
+.mot-de-passe
+journaux/
+lien-demo.txt

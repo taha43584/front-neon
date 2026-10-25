@@ -1,0 +1,61 @@
+.photos { overflow: visible; border: 1px solid var(--ligne-20, #eadfd6); border-radius: 24px; background: var(--carte); }
+.couverture { position: relative; width: 100%; min-height: 128px; aspect-ratio: 16 / 5; overflow: visible; border-radius: 24px 24px 0 0; background: var(--ligne-13, #efe6dd); }
+.couverture > img { display: block; width: 100%; height: 100%; border-radius: 24px 24px 0 0; object-fit: cover; }
+.menu-image.coin { position: absolute; top: 12px; right: 12px; }
+.bouton-photo { display: inline-flex; min-height: 44px; align-items: center; gap: 6px; padding: 0 14px; border: none; border-radius: 999px; background: rgba(255, 255, 255, 0.92); background: color-mix(in srgb, var(--carte) 92%, transparent); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); color: var(--encre-9, #302a26); font: 600 13px var(--police-texte); cursor: pointer; }
+.bouton-photo:hover { background: var(--carte); }
+.ordi { display: none; }
+
+.menu-image { position: relative; }
+.liste-menu { position: absolute; z-index: 20; top: calc(100% + 6px); left: 0; display: flex; min-width: 224px; flex-direction: column; padding: 6px; border: 1px solid var(--ligne-20, #eadfd6); border-radius: 14px; background: var(--carte); box-shadow: 0 10px 30px rgba(42, 36, 32, 0.15); box-shadow: 0 10px 30px color-mix(in srgb, var(--ombre, #2a2420) 15%, transparent); }
+.liste-menu.droite { right: 0; left: auto; }
+.liste-menu button { min-height: 44px; padding: 0 12px; border: none; border-radius: 10px; background: none; color: var(--encre-9, #302a26); font: 14px var(--police-texte); text-align: left; cursor: pointer; }
+.liste-menu button:hover, .liste-menu button:focus-visible { background: var(--surface-25, #f7f1ec); }
+.liste-menu .danger { color: var(--rouge-11, #c0392b); }
+
+.identite { display: flex; flex-direction: column; gap: 12px; padding: 0 20px 20px; }
+.logo-bloc { width: fit-content; margin-top: -48px; }
+.logo { position: relative; display: block; width: 96px; height: 96px; overflow: hidden; padding: 0; border: 4px solid var(--carte); border-radius: 999px; background: var(--ligne-6, #f4e9e0); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12); cursor: pointer; }
+.logo img { width: 100%; height: 100%; object-fit: cover; }
+.initiales { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; color: var(--cuivre-22, #8a5d43); font: 600 30px var(--police-titre); }
+.survol { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 0 8px; background: rgba(36, 30, 26, 0.55); background: color-mix(in srgb, var(--ombre-2, #241e1a) 55%, transparent); color: var(--carte); font-size: 11px; font-weight: 600; line-height: 1.2; text-align: center; opacity: 0; transition: opacity 0.2s; }
+.logo:hover .survol, .logo:focus-visible .survol { opacity: 1; }
+.pastille-camera { position: absolute; right: 4px; bottom: 4px; display: flex; width: 32px; height: 32px; align-items: center; justify-content: center; border: 2px solid var(--carte); border-radius: 999px; background: var(--encre-9, #302a26); color: var(--carte); pointer-events: none; }
+.texte-identite { min-width: 0; padding-bottom: 4px; }
+.nom-boutique { margin: 0; overflow: hidden; font: 24px var(--police-titre); text-overflow: ellipsis; white-space: nowrap; }
+.petit { margin: 2px 0 0; color: var(--gris-11, #7c6d64); font-size: 12px; }
+.message { margin: 0 20px 20px; padding: 10px 14px; border-radius: 12px; background: var(--surface-29, #e8f4e8); color: var(--vert-7, #2e7d32); font-size: 14px; }
+.message.erreur { background: var(--ligne-3, #fde8e8); color: var(--rouge-11, #c0392b); }
+
+/* Fenêtre de recadrage : plein écran sur téléphone, centrée sur ordinateur */
+.fenetre-recadrage { width: 100%; max-width: none; margin: 0; padding: 0; border: none; background: var(--carte); color: var(--texte); }
+@media (max-width: 639px) { .fenetre-recadrage { height: 100dvh; max-height: 100dvh; } }
+.fenetre-recadrage[open] { display: flex; flex-direction: column; }
+.fenetre-recadrage::backdrop { background: rgba(36, 30, 26, 0.6); }
+.entete-fenetre { padding: 16px 20px; border-bottom: 1px solid var(--ligne-12, #f0e6de); }
+.entete-fenetre h2 { font-size: 20px; }
+.zone-recadrage { min-height: 300px; flex: 1; }
+.pied-fenetre { display: flex; flex-direction: column; gap: 16px; padding: 16px 20px calc(16px + env(safe-area-inset-bottom)); }
+.zoom { display: flex; align-items: center; gap: 12px; }
+.zoom input { height: 8px; flex: 1; accent-color: var(--cuivre-16, #8e5d3e); cursor: pointer; }
+.rond { width: 44px; height: 44px; flex-shrink: 0; border: 1px solid var(--ligne-20, #eadfd6); border-radius: 999px; background: var(--carte); color: var(--encre-9, #302a26); font-size: 20px; cursor: pointer; }
+.rond:disabled { opacity: 0.4; cursor: not-allowed; }
+.barre { height: 8px; overflow: hidden; border-radius: 999px; background: var(--ligne-12, #f0e6de); }
+.barre span { display: block; height: 100%; border-radius: 999px; background: var(--cuivre-16, #8e5d3e); transition: width 0.2s; }
+.alerte { margin: 0; padding: 8px 12px; border-radius: 12px; background: var(--ligne-3, #fde8e8); color: var(--rouge-11, #c0392b); font-size: 14px; }
+.actions { display: flex; justify-content: flex-end; gap: 8px; }
+.actions .bouton { min-height: 44px; }
+.actions .bouton:last-child { min-width: 128px; }
+
+@media (min-width: 640px) {
+  .ordi { display: inline; }
+  .tel { display: none; }
+  .identite { flex-direction: row; align-items: flex-end; gap: 20px; padding: 0 28px 20px; }
+  .logo-bloc { margin-top: -64px; }
+  .logo { width: 128px; height: 128px; }
+  .initiales { font-size: 36px; }
+  .pastille-camera { right: 8px; bottom: 8px; }
+  .fenetre-recadrage { width: min(768px, calc(100% - 32px)); max-height: 92vh; margin: auto; border: 1px solid var(--ligne-20, #eadfd6); border-radius: 18px; }
+  .zone-recadrage { height: 420px; flex: none; }
+}
+.fenetre-recadrage:focus-visible { outline: none; }

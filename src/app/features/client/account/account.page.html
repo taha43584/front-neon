@@ -1,0 +1,221 @@
+<div class="conteneur page">
+  @if (auth.user(); as user) {
+    @if (!auth.isCustomer()) {
+      <div class="acces">
+        <span class="icone"><app-icon name="triangle-alert" [size]="24" /></span>
+        <h1>{{ user.role === 'admin' ? 'Compte administrateur' : 'Compte vendeur' }}</h1>
+        <p>L'espace client est réservé aux comptes Client. {{ user.role === 'admin' ? 'Gérez la marketplace depuis la console d\'administration.' : 'Retrouvez votre boutique, vos produits et vos commandes dans votre espace vendeur.' }}</p>
+        <a routerLink="/" class="bouton">Retour à l'accueil</a>
+      </div>
+    } @else {
+      <p class="surtitre">Espace client</p>
+      <h1>Vos projets, au même endroit.</h1>
+      <p class="intro">Retrouvez vos commandes, vos sélections et les boutiques que vous suivez.</p>
+      <nav class="raccourcis" aria-label="Raccourcis de l'espace client">
+        <a routerLink="/messages" class="raccourci" data-testid="account-messages-link"><app-icon name="message-circle" [size]="16" /> Ma messagerie</a>
+        <a routerLink="/assistant" class="raccourci"><app-icon name="sparkles" [size]="16" /> Assistant Déco IA</a>
+        <a routerLink="/produits" class="raccourci"><app-icon name="store" [size]="16" /> Boutique et catalogue</a>
+      </nav>
+
+      <!-- Profil -->
+      <section class="bloc" id="profil" data-testid="profile">
+        <div class="titre-bloc">
+          <h2 class="avec-icone"><app-icon name="user-round" [size]="18" /> Mes informations</h2>
+          <button type="button" class="bouton bouton-clair petit-bouton" (click)="editing() ? editing.set(false) : startEditing()">{{ editing() ? 'Annuler' : 'Modifier' }}</button>
+        </div>
+        @if (profileMessage()) { <p class="succes" role="status" data-testid="profile-message">✓ {{ profileMessage() }}</p> }
+        @if (editing()) {
+          <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" novalidate class="form-profil">
+            @for (field of profileFields; track field.name) {
+              <label [class.large]="field.wide">
+                <span>{{ field.label }}</span>
+                <input class="champ" [formControlName]="field.name" [attr.aria-invalid]="!!profileErrors()[field.name]" [attr.data-testid]="'profile-' + field.name" />
+                @if (profileErrors()[field.name]; as e) { <small class="erreur">{{ e }}</small> }
+              </label>
+            }
+            <div class="large"><button type="submit" class="bouton" [disabled]="saving()" data-testid="profile-save">{{ saving() ? 'Enregistrement…' : 'Enregistrer' }}</button></div>
+          </form>
+        } @else {
+          <dl class="infos-profil">
+            <div><dt>Nom complet</dt><dd>{{ user.name || '—' }}</dd></div>
+            <div><dt>E-mail</dt><dd class="coupe">{{ user.email }}</dd></div>
+            <div><dt>Téléphone</dt><dd>{{ user.phone || 'Non renseigné' }}</dd></div>
+            <div><dt>Ville</dt><dd data-testid="profile-city">{{ user.city || 'Non renseignée' }}</dd></div>
+            <div class="large"><dt>Adresse de livraison</dt><dd>{{ user.address || 'Non renseignée' }}</dd></div>
+          </dl>
+        }
+      </section>
+
+      <!-- A-10e : thème du site (Automatique / Clair / Sombre), gardé sur cet appareil -->
+      <section class="bloc" aria-label="Apparence du site">
+        <app-theme-choice />
+      </section>
+
+      @switch (status()) {
+        @case ('loading') { <div class="bloc chargement" role="status">Chargement de votre espace client…</div> }
+        @case ('error') {
+          <div class="bloc chargement" role="alert">Votre espace n'a pas pu être chargé. <button type="button" class="bouton petit-bouton" (click)="load()">Réessayer</button></div>
+        }
+        @default {
+          @if (dashboard(); as d) {
+            <div class="compteurs">
+              <div class="compteur"><p>Commandes</p><strong>{{ d.stats.orderCount }}</strong><small>{{ d.stats.orderCount ? 'Commandes enregistrées' : 'Aucune commande enregistrée' }}</small></div>
+              <div class="compteur"><p>Favoris</p><strong>{{ d.stats.favoriteCount }}</strong><small>{{ d.stats.favoriteCount ? 'Sélections sauvegardées' : 'Vos sélections apparaîtront ici' }}</small></div>
+              <div class="compteur"><p>Boutiques suivies</p><strong>{{ d.stats.followedShopCount }}</strong><small>{{ d.stats.followedShopCount ? 'Boutiques suivies' : 'Aucune boutique suivie' }}</small></div>
+            </div>
+
+            <!-- Commandes -->
+            <section class="bloc" data-testid="orders">
+              <div class="titre-bloc"><h2>Mes commandes</h2></div>
+              @if (d.orders.length) {
+                <div class="commandes">
+                  @for (order of d.orders; track order.id) {
+                    <div class="commande" data-testid="order-row">
+                      <button type="button" class="entete-commande" [attr.aria-expanded]="openOrderId() === order.id" (click)="toggleOrder(order)">
+                        <span>
+                          <span class="ref">Commande <span class="sans-coupure">{{ reference(order.id) }}</span></span>
+                          <span class="petit">{{ order.shippingCity }} · {{ order.createdAt | date: 'longDate' }}</span>
+                        </span>
+                        <span class="droite">
+                          <strong>{{ order.totalTnd | prixDt }}</strong>
+                          <span class="statut" [class]="'statut ' + order.status" data-testid="order-status">{{ statusLabel(order.status) }}</span>
+                        </span>
+                      </button>
+                      @if (openOrderId() === order.id) {
+                        <div class="detail" data-testid="order-detail">
+                          @if (detailOf(order.id); as detail) {
+                            <ul>
+                              @for (item of detail.items; track item.id) {
+                                <li>
+                                  <span>
+                                    {{ item.productName }} × {{ item.quantity }}
+                                    @if (item.customSummary) { <small class="fort">{{ item.customSummary }}</small> }
+                                    <small>Boutique : {{ item.shopName }}{{ item.selectedColor ? ' · ' + item.selectedColor : '' }}</small>
+                                  </span>
+                                  <span class="montant">{{ +item.unitPriceTnd * item.quantity | prixDt }}</span>
+                                  @if (reviewableById().get(item.id); as line) {
+                                    <button type="button" class="bouton petit-bouton donner-avis" (click)="openReview(line)" data-testid="give-review">Donner mon avis</button>
+                                  }
+                                </li>
+                              }
+                            </ul>
+                            <div class="livraison">
+                              <p class="fort">Livraison</p>
+                              <p>{{ detail.shippingName }} · {{ detail.shippingPhone }}</p>
+                              <p>{{ detail.shippingAddress }}, {{ detail.shippingCity }}</p>
+                              @if (detail.shippingNote) { <p class="note">« {{ detail.shippingNote }} »</p> }
+                            </div>
+                          } @else if (details()[order.id] === 'error') {
+                            <p class="erreur">Détail indisponible.</p>
+                          } @else {
+                            <p class="petit">Chargement du détail…</p>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="vide-bloc"><app-icon name="clipboard-list" [size]="28" /><p>Vos commandes et leur suivi apparaîtront ici.</p></div>
+              }
+            </section>
+
+            <!-- Favoris et boutiques suivies (/favoris : section mise en avant) -->
+            <section class="bloc" id="favoris" [class.en-avant]="focus() === 'favorites'" data-testid="favorites">
+              <div class="titre-bloc"><h2>{{ focus() === 'favorites' ? 'Vos favoris et boutiques suivies' : 'Vos sélections' }}</h2></div>
+              @if (d.favorites.length || d.followedShops.length) {
+                <ul class="selections">
+                  @for (item of d.favorites.slice(0, 3); track item.id) {
+                    <li><a [routerLink]="['/produit', item.productSlug]" class="selection" data-testid="favorite-row"><span>{{ item.productName }}</span><span class="prix-selection">{{ item.priceTnd }} TND</span></a></li>
+                  }
+                  @for (shop of d.followedShops.slice(0, 3); track shop.id) {
+                    <li><a [routerLink]="['/boutique', shop.shopSlug]" class="selection" data-testid="followed-shop-row"><app-icon name="store" [size]="16" class="accent" /><span>{{ shop.shopName }}</span></a></li>
+                  }
+                </ul>
+              } @else {
+                <div class="vide-bloc"><app-icon name="heart" [size]="28" /><p>Ajoutez des favoris ou suivez une boutique depuis le catalogue.</p></div>
+              }
+            </section>
+
+            <div class="deux-colonnes">
+              <!-- Adresses de livraison -->
+              <section class="bloc" id="adresses" data-testid="addresses">
+                <div class="titre-bloc">
+                  <h2>Adresses de livraison</h2>
+                  <button type="button" class="bouton bouton-clair petit-bouton" [attr.aria-expanded]="addressFormOpen()" (click)="toggleAddressForm()" data-testid="address-toggle">{{ addressFormOpen() ? 'Fermer' : 'Ajouter' }}</button>
+                </div>
+                @if (addressFormOpen()) {
+                  <form [formGroup]="addressForm" (ngSubmit)="saveAddress()" novalidate class="form-adresse" data-testid="address-form">
+                    <div class="grille-adresse">
+                      <label><span class="masque-lecteur">Libellé</span><input class="champ" formControlName="label" placeholder="Maison, bureau…" maxlength="64" /></label>
+                      <label><span class="masque-lecteur">Nom du destinataire</span><input class="champ" formControlName="recipientName" placeholder="Nom du destinataire" autocomplete="name" /></label>
+                      <label><span class="masque-lecteur">Téléphone</span><input class="champ" formControlName="phone" placeholder="Téléphone" inputmode="tel" autocomplete="tel" /></label>
+                      <label><span class="masque-lecteur">Ville</span><input class="champ" formControlName="city" placeholder="Ville" autocomplete="address-level2" /></label>
+                    </div>
+                    <label><span class="masque-lecteur">Adresse complète</span><input class="champ large" formControlName="addressLine" placeholder="Adresse complète" autocomplete="street-address" /></label>
+                    <label><span class="masque-lecteur">Code postal</span><input class="champ large" formControlName="postalCode" placeholder="Code postal (optionnel)" autocomplete="postal-code" /></label>
+                    <label class="case"><input type="checkbox" formControlName="isDefault" /> Définir comme adresse principale</label>
+                    @if (addressError()) { <p class="erreur" role="alert">{{ addressError() }}</p> }
+                    <button type="submit" class="bouton petit-bouton" [disabled]="addressSaving()" data-testid="address-save">{{ addressSaving() ? 'Enregistrement…' : "Enregistrer l'adresse" }}</button>
+                  </form>
+                }
+                @if (d.addresses.length) {
+                  <ul class="adresses">
+                    @for (a of d.addresses; track a.id) {
+                      <li class="adresse" data-testid="address-row">
+                        <div>
+                          <p class="adresse-titre"><app-icon name="map-pin" [size]="16" class="accent" />{{ a.label }}{{ a.isDefault ? ' · principale' : '' }}</p>
+                          <p class="adresse-ligne">{{ a.recipientName }} · {{ a.phone }}</p>
+                          <p class="petit">{{ a.addressLine }}, {{ a.city }}{{ a.postalCode ? ' · ' + a.postalCode : '' }}</p>
+                        </div>
+                        <button type="button" class="supprimer" [attr.aria-label]="'Supprimer ' + a.label" (click)="removeAddress(a.id)"><app-icon name="trash-2" [size]="16" /></button>
+                      </li>
+                    }
+                  </ul>
+                } @else {
+                  <div class="vide-bloc"><app-icon name="map-pin" [size]="28" /><p>Aucune adresse enregistrée.</p></div>
+                }
+              </section>
+
+              <!-- Avis -->
+              <section class="bloc" id="avis" data-testid="reviews">
+                <div class="titre-bloc"><h2>Vos avis</h2><app-icon name="message-square" class="accent" /></div>
+                @if (d.reviews.length) {
+                  <ul class="avis-liste">
+                    @for (r of d.reviews; track r.id) {
+                      <li class="avis-ligne" data-testid="review-row">
+                        <div class="avis-entete"><p class="fort">{{ r.productName }}</p><span class="statut-avis">{{ stars(r.rating) }} · {{ reviewStatusLabel(r.status) }}</span></div>
+                        <p class="avis-texte">{{ r.body }}</p>
+                      </li>
+                    }
+                  </ul>
+                }
+                @if (reviewableLines().length) {
+                  <div class="a-noter">
+                    <p class="petit">Partagez votre retour sur vos articles livrés :</p>
+                    <ul class="lignes-a-noter">
+                      @for (line of reviewableLines(); track line.orderItemId) {
+                        <li class="ligne-a-noter" data-testid="reviewable-line">
+                          @if (line.image) { <img [src]="line.image" alt="" loading="lazy" /> }
+                          <span class="ligne-texte">
+                            <span class="fort">{{ line.productName }}</span>
+                            <small>{{ line.shopName }}{{ line.purchasedVariant ? ' · ' + line.purchasedVariant : '' }} · commande {{ reference(line.orderId) }}</small>
+                          </span>
+                          <button type="button" class="bouton petit-bouton" (click)="openReview(line)" data-testid="give-review">Donner mon avis</button>
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                } @else if (!d.reviews.length) {
+                  <div class="vide-bloc"><app-icon name="star" [size]="28" /><p>Les avis apparaîtront après une commande livrée.</p></div>
+                }
+              </section>
+            </div>
+          }
+        }
+      }
+    }
+  }
+</div>
+
+<app-review-form-dialog (sent)="onReviewSent()" />

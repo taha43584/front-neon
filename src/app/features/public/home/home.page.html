@@ -1,0 +1,202 @@
+<!-- Téléphone (< 768 px) : accueil « façon application » (A-10d), mêmes données que l'ordinateur -->
+@if (viewport.phone()) {
+  <!-- @defer (on immediate) : son code est un morceau à part, téléchargé PENDANT le chargement des données ;
+       l'ordinateur ne le télécharge jamais. En attendant : les mêmes cases grises que pendant le chargement. -->
+  @defer (on immediate) {
+    <app-accueil-telephone [siteName]="site.name()" [tagline]="site.settings()?.tagline || 'La marketplace tunisienne de la décoration'"
+      [status]="status()" [home]="home()" [categories]="categories()" [products]="products()" [videos]="videos()" [hasNeon]="hasNeon()" (retry)="load()" />
+  } @placeholder {
+    <section class="conteneur section" aria-label="Chargement"><app-load-state status="loading" [count]="4" /></section>
+  }
+} @else {
+<!-- ===================== Ordinateur et tablette : mise en page A-10b, inchangée ===================== -->
+<!-- 1. Bande beige : titre + les 6 catégories les plus fournies en cercles (défilement horizontal sur téléphone) -->
+<section class="bande" aria-labelledby="titre-accueil">
+  <div class="conteneur">
+    <p class="surtitre monte">{{ site.settings()?.tagline || 'La marketplace tunisienne de la décoration' }}</p>
+    <h1 id="titre-accueil" class="monte delai-1">Trouvez la pièce qui manque à votre intérieur.</h1>
+    @if (status() === 'loading') {
+      <ul class="cercles" role="status" aria-label="Chargement des catégories">
+        @for (i of [0, 1, 2, 3, 4, 5]; track i) { <li aria-hidden="true"><span class="squelette rond"></span><span class="squelette ligne-cercle"></span></li> }
+      </ul>
+    } @else if (circles().length) {
+      <ul class="cercles monte delai-2" data-testid="home-circles">
+        @for (c of circles(); track c.slug) {
+          <li>
+            <a class="cercle zoom" [routerLink]="['/categorie', c.slug]">
+              <span class="rond">
+                @if (c.image; as image) { <img class="zoom-img" [ngSrc]="image" alt="" fill /> }
+                @else { <app-icon name="layout-grid" [size]="28" /> }
+              </span>
+              <span class="nom-cercle">{{ c.name }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</section>
+
+@if (status() === 'loading') {
+  <section class="conteneur section" aria-label="Chargement des nouveautés"><app-load-state status="loading" [count]="10" /></section>
+}
+
+@if (status() === 'error') {
+  <section appReveal class="conteneur section">
+    <app-load-state status="error" (retry)="load()" />
+  </section>
+}
+
+<!-- 2. Vidéos des ateliers : 1 grande + 4 petites (seulement si des produits publiés ont une vidéo) -->
+@if (videos().length) {
+  <section appReveal class="conteneur section" aria-labelledby="titre-videos">
+    <div class="titre-section">
+      <div><p class="surtitre">Le geste de l'artisan</p><h2 id="titre-videos">Dans nos ateliers, en vidéo</h2></div>
+    </div>
+    <!-- @defer : le code des vidéos n'est téléchargé qu'à l'approche de la grille ; en attendant, cases vides de même taille -->
+    <div #grilleVideos class="grille-videos" [attr.data-nombre]="videos().length" data-testid="home-videos">
+      @defer (on viewport(grilleVideos)) {
+        @for (v of videos(); track v.product.slug; let first = $first) {
+          <app-workshop-video [item]="v" [class.grande]="first" />
+        }
+      } @placeholder {
+        @for (v of videos(); track v.product.slug; let first = $first) {
+          <div class="video-attente" [class.grande]="first"></div>
+        }
+      }
+    </div>
+  </section>
+}
+
+@if (home(); as data) {
+  <!-- 3. Nouveautés : 5 cartes par ligne sur ordinateur, 2 sur téléphone -->
+  @if (latest().length) {
+    <section appReveal class="conteneur section" aria-labelledby="titre-nouveautes">
+      <div class="titre-section">
+        <div><p class="surtitre">Fraîchement publiées</p><h2 id="titre-nouveautes">Nouveautés de nos ateliers</h2></div>
+        <div class="actions-section">
+          @if (availableFilters().length > 1) {
+            <div class="filtres" role="group" aria-label="Filtrer les nouveautés">
+              @for (f of availableFilters(); track f.value) {
+                <button type="button" class="pastille" [class.active]="latestFilter() === f.value" [attr.aria-pressed]="latestFilter() === f.value" (click)="latestFilter.set(f.value)">{{ f.label }}</button>
+              }
+            </div>
+          }
+          <a routerLink="/produits" [queryParams]="{ sort: 'recent' }" class="lien-section">Tout voir →</a>
+        </div>
+      </div>
+      <!-- Changement de filtre : la grille est recréée, les cartes réapparaissent en fondu décalé -->
+      @for (k of [latestFilter()]; track k) {
+        <div class="grille-produits grille-5" data-testid="home-latest">
+          @for (p of latest(); track p.slug; let i = $index) {
+            <app-product-card [product]="p" [index]="i" />
+          }
+        </div>
+      }
+    </section>
+  }
+  @if (data.totals.products === 0) {
+    <section appReveal class="conteneur section">
+      <div class="vide vide-accueil">
+        <p class="titre">Le catalogue se construit</p>
+        <p>Aucune création n'est encore publiée. Les produits des boutiques validées apparaîtront ici automatiquement.</p>
+        <a routerLink="/inscription/vendeur" class="bouton">Devenir vendeur</a>
+      </div>
+    </section>
+  }
+
+  <!-- 4. Des idées pour chaque espace → recherche du catalogue -->
+  @if (data.totals.products > 0) {
+    <section appReveal class="conteneur section" aria-labelledby="titre-espaces">
+      <div class="titre-section">
+        <div><p class="surtitre">Inspiration</p><h2 id="titre-espaces">Des idées pour chaque espace</h2></div>
+      </div>
+      <ul class="espaces" data-testid="home-spaces">
+        @for (s of spaces; track s.query) {
+          <li>
+            <a class="espace tuile-anim" routerLink="/produits" [queryParams]="{ q: s.query }">
+              <span class="icone-espace"><app-icon [name]="s.icon" [size]="28" [strokeWidth]="1.6" /></span>
+              <span class="nom-espace">{{ s.label }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  <!-- 5. Néon (seulement si un atelier propose le néon personnalisé) -->
+  @if (hasNeon()) {
+    <section appReveal class="conteneur section" aria-label="Néon personnalisé">
+      @defer (on viewport) {
+        <app-neon-banner />
+      } @placeholder {
+        <div class="neon-attente toujours-sombre"></div>
+      }
+    </section>
+  }
+
+  <!-- 6. Ateliers à découvrir : mosaïque de photos, logo, note, ville, nombre de créations -->
+  @if (workshops().length) {
+    <section appReveal class="conteneur section" aria-labelledby="titre-ateliers">
+      <div class="titre-section">
+        <div><p class="surtitre">Des ateliers tunisiens</p><h2 id="titre-ateliers">Ateliers à découvrir</h2></div>
+        <a routerLink="/boutiques" class="lien-section">Toutes les boutiques →</a>
+      </div>
+      <ul class="rangee-ateliers" data-testid="home-shops">
+        @for (shop of workshops(); track shop.id; let i = $index) {
+          <li class="carte-atelier tuile-anim fondu-carte" [style.--rang]="i">
+            <div class="mosaique" [attr.data-photos]="shop.photos.length">
+              @for (photo of shop.photos; track $index) { <img class="tuile-img" [src]="photo" alt="" loading="lazy" /> }
+            </div>
+            <div class="corps-atelier">
+              <app-shop-logo class="logo-atelier" [name]="shop.name" [logoUrl]="shop.logoUrl" [size]="56" />
+              <div class="texte-atelier">
+                <a class="nom-atelier" [routerLink]="['/boutique', shop.slug]">{{ shop.name }}</a>
+                <p class="infos-atelier">
+                  @if (shop.reviewCount > 0 && shop.rating !== null) {
+                    <span class="note">★ {{ shop.rating.toFixed(1) }} <span class="petit">({{ shop.reviewCount }} avis)</span></span>
+                  }
+                  @if (shop.city) { <span class="ville"><app-icon name="map-pin" [size]="14" /> {{ shop.city }}</span> }
+                  <span>{{ plural(shop.productCount, 'création') }}</span>
+                </p>
+              </div>
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+}
+
+<!-- 7. Qu'est-ce qu'Elegance Deco ? -->
+<section appReveal class="conteneur section" aria-labelledby="titre-quoi">
+  <div class="quoi">
+    <h2 id="titre-quoi">{{ whatIs() }}</h2>
+    <ul class="piliers">
+      @for (item of pillars; track item.title) {
+        <li>
+          <span class="icone-pilier"><app-icon [name]="item.icon" [size]="24" /></span>
+          <h3>{{ item.title }}</h3>
+          <p>{{ item.text }}</p>
+        </li>
+      }
+    </ul>
+    <a routerLink="/aide" class="bouton bouton-contour">Consulter l'aide</a>
+  </div>
+</section>
+
+<!-- 8. Newsletter : aucune procédure côté serveur → formulaire désactivé (BACK-A-FAIRE.md n° 10) -->
+<section appReveal class="conteneur section" aria-labelledby="titre-newsletter">
+  <div class="newsletter toujours-sombre">
+    <div>
+      <h2 id="titre-newsletter">Les nouveautés des ateliers, dans votre boîte mail</h2>
+      <p id="newsletter-info">L'inscription à la lettre d'information sera bientôt disponible.</p>
+    </div>
+    <form class="form-newsletter" aria-describedby="newsletter-info" (submit)="$event.preventDefault()" novalidate>
+      <label class="masque-lecteur" for="newsletter-email">Adresse e-mail</label>
+      <input id="newsletter-email" class="champ" type="email" placeholder="votre@email.tn" disabled />
+      <button type="submit" class="bouton" disabled>Bientôt disponible</button>
+    </form>
+  </div>
+</section>
+}

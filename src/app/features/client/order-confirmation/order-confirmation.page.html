@@ -1,0 +1,47 @@
+<div class="page">
+  <div class="entete">
+    <span class="coche" aria-hidden="true">✓</span>
+    <p class="surtitre">Merci pour votre confiance</p>
+    <h1>Votre commande est confirmée.</h1>
+    <p class="intro">Les boutiques partenaires vont préparer votre sélection. Conservez votre référence pour le suivi.</p>
+    @if (order(); as o) {
+      <p class="reference" data-testid="order-reference">Référence <span>{{ o.reference }}</span></p>
+    }
+  </div>
+
+  @switch (status()) {
+    @case ('loading') { <p class="info" role="status">Chargement du récapitulatif…</p> }
+    @case ('error') { <p class="info">Le récapitulatif détaillé est disponible depuis votre espace client.</p> }
+    @default {
+      @if (order(); as o) {
+        <div class="details">
+          <section class="recap">
+            <div class="titre-bloc"><h2>Récapitulatif</h2><p>{{ o.items.length }} ligne{{ o.items.length > 1 ? 's' : '' }} de commande · {{ statusLabel(o.status) }}</p></div>
+            @for (item of o.items; track item.id) {
+              <div class="ligne">
+                <div>
+                  <p class="nom">{{ item.productName }}</p>
+                  @if (item.customSummary) { <p class="petit fort">{{ item.customSummary }}</p> }
+                  <p class="petit">Quantité : {{ item.quantity }} · Boutique : {{ item.shopName }}</p>
+                </div>
+                <p class="montant">{{ +item.unitPriceTnd * item.quantity | prixDt }}</p>
+              </div>
+            }
+            <p class="total"><span>Total</span><strong data-testid="order-total">{{ o.totalTnd | prixDt }}</strong></p>
+          </section>
+          <aside class="livraison">
+            <h2 class="avec-icone"><app-icon name="map-pin" [size]="18" /> Livraison</h2>
+            <p class="nom">{{ o.shippingName }}</p>
+            <p>{{ o.shippingAddress }}<br />{{ o.shippingCity }}<br />{{ o.shippingPhone }}</p>
+            <p class="petit">Paiement à la livraison. Suivi disponible depuis votre espace client.</p>
+          </aside>
+        </div>
+      }
+    }
+  }
+
+  <div class="boutons">
+    <a routerLink="/espace-client" class="bouton">Suivre ma commande</a>
+    <a routerLink="/produits" class="bouton bouton-clair">Continuer mes achats →</a>
+  </div>
+</div>

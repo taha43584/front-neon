@@ -1,0 +1,36 @@
+:host { display: block; }
+
+/* A-10d : barre flottante sombre, arrondie, 66 px, à 14 px des bords (+ zone sûre des téléphones à encoche) */
+.barre-bas { position: fixed; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom)); left: 14px; z-index: 40; height: 66px; overflow: hidden; border-radius: 33px; background: rgba(42, 36, 32, 0.96); background: color-mix(in srgb, var(--ombre, #2a2420) 96%, transparent); box-shadow: 0 14px 34px rgba(42, 36, 32, 0.28); box-shadow: 0 14px 34px color-mix(in srgb, var(--ombre, #2a2420) 28%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.barre-bas ul { position: relative; display: grid; height: 100%; grid-template-columns: repeat(4, 1fr); margin: 0; padding: 0; list-style: none; }
+.barre-bas a, .barre-bas button { display: flex; width: 100%; height: 100%; min-height: 44px; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0; border: none; background: none; color: var(--ligne-37, #cbbcb0); font: 500 11px var(--police-texte); text-decoration: none; cursor: pointer; transition: color .25s, transform .15s; }
+.barre-bas .actif { color: var(--carte); }
+.barre-bas a:active, .barre-bas button:active { transform: scale(0.96); }
+.barre-bas a:focus-visible, .barre-bas button:focus-visible { outline: 2px solid var(--carte); outline-offset: -6px; border-radius: 24px; }
+/* Pastille sous l'onglet actif : un quart de la barre, déplacée par translateX (aucun recalcul de mise en page) */
+.pastille-active { position: absolute; top: 0; bottom: 0; left: 0; width: 25%; display: flex; align-items: center; justify-content: center; transition: transform .35s var(--ease); pointer-events: none; }
+.pastille-active span { width: 64px; height: 50px; border-radius: 25px; background: var(--accent); }
+@media (prefers-reduced-motion: reduce) {
+  .pastille-active, .barre-bas a, .barre-bas button { transition: none; }
+  .barre-bas a:active, .barre-bas button:active { transform: none; }
+}
+.titre-section { margin: 24px 0 8px; color: var(--surtitre); font-size: 12px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; }
+
+/* Panneau du bas : arrondi en haut, 80 % de la hauteur au plus */
+.panneau { width: 100%; max-width: 100%; max-height: 80vh; margin: auto 0 0; padding: 0; border: none; border-radius: 28px 28px 0 0; background: var(--fond); color: var(--texte); }
+.panneau::backdrop { background: rgba(42, 36, 32, 0.4); }
+.panneau-contenu { padding: 20px 20px calc(20px + env(safe-area-inset-bottom)); }
+.panneau-haut { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.titre { margin: 0; font-family: var(--police-titre); font-size: 24px; }
+.fermer { display: flex; width: 44px; height: 44px; align-items: center; justify-content: center; border: none; border-radius: 999px; background: none; color: var(--texte); cursor: pointer; }
+.fermer:hover { background: var(--beige); }
+.liste { margin: 0; padding: 0; list-style: none; }
+.liste li + li { margin-top: 4px; }
+.liste a { display: flex; min-height: 48px; align-items: center; justify-content: space-between; gap: 12px; padding: 0 12px; border-radius: 16px; color: var(--texte); font-size: 15px; text-decoration: none; }
+.liste a:hover { background: var(--beige-clair); }
+.liste span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.liste small { flex-shrink: 0; color: var(--texte-secondaire); font-size: 12px; }
+.vide-panneau { margin: 0; color: var(--texte-secondaire); font-size: 14px; }
+.tout { width: 100%; margin-top: 16px; }
+
+@media (min-width: 768px) { :host { display: none; } }

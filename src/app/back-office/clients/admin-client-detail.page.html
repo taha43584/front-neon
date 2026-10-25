@@ -1,0 +1,73 @@
+<a class="retour" routerLink="/admin/clients">‹ Clients</a>
+@switch (status()) {
+  @case ('loading') { <p class="info" role="status">Chargement…</p> }
+  @case ('error') { <div class="erreur-etat" role="alert"><p>{{ error() }}</p></div> }
+  @default {
+    @let d = data()!;
+    @let u = d.user;
+    <div class="entete-page">
+      <div>
+        <h1>{{ fullName() }}</h1>
+        <p>Client n° {{ u.id }} · inscrit le {{ u.createdAt | date: 'dd/MM/y' }}</p>
+      </div>
+      @if (u.role !== 'admin') {
+        <div class="actions-page">
+          @if (u.suspended) {
+            <button type="button" class="b vert" (click)="confirm.set('unsuspend')" data-testid="client-unsuspend">Réactiver le compte</button>
+          } @else {
+            <button type="button" class="b rouge" (click)="confirm.set('suspend')" data-testid="client-suspend">Suspendre le compte</button>
+          }
+        </div>
+      }
+    </div>
+    @if (message()) { <p class="message" role="status" data-testid="admin-message">{{ message() }}</p> }
+
+    <div class="grille-fiche trois">
+      <section class="panneau">
+        <div class="titre-panneau"><h2>Profil</h2></div>
+        <dl class="champs-fiche">
+          <div><dt>Statut du compte</dt><dd><app-status-badge [status]="u.suspended ? 'suspended' : 'active'" [label]="u.suspended ? 'Suspendu' : 'Actif'" /></dd></div>
+          <div><dt>E-mail</dt><dd>{{ u.email || '—' }}</dd></div>
+          <div><dt>Téléphone</dt><dd>{{ u.phone || '—' }}</dd></div>
+          <div><dt>Ville / localisation</dt><dd>{{ u.city || '—' }}</dd></div>
+          <div><dt>Adresse de livraison</dt><dd>{{ u.address || '—' }}</dd></div>
+          <div><dt>Dernière connexion</dt><dd>{{ (u.lastSignedIn | date: 'dd/MM/y HH:mm') || '—' }}</dd></div>
+          <div><dt>Commandes</dt><dd>{{ d.stats.orderCount }} · {{ d.stats.totalSpent | prixDt }} (hors annulées)</dd></div>
+        </dl>
+        @if (d.addresses.length) {
+          <div class="adresses">
+            <p class="sous">ADRESSES ENREGISTRÉES</p>
+            @for (a of d.addresses; track a.id) {
+              <div class="adresse"><p class="fort">{{ a.label }}{{ a.isDefault ? ' · principale' : '' }}</p><p class="sous">{{ a.recipientName }} · {{ a.phone }}</p><p class="sous">{{ a.addressLine }}, {{ a.city }}</p></div>
+            }
+          </div>
+        }
+      </section>
+
+      <section class="panneau">
+        <div class="titre-panneau"><h2>Historique des commandes ({{ d.orders.length }})</h2></div>
+        @if (d.orders.length) {
+          <div class="tableau">
+            <table>
+              <thead><tr><th>Référence</th><th>Date</th><th>Ville</th><th class="droite">Articles</th><th class="droite">Total</th><th>Statut</th></tr></thead>
+              <tbody>
+                @for (o of d.orders; track o.id) {
+                  <tr>
+                    <td><a class="nom" [routerLink]="['/admin/commandes', o.id]">{{ o.reference }}</a></td>
+                    <td>{{ o.createdAt | date: 'dd/MM/y' }}</td>
+                    <td>{{ o.shippingCity }}</td>
+                    <td class="droite">{{ o.itemCount }}</td>
+                    <td class="droite">{{ o.totalTnd | prixDt }}</td>
+                    <td><app-status-badge [status]="o.status" /></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else { <p class="vide">Aucune commande</p> }
+      </section>
+    </div>
+  }
+}
+
+<app-confirm-dialog [request]="request()" [busy]="busy()" [serverError]="actionError()" (confirmed)="apply()" (cancelled)="confirm.set(null)" />

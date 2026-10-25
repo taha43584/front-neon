@@ -1,0 +1,70 @@
+<div class="titre-page">
+  <div>
+    <h1>Mes commandes</h1>
+    <p>Seuls vos articles apparaissent ici. Le statut que vous choisissez ne s'applique qu'à vos articles, jamais à ceux des autres boutiques.</p>
+  </div>
+</div>
+
+<div class="barre-filtres">
+  <div class="pastilles" role="group" aria-label="Filtrer par statut">
+    @for (f of filters; track f.value) {
+      <button type="button" class="pastille" [class.active]="filter() === f.value" [attr.aria-pressed]="filter() === f.value" (click)="filter.set(f.value)">{{ f.label }}</button>
+    }
+  </div>
+  <input class="champ recherche" type="search" placeholder="N° de commande, client ou produit" aria-label="Rechercher une commande" [value]="search()" (input)="search.set($any($event.target).value)" />
+</div>
+
+@if (message(); as m) {
+  <p class="message" [class.erreur]="m.error" [attr.role]="m.error ? 'alert' : 'status'" data-testid="orders-message">{{ m.text }}</p>
+}
+
+@if (visibleOrders().length === 0) {
+  <div class="bloc vide-bloc">{{ hasOrders() ? 'Aucune commande pour ce filtre.' : 'Aucune commande reçue pour le moment.' }}</div>
+} @else {
+  <div class="commandes">
+    @for (o of visibleOrders(); track o.orderId) {
+      <article class="bloc commande" [attr.data-testid]="'vendor-order-' + o.orderId">
+        <header class="entete-commande">
+          <div>
+            <h2>Commande {{ reference(o.orderId) }}</h2>
+            <p class="petit">Passée le {{ o.createdAt | date: 'd MMMM y, HH:mm' }}</p>
+            @if (o.orderStatus !== o.status) { <p class="petit">Statut global de la commande : {{ statusLabel(o.orderStatus) }}</p> }
+          </div>
+          <label class="choix-statut">
+            Statut de vos articles
+            <select class="champ" [value]="o.status" [disabled]="locked(o)" (change)="changeStatus(o, $event)" data-testid="order-status">
+              @for (s of statuses; track s[0]) { <option [value]="s[0]" [selected]="s[0] === o.status">{{ s[1] }}</option> }
+            </select>
+          </label>
+        </header>
+        <div class="corps-commande">
+          <div>
+            <p class="intertitre">Vos articles</p>
+            <ul class="articles">
+              @for (i of o.items; track i.id) {
+                <li>
+                  <div class="article">
+                    <span class="nom-article">{{ i.productName }}</span> × {{ i.quantity }}
+                    @if (i.customSummary) { <span class="mesures" data-testid="vendor-measures">À fabriquer : {{ i.customSummary }}</span> }
+                    @if (details(i); as d) { <span class="petit bloc-texte">{{ d }}</span> }
+                    @if (neonOf(i); as n) { <app-neon-order-preview [neon]="n" /> }
+                  </div>
+                  <span class="montant">{{ lineTotal(i) | prixDt }}</span>
+                </li>
+              }
+            </ul>
+            <p class="total"><span>Total de vos articles</span><span>{{ o.total | prixDt }}</span></p>
+          </div>
+          <div class="livraison">
+            <p class="intertitre">Livraison</p>
+            <p class="gras">{{ o.shippingName }}</p>
+            <p>{{ o.shippingPhone }}</p>
+            <p>{{ o.shippingAddress }}, {{ o.shippingCity }}</p>
+            @if (o.shippingNote) { <p class="note">« {{ o.shippingNote }} »</p> }
+            <p class="petit">Paiement à la livraison.</p>
+          </div>
+        </div>
+      </article>
+    }
+  </div>
+}

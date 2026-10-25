@@ -1,0 +1,113 @@
+.page { max-width: 1280px; padding-top: 32px; padding-bottom: 56px; }
+.surtitre { color: var(--cuivre-13, #9a6341); }
+h1 { margin-top: 12px; font-size: 36px; letter-spacing: -0.05em; }
+.intro { max-width: 640px; margin: 12px 0 0; color: var(--gris-11, #7c6d64); font-size: 14px; line-height: 1.7; }
+
+.acces { max-width: 520px; margin: 48px auto; padding: 40px; border: 1px solid var(--ligne-20, #eadfd6); border-radius: 28px; background: var(--carte); text-align: center; }
+.acces .icone { color: var(--cuivre-13, #9a6341); font-size: 40px; }
+.acces h1 { font-size: 30px; }
+.acces p { color: var(--gris-11, #7c6d64); font-size: 14px; line-height: 1.7; }
+
+.bloc { margin-top: 32px; padding: 24px; border: 1px solid var(--ligne-20, #eadfd6); border-radius: 28px; background: var(--carte); }
+.titre-bloc { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.titre-bloc h2 { font-family: var(--police-texte); font-size: 18px; font-weight: 600; letter-spacing: 0; }
+.petit-bouton { min-height: 44px; padding: 0 18px; font-size: 13px; }
+.chargement { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; min-height: 160px; color: var(--gris-11, #7c6d64); font-size: 14px; }
+
+.succes { margin: 16px 0 0; padding: 10px 14px; border-radius: 12px; background: var(--surface-22, #eef7ee); color: var(--vert-7, #2e7d32); font-size: 14px; }
+.form-profil, .infos-profil { display: grid; gap: 16px; margin: 20px 0 0; }
+.form-profil label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 500; }
+.form-profil [aria-invalid='true'] { border-color: var(--rouge-7, #e8a5a5); }
+.erreur { color: var(--rouge-11, #c0392b); font-size: 12px; font-weight: 400; }
+.infos-profil { font-size: 14px; }
+.infos-profil dt { color: var(--gris-11, #7c6d64); font-size: 12px; }
+.infos-profil dd { margin: 4px 0 0; font-weight: 500; }
+.coupe { word-break: break-all; }
+
+.compteurs { display: grid; gap: 16px; margin-top: 32px; }
+.compteur { padding: 20px; border: 1px solid var(--ligne-20, #eadfd6); border-radius: 18px; background: var(--carte); }
+.compteur p { margin: 0; color: var(--gris-11, #7c6d64); font-size: 14px; }
+.compteur strong { display: block; margin-top: 4px; font-family: var(--police-titre); font-size: 30px; font-weight: 500; }
+.compteur small { color: var(--gris-7, #7e6f66); font-size: 12px; }
+
+.commandes { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+.commande { border-radius: 18px; background: var(--surface-10, #fbf8f4); }
+.entete-commande { display: flex; width: 100%; min-height: 64px; align-items: center; justify-content: space-between; gap: 12px; padding: 16px; border: none; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.ref { display: block; font-weight: 500; }
+.petit { display: block; margin-top: 4px; color: var(--gris-11, #7c6d64); font-size: 12px; }
+.droite { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; text-align: right; }
+.statut { padding: 2px 10px; border-radius: 999px; background: var(--ligne-15, #f3e4d8); color: var(--cuivre-16, #8e5d3e); font-size: 12px; }
+.statut.delivered { background: var(--surface-29, #e8f4e8); color: var(--vert-7, #2e7d32); }
+.statut.cancelled { background: var(--ligne-3, #fde8e8); color: var(--rouge-11, #c0392b); }
+.statut.shipped { background: var(--ardoise-fond-3, #e8f0fb); color: var(--bleu-6, #2a5d9f); }
+
+.detail { padding: 12px 16px 16px; border-top: 1px solid var(--ligne-19, #eee3da); font-size: 14px; }
+.detail ul { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.detail li { display: flex; justify-content: space-between; gap: 12px; color: var(--gris-19, #6f6259); }
+.detail small { display: block; color: var(--gris-7, #7e6f66); font-size: 12px; }
+.detail small.fort, .fort { color: var(--gris-21, #6d5e54); font-weight: 600; }
+.montant { flex-shrink: 0; }
+.livraison { margin-top: 12px; padding: 12px; border-radius: 12px; background: var(--carte); color: var(--gris-19, #6f6259); font-size: 12px; }
+.livraison p { margin: 2px 0; }
+.livraison .fort { color: var(--encre-9, #302a26); }
+.note { font-style: italic; }
+.vide-bloc { display: flex; min-height: 128px; flex-direction: column; align-items: center; justify-content: center; margin: 20px 0 0; color: var(--gris-11, #7c6d64); font-size: 14px; text-align: center; }
+.vide-bloc app-icon { color: var(--cuivre-13, #9a6341); }
+.vide-bloc p { max-width: 24rem; margin: 12px 0 0; line-height: 1.5rem; }
+.avec-icone { display: flex; align-items: center; gap: 8px; }
+.en-avant { box-shadow: 0 0 0 2px rgba(199, 156, 119, .4); box-shadow: 0 0 0 2px color-mix(in srgb, var(--cuivre-8, #c79c77) 40%, transparent); scroll-margin-top: 160px; }
+.selections { display: grid; gap: 12px; margin: 20px 0 0; padding: 0; list-style: none; }
+.selection { display: flex; min-height: 56px; align-items: center; justify-content: space-between; gap: 12px; padding: 16px; border-radius: 16px; background: var(--surface-10, #fbf8f4); color: inherit; font-size: 14px; font-weight: 500; text-decoration: none; }
+.selection > app-icon + span { margin-right: auto; }
+a.selection:hover { background: var(--surface-32, #f5eee8); }
+.prix-selection { flex-shrink: 0; color: var(--cuivre-16, #8e5d3e); font-weight: 400; }
+.accent { color: var(--cuivre-16, #8e5d3e); }
+
+@media (min-width: 640px) {
+  h1 { font-size: 48px; }
+  .bloc { padding: 28px; }
+  .form-profil, .infos-profil { grid-template-columns: 1fr 1fr; }
+  .large { grid-column: span 2; }
+}
+@media (min-width: 768px) {
+  .compteurs { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 1024px) {
+  .infos-profil { grid-template-columns: repeat(3, 1fr); }
+  .infos-profil .large { grid-column: span 2; }
+}
+.sans-coupure { white-space: nowrap; }
+
+.raccourcis { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.raccourci { display: inline-flex; min-height: 44px; align-items: center; gap: 8px; padding: 0 16px; border: 1px solid var(--ligne-20, #eadfd6); border-radius: 999px; background: var(--carte); color: var(--texte); font-size: 14px; font-weight: 500; text-decoration: none; }
+.raccourci:hover { border-color: var(--accent); }
+.deux-colonnes { display: grid; gap: 24px; margin-top: 32px; }
+.deux-colonnes .bloc { margin-top: 0; }
+.form-adresse { display: grid; gap: 12px; margin-top: 20px; padding: 16px; border-radius: 16px; background: var(--surface-10, #fbf8f4); }
+.grille-adresse { display: grid; gap: 12px; }
+.form-adresse .champ { width: 100%; }
+.case { display: flex; min-height: 44px; align-items: center; gap: 8px; color: var(--gris-11, #7c6d64); font-size: 14px; }
+.form-adresse .bouton { justify-self: start; }
+.adresses, .avis-liste { display: grid; gap: 12px; margin: 20px 0 0; padding: 0; list-style: none; }
+.adresse { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 16px; border-radius: 16px; background: var(--surface-10, #fbf8f4); }
+.adresse-titre { display: flex; align-items: center; gap: 8px; margin: 0; font-weight: 500; }
+.adresse-ligne { margin: 8px 0 0; font-size: 14px; }
+.adresse .petit { margin: 4px 0 0; }
+.supprimer { display: flex; width: 44px; height: 44px; flex-shrink: 0; align-items: center; justify-content: center; border: none; border-radius: 999px; background: none; color: var(--cuivre-16, #8e5d3e); cursor: pointer; }
+.supprimer:hover { background: var(--ligne-18, #f2e2d7); }
+.avis-ligne { padding: 16px; border-radius: 16px; background: var(--surface-10, #fbf8f4); }
+.avis-entete { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.avis-entete .fort { margin: 0; }
+.statut-avis { color: var(--cuivre-16, #8e5d3e); font-size: 12px; white-space: nowrap; }
+.avis-texte { margin: 8px 0 0; color: var(--gris-19, #6f6259); font-size: 14px; line-height: 1.5rem; }
+.a-noter { display: grid; gap: 16px; margin-top: 20px; }
+.lignes-a-noter { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.ligne-a-noter { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--ligne-20, #eadfd6); border-radius: 16px; }
+.ligne-a-noter img { width: 48px; height: 48px; flex-shrink: 0; border-radius: 10px; object-fit: cover; }
+.ligne-texte { display: grid; min-width: 0; flex: 1; }
+.ligne-texte small { color: var(--texte-secondaire); font-size: 12px; }
+.donner-avis { margin-top: 6px; }
+.zone-avis { height: auto; min-height: 80px; padding: 10px 14px; resize: vertical; }
+.erreur { margin: 0; color: var(--erreur); font-size: 14px; }
+@media (min-width: 640px) { .grille-adresse { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1024px) { .deux-colonnes { grid-template-columns: 1fr 1fr; align-items: start; } }

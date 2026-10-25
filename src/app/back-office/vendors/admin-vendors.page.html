@@ -1,0 +1,72 @@
+<div class="entete-page">
+  <div>
+    <h1>Vendeurs</h1>
+    <p>Demandes d'ouverture de boutique et gestion des vendeurs.</p>
+  </div>
+</div>
+@if (message()) { <p class="message" role="status" data-testid="admin-message">{{ message() }}</p> }
+
+<section class="panneau">
+  <div class="filtres">
+    <div class="ligne-haut">
+      <div class="onglets" role="tablist" aria-label="Filtrer les vendeurs">
+        @for (t of tabs(); track t.value) {
+          <button type="button" role="tab" [attr.aria-selected]="status() === t.value" (click)="setStatus(t.value)">{{ t.label }}@if (t.count !== undefined) { <span class="nombre">{{ t.count }}</span> }</button>
+        }
+      </div>
+      <div class="recherche-admin">
+        <input class="champ-admin" type="search" placeholder="Boutique, vendeur, e-mail, WhatsApp" aria-label="Boutique, vendeur, e-mail, WhatsApp" [value]="search()" (input)="setSearch($any($event.target).value)" data-testid="admin-search" />
+        @if (search()) { <button type="button" class="effacer" aria-label="Effacer la recherche" (click)="setSearch('')">✕</button> }
+      </div>
+    </div>
+  </div>
+
+  @switch (list.status()) {
+    @case ('loading') { <p class="info" role="status">Chargement…</p> }
+    @case ('error') { <div class="erreur-etat" role="alert"><p>{{ list.error() }}</p><button type="button" class="b" (click)="list.reload()">Réessayer</button></div> }
+    @default {
+      @if (!rows().length) {
+        <p class="vide">Aucun vendeur pour ce filtre</p>
+      } @else {
+        <div class="tableau">
+          <table data-testid="admin-vendors-table">
+            <thead><tr>
+              <th>Boutique</th>
+              <th>Vendeur</th>
+              <th>WhatsApp</th>
+              <th>Conditions</th>
+              <th class="droite">Produits</th>
+              <th>Demande</th>
+              <th>Statut</th>
+              <th class="droite">Actions</th>
+            </tr></thead>
+            <tbody>
+              @for (v of rows(); track v.id) {
+                <tr [attr.data-testid]="'vendor-row-' + v.id">
+                  <td><a class="nom" [routerLink]="['/admin/vendeurs', v.id]">{{ v.name }}</a><span class="sous">{{ v.city || 'Ville non renseignée' }}</span></td>
+                  <td>{{ owner(v) }}<span class="sous">{{ v.ownerEmail }}</span></td>
+                  <td>{{ v.whatsapp || '—' }}</td>
+                  <td>@if (v.termsAccepted) { <span class="ok-texte">Acceptées ({{ v.termsVersion }})</span> } @else { <span class="alerte-texte">Non acceptées</span> }</td>
+                  <td class="droite">{{ v.publishedCount }} / {{ v.productCount }}</td>
+                  <td>{{ v.createdAt | date: 'dd/MM/y' }}</td>
+                  <td><app-status-badge [status]="v.status" /></td>
+                  <td>
+                    <div class="groupe-actions">
+                      @if (v.status !== 'active') { <button type="button" class="b vert" (click)="ask(v, 'active')">{{ v.status === 'suspended' ? 'Réactiver' : 'Approuver' }}</button> }
+                      @if (v.status === 'pending') { <button type="button" class="b rouge" (click)="ask(v, 'rejected')">Refuser</button> }
+                      @if (v.status === 'active') { <button type="button" class="b rouge" (click)="ask(v, 'suspended')">Suspendre</button> }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @let d = list.data()!;
+        <app-admin-pagination [page]="d.page" [pageCount]="d.pageCount" [total]="d.total" (pageChange)="page.set($event)" />
+      }
+    }
+  }
+</section>
+
+<app-confirm-dialog [request]="request()" [busy]="busy()" [serverError]="actionError()" (confirmed)="apply($event)" (cancelled)="action.set(null)" />

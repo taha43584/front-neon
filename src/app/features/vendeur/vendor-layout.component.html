@@ -1,0 +1,162 @@
+<!--
+  Espace vendeur = application à part (comme le site React et la console admin) :
+  - boutique approuvée : barre latérale fixe (ordinateur), tiroir (téléphone), barre du haut ;
+  - autres états (chargement, demande, refus, suspension) : cadre simple « Elegance. Espace vendeur ».
+-->
+<ng-template #barreLaterale>
+  @if (state.shop(); as shop) {
+    <div class="barre">
+      <div class="barre-boutique">
+        <app-shop-logo [name]="shop.name" [logoUrl]="shop.logoUrl" [size]="44" />
+        <div class="barre-boutique-texte">
+          <p class="nom-boutique">{{ shop.name }}</p>
+          <p class="approuvee"><span class="pastille-verte" aria-hidden="true"></span> Boutique approuvée</p>
+        </div>
+      </div>
+      <nav class="navigation" aria-label="Navigation vendeur">
+        @for (link of links; track link.path) {
+          <a [routerLink]="link.path" routerLinkActive="actif" ariaCurrentWhenActive="page" [routerLinkActiveOptions]="{ exact: link.exact }" [class.actif]="link.path === '/espace-vendeur/ajouter' && editing()" (click)="closeDrawer()">
+            <app-icon [name]="link.icon" [size]="16" class="icone-lien" />
+            <span class="libelle">{{ link.path === '/espace-vendeur/ajouter' && editing() ? 'Modifier un produit' : link.label }}</span>
+            @if (badge(link.badge); as count) { <span class="compte" [attr.aria-label]="count + (link.badge === 'commandes' ? ' en attente' : ' produits')">{{ count }}</span> }
+          </a>
+        }
+      </nav>
+      <div class="barre-pied">
+        <a [routerLink]="['/boutique', shop.slug]" (click)="closeDrawer()"><app-icon name="external-link" [size]="16" class="icone-lien" /> Ma vitrine publique</a>
+        <p class="email">{{ auth.user()?.email }}</p>
+        <button type="button" class="deconnexion" (click)="logout()"><app-icon name="log-out" [size]="16" /> Se déconnecter</button>
+      </div>
+    </div>
+  }
+</ng-template>
+
+@if (state.status() === 'ok' && state.shopActive()) {
+  @let shop = state.shop()!;
+  <div class="app-vendeur">
+    <aside class="laterale-fixe"><ng-container *ngTemplateOutlet="barreLaterale" /></aside>
+    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- clic sur le fond du <dialog> ; au clavier : Échap (natif) -->
+    <dialog #drawer class="tiroir" aria-label="Menu de l'espace vendeur" (click)="onDrawerClick($event)" data-testid="vendor-drawer">
+      <ng-container *ngTemplateOutlet="barreLaterale" />
+      <button type="button" class="fermer-tiroir" aria-label="Fermer le menu" (click)="closeDrawer()"><app-icon name="x" /></button>
+    </dialog>
+    <div class="colonne">
+      <header class="haut">
+        <div class="haut-gauche">
+          <button type="button" class="ouvrir-menu" aria-label="Ouvrir le menu" (click)="openDrawer()" data-testid="vendor-menu-open"><app-icon name="menu" /></button>
+          <a routerLink="/" class="marque">Elegance<span>.</span></a>
+          <span class="espace-libelle">Espace vendeur</span>
+          <!-- Boutique connectée, toujours visible : on sait quelle boutique on modifie -->
+          <span class="boutique-connectee" data-testid="vendor-current-shop">
+            <app-shop-logo [name]="shop.name" [logoUrl]="shop.logoUrl" [size]="28" />
+            <span class="boutique-nom"><span class="masque-lecteur">Boutique connectée : </span><span class="prefixe">Boutique : </span><strong>{{ shop.name }}</strong></span>
+          </span>
+        </div>
+        @if (!onEditor()) {
+          <a routerLink="/espace-vendeur/ajouter" class="bouton ajouter" aria-label="Ajouter un produit"><app-icon name="plus" [size]="16" /><span class="texte-ajouter">Ajouter un produit</span></a>
+        }
+      </header>
+      <main class="contenu"><router-outlet /></main>
+    </div>
+  </div>
+} @else {
+  <div class="cadre-simple">
+    <div class="cadre-haut">
+      <a routerLink="/" class="marque grande">Elegance<span>.</span> <small>Espace vendeur</small></a>
+      <a routerLink="/" class="retour-site">Retour au site</a>
+    </div>
+    <div class="cadre-contenu">
+      @switch (state.status()) {
+        @case ('loading') { <p class="info" role="status">Chargement de votre espace vendeur…</p> }
+        @case ('error') {
+          <div class="info" role="alert">Votre espace vendeur n'a pas pu être chargé. <button type="button" class="bouton petit" (click)="state.reload()">Réessayer</button></div>
+        }
+        @default {
+          @if (state.shop(); as shop) {
+            <div class="boutique-etat" data-testid="vendor-current-shop">
+              <app-shop-logo [name]="shop.name" [logoUrl]="shop.logoUrl" [size]="40" />
+              <div class="boutique-texte"><span class="petit">Boutique connectée</span><strong>{{ shop.name }}</strong></div>
+            </div>
+            @switch (shop.status) {
+      @case ('pending') {
+        @if (editingApplication()) {
+          <div class="etat">
+            <div class="titre-etat">
+              <h1>Modifier ma demande vendeur</h1>
+              <button type="button" class="bouton bouton-clair petit" (click)="editingApplication.set(false)">Annuler</button>
+            </div>
+            <app-shop-application-form [shop]="shop" [editing]="true" (done)="applicationSaved()" />
+          </div>
+        } @else {
+          <div class="etat" data-testid="vendor-shop-status" data-status="pending">
+            <section class="carte-attente">
+              <span class="statut-attente"><span class="point" aria-hidden="true"></span> Statut : Demande en attente de validation</span>
+              <h1>Votre candidature pour "{{ shop.name }}" est en cours d'examen</h1>
+              <p>Merci d'avoir soumis votre boutique sur Elegance Deco. Notre équipe administrative étudie chaque dossier afin de garantir l'authenticité et la qualité de la sélection. Vous recevrez une confirmation dès validation.</p>
+              <ol class="etapes">
+                <li><strong>1. Dossier reçu</strong><span>Informations et visuels enregistrés</span></li>
+                <li><strong>2. Examen de conformité</strong><span>Vérification sous 24h à 48h ouvrées</span></li>
+                <li class="a-venir"><strong>3. Activation boutique</strong><span>Publication de vos produits &amp; ventes</span></li>
+              </ol>
+            </section>
+
+            <!-- Photo de profil et couverture : préparées dès maintenant, publiques après l'approbation -->
+            <app-shop-images-editor [shop]="shop" [pending]="true" (changed)="state.reload()" />
+
+            <section class="recap">
+              <div class="titre-etat">
+                <h2>Récapitulatif de votre boutique</h2>
+                <button type="button" class="bouton bouton-clair petit" (click)="editingApplication.set(true)">Modifier les informations</button>
+              </div>
+              <div class="recap-grille">
+                <div>
+                  <p class="petit">Nom de la boutique</p><p class="gras">{{ shop.name }}</p>
+                  @if (shop.tagline) { <p class="petit">Slogan / Signature</p><p>{{ shop.tagline }}</p> }
+                  @if (shop.about) { <p class="petit">Présentation</p><p class="multi">{{ shop.about }}</p> }
+                </div>
+                <div>
+                  @if (shop.phone) { <p>{{ shop.phone }}</p> }
+                  @if (shop.whatsapp) { <p>WhatsApp : {{ shop.whatsapp }}</p> }
+                  @if (shop.city) { <p>{{ shop.city }}{{ shop.address ? ' · ' + shop.address : '' }}</p> }
+                </div>
+              </div>
+            </section>
+          </div>
+        }
+      }
+
+      @case ('suspended') {
+        <div class="carte-statut rouge" data-testid="vendor-shop-status" data-status="suspended">
+          <span class="etiquette-rouge">Boutique Suspendue</span>
+          <h1>Votre boutique "{{ shop.name }}" a été suspendue</h1>
+          <p>L'accès aux fonctionnalités de publication et de gestion est actuellement restreint par l'administration d'Elegance Deco.</p>
+          @if (shop.rejectionReason) { <p class="motif"><strong>Motif :</strong> {{ shop.rejectionReason }}</p> }
+          <div class="actions-statut">
+            <a class="bouton petit" routerLink="/">← Retour à l'accueil</a>
+            <a class="bouton bouton-clair petit" href="mailto:support@elegancedeco.tn">Contacter le support</a>
+          </div>
+        </div>
+      }
+
+      @default {
+        <!-- Demande refusée : motif + formulaire pour corriger et soumettre à nouveau -->
+        <div class="etat" data-testid="vendor-shop-status" data-status="rejected">
+          <section class="carte-refus">
+            <h1>Demande refusée</h1>
+            <p>L'administration n'a pas validé la boutique « {{ shop.name }} ».</p>
+            @if (shop.rejectionReason) { <p class="motif"><strong>Motif :</strong> {{ shop.rejectionReason }}</p> }
+            <p>Corrigez vos informations ci-dessous et soumettez une nouvelle demande.</p>
+          </section>
+          <app-shop-application-form [shop]="shop" [editing]="true" (done)="applicationSaved()" />
+        </div>
+      }
+            }
+          } @else {
+            <!-- Compte vendeur sans boutique : première demande -->
+            <app-shop-application-form (done)="applicationSaved()" />
+          }
+        }
+      }
+    </div>
+  </div>
+}

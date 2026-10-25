@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Elegance Deco — Angular</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#faf8f4">
+  <!-- A-10e : thème (Automatique / Clair / Sombre) posé AVANT le premier affichage : aucun flash blanc en mode sombre.
+       Même règle que ThemeService (core/services/theme.service.ts), qui prend le relais une fois Angular démarré. -->
+  <script>
+    (function () {
+      var choix = null;
+      try { choix = localStorage.getItem('elegance-theme'); } catch (e) { /* stockage bloqué : réglage de l'appareil */ }
+      var sombre = choix === 'sombre' || (choix !== 'clair' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+      document.documentElement.setAttribute('data-theme', sombre ? 'sombre' : 'clair');
+      // Couleurs du thème sombre : téléchargées SEULEMENT en sombre ; écrites pendant la lecture de la page,
+      // elles bloquent le premier affichage (aucun flash clair). En clair, rien n'est téléchargé.
+      if (sombre) document.write('<link rel="stylesheet" href="theme-sombre.css" id="theme-sombre">');
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', sombre ? '#1c1714' : '#faf8f4');
+    })();
+  </script>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <!-- Mêmes polices que le site : Playfair Display (titres) et DM Sans (texte) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+  <!-- A-10g : intro à l'ouverture (avant Angular, à la place de l'écran blanc du chargement). Voir le script en bas de page. -->
+  <style>
+    #intro { --i-fond: #f6f3ee; --i-clair: #ffffff; --i-ombre: #e3d9cc; --i-encre: #2a2420; --i-cuivre: #936940; --i-lueur: rgba(147, 105, 64, .35); --i-gris: #6b625b;
+      position: fixed; inset: 0; z-index: 2147483000; display: flex; align-items: center; justify-content: center; background: var(--i-fond); transition: opacity .35s ease; }
+    [data-theme="sombre"] #intro { --i-fond: #1c1714; --i-clair: #2a231e; --i-ombre: #0f0c0a; --i-encre: #f3eadf; --i-cuivre: #d69a6c; --i-lueur: rgba(214, 154, 108, .55); --i-gris: #c4b6aa; }
+    #intro[hidden] { display: none; }
+    #intro.fin { opacity: 0; pointer-events: none; }
+    #intro .scene { position: relative; display: flex; width: min(70vw, 320px); aspect-ratio: 1; align-items: center; justify-content: center; animation: i-sortie .45s ease 2.25s forwards; }
+    /* Disque « en relief » : lumière en haut à gauche, ombre beige en bas à droite ; cercle intérieur légèrement creusé */
+    #intro .disque { position: absolute; inset: 0; border-radius: 50%; background: var(--i-fond); box-shadow: -14px -14px 30px var(--i-clair), 16px 16px 34px var(--i-ombre); }
+    #intro .creux { position: absolute; inset: 11%; border-radius: 50%; box-shadow: inset 6px 6px 14px var(--i-ombre), inset -6px -6px 14px var(--i-clair); }
+    #intro svg { position: absolute; inset: -6%; width: 112%; height: 112%; transform: rotate(-90deg); }
+    #intro circle { fill: none; stroke: var(--i-cuivre); stroke-width: .8; stroke-linecap: round; stroke-dasharray: 302; stroke-dashoffset: 302; animation: i-trait 1.1s cubic-bezier(.6, .1, .3, 1) .15s forwards; }
+    #intro .textes { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; }
+    #intro .elegance { font: 500 clamp(30px, 9vw, 40px)/1 "Playfair Display", Georgia, serif; color: var(--i-encre); letter-spacing: -.02em; opacity: 0; animation: i-net .7s ease .45s forwards; }
+    #intro .deco { margin-top: 2px; font: 400 clamp(28px, 8.4vw, 38px)/1.2 Pacifico, "Brush Script MT", cursive; color: var(--i-cuivre); opacity: 0; animation: i-neon .9s linear 1.05s forwards; }
+    #intro .ligne { margin-top: 12px; font: 600 10px/1 "DM Sans", system-ui, sans-serif; color: var(--i-gris); letter-spacing: .32em; opacity: 0; animation: i-apparait .5s ease 1.55s forwards; }
+    #intro .passer { position: absolute; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); min-width: 44px; min-height: 44px; padding: 0 16px; border: 1px solid var(--i-ombre); border-radius: 999px; background: var(--i-fond); color: var(--i-encre); font: 600 14px "DM Sans", system-ui, sans-serif; cursor: pointer; opacity: 0; animation: i-apparait .3s ease .9s forwards; }
+    #intro .passer:focus-visible { outline: 2px solid var(--i-cuivre); outline-offset: 2px; }
+    @keyframes i-trait { to { stroke-dashoffset: 0; } }
+    @keyframes i-net { from { opacity: 0; filter: blur(6px); } to { opacity: 1; filter: blur(0); } }
+    @keyframes i-apparait { to { opacity: 1; } }
+    /* Néon qui s'allume : 3 petits clignotements puis une lueur douce */
+    @keyframes i-neon { 0% { opacity: 0; } 8% { opacity: 1; } 14% { opacity: .15; } 24% { opacity: 1; } 30% { opacity: .3; } 40%, 100% { opacity: 1; text-shadow: 0 0 6px var(--i-lueur), 0 0 18px var(--i-lueur); } }
+    @keyframes i-sortie { to { opacity: 0; transform: scale(1.08); } }
+  </style>
+</head>
+<body>
+  <!-- Intro (A-10g). La scène est décorative (aria-hidden) ; le bouton « Passer » reste accessible (hors de la partie cachée). -->
+  <div id="intro" hidden>
+    <div class="scene" aria-hidden="true">
+      <span class="disque"></span><span class="creux"></span>
+      <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48"></circle></svg>
+      <div class="textes"><span class="elegance">Elegance</span><span class="deco">Deco</span><span class="ligne">FAIT MAIN · EN TUNISIE</span></div>
+    </div>
+    <button type="button" class="passer">Passer →</button>
+  </div>
+  <script>
+    // Intro : une fois par visite (sessionStorage), seulement en arrivant sur l'accueil, jamais si « réduire les animations ».
+    // Retirée quand l'animation est finie (2,7 s) ET que la page d'accueil est affichée ; au plus tard à 3,5 s.
+    (function () {
+      var intro = document.getElementById('intro');
+      var reduit = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var vue = null;
+      try { vue = sessionStorage.getItem('elegance-intro'); } catch (e) { vue = '1'; }
+      if (location.pathname !== '/' || reduit || vue) return;
+      try { sessionStorage.setItem('elegance-intro', '1'); } catch (e) { /* stockage bloqué */ }
+      var police = document.createElement('link');
+      police.rel = 'stylesheet';
+      police.href = 'https://fonts.googleapis.com/css2?family=Pacifico&text=Deco&display=block';
+      document.head.appendChild(police);
+      intro.hidden = false;
+      var debut = Date.now(), fini = false;
+      function retirer(vite) {
+        if (fini) return;
+        fini = true;
+        document.removeEventListener('keydown', clavier);
+        intro.classList.add('fin');
+        setTimeout(function () { intro.remove(); }, vite ? 150 : 350);
+      }
+      function clavier(e) { if (e.key === 'Escape') retirer(true); }
+      document.addEventListener('keydown', clavier);
+      intro.querySelector('.passer').addEventListener('click', function () { retirer(true); });
+      (function attendre() {
+        var t = Date.now() - debut;
+        var pageAffichee = !!document.querySelector('app-home-page');
+        if ((t >= 2700 && pageAffichee) || t >= 3150) return retirer(false);
+        setTimeout(attendre, 100);
+      })();
+    })();
+  </script>
+  <app-root></app-root>
+</body>
+</html>

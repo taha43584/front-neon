@@ -1,0 +1,147 @@
+<!-- Bande d'information (défile avec la page ; seul l'en-tête reste collé en haut) -->
+<div class="bandeau toujours-sombre">
+  <span class="md-plus">Paiement à la livraison partout en Tunisie · Créations sur mesure, prix calculé selon vos dimensions</span>
+  <span class="tel-seul">Paiement à la livraison · Créations sur mesure</span>
+</div>
+
+<header class="entete">
+  <div class="conteneur ligne-haut">
+    <!-- Tablette seulement : sur téléphone, la barre du bas (onglet « Catégories ») remplace ce menu (A-10d) -->
+    <button type="button" class="bouton-icone sous-lg pas-telephone" aria-label="Ouvrir le menu" (click)="openDrawer()" data-testid="menu-open">
+      <app-icon name="menu" />
+    </button>
+
+    <!-- Téléphone : logo centré entre le menu et le panier -->
+    <div class="zone-logo">
+      <a routerLink="/" class="logo" [attr.aria-label]="site.name() + ' — accueil'">
+        <span class="logo-nom">{{ brandParts().first }}<span>{{ brandParts().rest }}</span></span>
+        <small>Marketplace décoration</small>
+      </a>
+    </div>
+
+    <!-- Ordinateur : « Catégories » ouvre le panneau de toutes les catégories (survol ou clic) -->
+    @if (site.categories().length) {
+      <div class="menu-categories lg-plus" (mouseleave)="leaveCategories()">
+        <button type="button" class="bouton-categories" aria-haspopup="true" [attr.aria-expanded]="categoriesOpen()"
+          (click)="clickCategories()" (mouseenter)="hoverCategories()" (keydown.escape)="categoriesOpen.set(false)" data-testid="categories-button">
+          <app-icon name="layout-grid" [size]="18" /> Catégories
+        </button>
+        @if (categoriesOpen()) {
+          <div class="liste-categories">
+            <div class="grille-categories">
+              @for (c of site.categories(); track c.slug) {
+                <a [routerLink]="['/categorie', c.slug]" (click)="categoriesOpen.set(false)">
+                  <span>{{ c.name }}</span><small>{{ c.productCount }} création{{ c.productCount > 1 ? 's' : '' }}</small>
+                </a>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <form class="recherche md-plus" role="search" (ngSubmit)="submitSearch()">
+      <input name="q" [(ngModel)]="search" placeholder="Miroir, néon, enseigne, boutique…" aria-label="Rechercher une création ou une boutique" />
+      <button type="submit" class="bouton-loupe" aria-label="Rechercher"><app-icon name="search" [size]="20" /></button>
+    </form>
+
+    <nav class="actions" aria-label="Compte, favoris et panier">
+      @if (auth.user(); as user) {
+        <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- conteneur : reçoit Échap et la perte de focus qui remontent de ses boutons -->
+        <div class="menu-compte md-plus" (keydown.escape)="closeAccount(true)" (focusout)="$any($event).relatedTarget && !$any($event.currentTarget).contains($any($event).relatedTarget) && closeAccount()">
+          <button #accountButton type="button" class="bouton-icone" [attr.aria-label]="account().label" [title]="account().label"
+            aria-haspopup="menu" [attr.aria-expanded]="accountOpen()" (click)="accountOpen.set(!accountOpen())" data-testid="account-menu">
+            <app-icon name="user-round" />
+            <span class="point-connecte" aria-hidden="true"></span>
+          </button>
+          @if (accountOpen()) {
+            <div class="liste-compte" role="menu">
+              <p class="email">{{ user.email || account().label }}</p>
+              <a role="menuitem" [routerLink]="account().href" (click)="closeAccount()" data-testid="account-link">{{ account().label }}</a>
+              <button role="menuitem" type="button" class="deconnexion" (click)="logout()"><app-icon name="log-out" [size]="16" /> Se déconnecter</button>
+            </div>
+          }
+        </div>
+      } @else {
+        <a routerLink="/connexion" class="se-connecter md-plus" data-testid="login-link"><app-icon name="user-round" [size]="18" /> Se connecter</a>
+      }
+      <a routerLink="/favoris" class="bouton-icone" aria-label="Favoris" title="Favoris"><app-icon name="heart" /></a>
+      <a routerLink="/panier" class="bouton-icone" [attr.aria-label]="'Panier : ' + cart.count() + ' article' + (cart.count() > 1 ? 's' : '')" title="Panier" data-testid="cart-link">
+        <app-icon name="shopping-bag" />
+        @if (cart.count() > 0) { <span class="pastille-panier" aria-hidden="true">{{ cart.count() }}</span> }
+      </a>
+    </nav>
+  </div>
+
+  <div class="menu lg-plus">
+    <nav class="conteneur menu-ligne" aria-label="Navigation principale">
+      <!-- Catégories principales (les plus fournies), puis les raccourcis du site -->
+      @if (site.categories().length) {
+        <ul class="liens-categories" data-testid="header-categories">
+          @for (c of site.categories().slice(0, 6); track c.slug) {
+            <li><a class="lien-menu" [routerLink]="['/categorie', c.slug]">{{ c.name }}</a></li>
+          }
+        </ul>
+        <span class="separateur" aria-hidden="true"></span>
+      }
+      <a class="lien-menu" routerLink="/produits" [queryParams]="{ sort: 'recent' }">Nouveautés</a>
+      @if (site.hasCustom()) { <a class="lien-menu" routerLink="/produits" [queryParams]="{ sur_mesure: 1 }">Sur mesure</a> }
+      <a class="lien-menu" routerLink="/produits" [queryParams]="{ promo: 1 }">Promotions</a>
+      <a class="lien-menu" routerLink="/boutiques">Boutiques</a>
+      <a class="vendre" routerLink="/vendre">Vendre sur {{ site.name() }}</a>
+    </nav>
+  </div>
+
+  <!-- Téléphone : barre de recherche pleine largeur dans l'en-tête collant (A-10d) ; elle ouvre l'écran de recherche (A-10e) -->
+  <button #barreRecherche type="button" class="recherche-tel tel-seul" aria-haspopup="dialog" aria-label="Rechercher une création ou une boutique" (click)="searchScreen.open()" data-testid="search-open">
+    <span class="faux-champ" [class.rempli]="search()">{{ search() || 'Miroir, néon, enseigne, boutique…' }}</span>
+    <span class="bouton-loupe" aria-hidden="true"><app-icon name="search" [size]="18" /></span>
+  </button>
+</header>
+
+<!-- Écran de recherche (téléphone seulement) : son code n'est téléchargé qu'au premier toucher de la barre
+     (ou plus tôt, quand le navigateur est libre) ; l'ordinateur ne le télécharge jamais -->
+@if (viewport.phone()) {
+  @defer (on interaction(barreRecherche); prefetch on idle) { <app-search-screen /> }
+}
+
+<!-- Tiroir du menu (téléphone et tablette) : <dialog> natif → Échap, focus enfermé, fond qui bloque la page -->
+<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- clic sur le fond du <dialog> ; au clavier : Échap (natif) -->
+<dialog #drawer class="tiroir" aria-label="Menu" (click)="onDrawerClick($event)" data-testid="menu-drawer">
+  <div class="tiroir-contenu">
+    <div class="tiroir-haut">
+      <a routerLink="/" class="logo" (click)="closeDrawer()">
+        <span class="logo-nom">{{ brandParts().first }}<span>{{ brandParts().rest }}</span></span>
+        <small>Marketplace décoration</small>
+      </a>
+      <button type="button" class="bouton-icone" aria-label="Fermer le menu" (click)="closeDrawer()"><app-icon name="x" /></button>
+    </div>
+    <div class="tiroir-compte">
+      @if (auth.user(); as user) {
+        <p class="email">{{ user.email }}</p>
+        <a [routerLink]="account().href" class="bouton plein" (click)="closeDrawer()">{{ account().label }}</a>
+        <button type="button" class="deconnexion-tiroir" (click)="logout()">Se déconnecter</button>
+      } @else {
+        <a routerLink="/connexion" class="bouton plein" (click)="closeDrawer()">Se connecter</a>
+        <a routerLink="/inscription" class="bouton plein bouton-contour-tiroir" (click)="closeDrawer()">Créer un compte</a>
+      }
+    </div>
+    @if (site.categories().length) {
+      <p class="surtitre-tiroir">Catégories</p>
+      <ul class="liens-tiroir">
+        @for (c of site.categories(); track c.slug) {
+          <li><a [routerLink]="['/categorie', c.slug]" (click)="closeDrawer()"><span>{{ c.name }}</span><small>{{ c.productCount }}</small></a></li>
+        }
+      </ul>
+    }
+    <ul class="liens-tiroir separe">
+      <li><a routerLink="/produits" (click)="closeDrawer()">Tous les produits</a></li>
+      <li><a routerLink="/produits" [queryParams]="{ sort: 'recent' }" (click)="closeDrawer()">Nouveautés</a></li>
+      @if (site.hasCustom()) { <li><a routerLink="/produits" [queryParams]="{ sur_mesure: 1 }" (click)="closeDrawer()">Sur mesure</a></li> }
+      <li><a routerLink="/produits" [queryParams]="{ promo: 1 }" (click)="closeDrawer()">Promotions</a></li>
+      <li><a routerLink="/boutiques" (click)="closeDrawer()">Boutiques</a></li>
+      <li><a routerLink="/vendre" (click)="closeDrawer()">Vendre avec nous</a></li>
+      <li><a routerLink="/aide" (click)="closeDrawer()">Aide</a></li>
+    </ul>
+  </div>
+</dialog>

@@ -1,0 +1,87 @@
+<div class="candidature">
+  @if (!editing()) {
+    <div class="intro">
+      <span class="etiquette">Espace Créateurs &amp; Artisans</span>
+      <h2>Ouvrez votre boutique sur Elegance Deco</h2>
+      <p>Rejoignez notre sélection d'artisans et designers tunisiens. Remplissez ce formulaire pour soumettre votre candidature à notre équipe de validation.</p>
+      <ul class="atouts">
+        <li>Validation sous 24h-48h</li>
+        <li>Vitrine personnalisée</li>
+        <li>Paiements transparents (10% com.)</li>
+      </ul>
+    </div>
+  }
+
+  <form [formGroup]="form" novalidate (ngSubmit)="submit()" data-testid="shop-application-form">
+    <fieldset>
+      <legend>Identité de votre boutique</legend>
+      <label class="champ-bloc large">
+        <span class="label">Nom de la boutique <span class="requis">*</span></span>
+        <input class="champ" formControlName="name" maxlength="191" placeholder="Ex: Atelier Céramique Tunis" [attr.aria-invalid]="!!error('name')" data-testid="application-name" />
+        @if (error('name'); as e) { <small class="erreur">{{ e }}</small> }
+      </label>
+      <label class="champ-bloc large">
+        <span class="label">Slogan / Signature</span>
+        <input class="champ" formControlName="tagline" maxlength="500" placeholder="Ex: Objets d'art et poteries façonnés à la main à Nabeul" />
+      </label>
+      <label class="champ-bloc large">
+        <span class="label">Présentation &amp; Histoire de votre univers</span>
+        <textarea class="champ" rows="4" formControlName="about" maxlength="2000" placeholder="Décrivez vos créations, vos matières de prédilection, vos techniques artisanales et ce qui rend votre travail unique..."></textarea>
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Visuels de la boutique</legend>
+      @if (editing() && shop(); as s) {
+        <div class="large"><app-shop-images-editor [shop]="s" [pending]="true" /></div>
+      } @else {
+        <p class="note large">Vous pourrez ajouter votre photo de profil (logo) et votre photo de couverture dès l'envoi de votre demande, depuis votre espace vendeur.</p>
+      }
+    </fieldset>
+
+    <fieldset>
+      <legend>Coordonnées &amp; Localisation</legend>
+      <label class="champ-bloc">
+        <span class="label">Téléphone de contact</span>
+        <input class="champ" formControlName="phone" maxlength="64" inputmode="tel" placeholder="+216 20 000 000" />
+      </label>
+      <label class="champ-bloc">
+        <span class="label">Ville / Gouvernorat</span>
+        <input class="champ" formControlName="city" maxlength="128" placeholder="Tunis, Sousse, Nabeul, Sfax..." />
+      </label>
+      <label class="champ-bloc large">
+        <span class="label">Adresse de l'atelier / showroom</span>
+        <input class="champ" formControlName="address" maxlength="500" placeholder="Ex: 12 Rue de l'Artisanat, Sidi Bou Saïd" />
+      </label>
+      <label class="champ-bloc large">
+        <span class="label">Horaires d'ouverture / Réception</span>
+        <input class="champ" formControlName="openingHours" maxlength="191" placeholder="Ex: Lun - Sam : 09h00 - 18h00" />
+      </label>
+    </fieldset>
+
+    <fieldset class="trois">
+      <legend>Réseaux sociaux &amp; Liens</legend>
+      <label class="champ-bloc">
+        <span class="label">Compte Instagram</span>
+        <input class="champ" formControlName="socialInstagram" maxlength="191" placeholder="@monatelier" [attr.aria-invalid]="!!error('socialInstagram')" />
+        @if (error('socialInstagram'); as e) { <small class="erreur">{{ e }}</small> }
+      </label>
+      <label class="champ-bloc">
+        <span class="label">Page Facebook</span>
+        <input class="champ" formControlName="socialFacebook" maxlength="191" placeholder="https://www.facebook.com/monatelier" [attr.aria-invalid]="!!error('socialFacebook')" />
+        @if (error('socialFacebook'); as e) { <small class="erreur">{{ e }}</small> }
+      </label>
+      <label class="champ-bloc">
+        <span class="label">Site web / Portfolio</span>
+        <input class="champ" formControlName="socialWebsite" maxlength="191" placeholder="https://..." />
+      </label>
+    </fieldset>
+
+    @if (message(); as m) {
+      <p class="message" [class.erreur-bloc]="m.error" [attr.role]="m.error ? 'alert' : 'status'">{{ m.text }}</p>
+    }
+    <button type="submit" class="bouton envoyer" [disabled]="saving()" data-testid="application-submit">
+      {{ saving() ? 'Enregistrement en cours...' : editing() ? 'Enregistrer les modifications' : 'Soumettre ma candidature vendeur →' }}
+    </button>
+  </form>
+</div>

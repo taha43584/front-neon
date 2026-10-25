@@ -1,0 +1,83 @@
+<div class="conteneur page">
+  <nav class="ariane" aria-label="Fil d'Ariane">
+    <a routerLink="/">Accueil</a><span>/</span><a routerLink="/produits">Produits</a>
+    @if (filters().category) { <span>/</span><span class="courant">{{ filters().category }}</span> }
+  </nav>
+
+  <div class="entete-page">
+    <div>
+      <h1>{{ title() }}</h1>
+      <p class="compteur" aria-live="polite">
+        @switch (state().status) {
+          @case ('loading') { Chargement… }
+          @case ('error') { Catalogue indisponible }
+          @default { {{ state().products.length }} produit{{ state().products.length > 1 ? 's' : '' }} }
+        }
+      </p>
+    </div>
+    <div class="outils">
+      @if (hasFilters()) {
+        <button type="button" class="pastille reinitialiser" (click)="reset()">✕ Réinitialiser</button>
+      }
+      @if (viewport.phone()) {
+        <!-- Téléphone (A-10e) : tous les filtres dans un panneau qui monte du bas -->
+        <app-filter-sheet [options]="sheetOptions" [value]="sheetValue()" [counter]="countFor" (apply)="applySheet($event)" />
+      } @else {
+        <button type="button" class="pastille" [class.active]="priceOpen()" [attr.aria-expanded]="priceOpen()" (click)="priceOpen.set(!priceOpen())">Prix</button>
+      }
+      <label class="tri">
+        <span>Trier par</span>
+        <select class="champ" [value]="currentSort()" (change)="setParams({ sort: $any($event.target).value === 'pertinence' ? null : $any($event.target).value })">
+          @for (s of sorts; track s.value) { <option [value]="s.value">{{ s.label }}</option> }
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <!-- Recherche au fil de la frappe (RxJS debounceTime) -->
+  <label class="recherche-page">
+    <span class="masque">Rechercher dans le catalogue</span>
+    <input class="champ" type="search" [formControl]="searchControl" placeholder="Rechercher : miroir, néon, enseigne…" data-testid="catalog-search" />
+  </label>
+
+  <div class="pastilles" role="group" aria-label="Catégories">
+    <button type="button" class="pastille" [class.active]="!filters().category" (click)="setParams({ category: null })">Toutes</button>
+    @for (c of chips(); track c.id) {
+      <button type="button" class="pastille" [class.active]="filters().category === c.name" (click)="setParams({ category: c.name })">{{ c.name }}</button>
+    }
+    @if (!viewport.phone()) {
+      <button type="button" class="pastille" [class.active]="filters().custom" [attr.aria-pressed]="!!filters().custom" (click)="toggle('sur_mesure')">Sur mesure</button>
+      <button type="button" class="pastille promo" [class.active]="filters().discount" [attr.aria-pressed]="!!filters().discount" (click)="toggle('promo')">Promotions</button>
+    }
+  </div>
+
+  @if (priceOpen() && !viewport.phone()) {
+    <div class="panneau-prix">
+      <label>Prix minimum (DT)<input class="champ" type="number" min="0" [formControl]="minControl" placeholder="0" /></label>
+      <label>Prix maximum (DT)<input class="champ" type="number" min="0" [formControl]="maxControl" placeholder="Sans limite" /></label>
+      <p>Le prix filtré est le prix payé, promotion incluse.</p>
+    </div>
+  }
+
+  <div class="resultats">
+    @switch (state().status) {
+      @case ('loading') { <app-load-state status="loading" /> }
+      @case ('error') { <app-load-state status="error" (retry)="retry()" /> }
+      @default {
+        @if (state().products.length) {
+          <div class="grille-produits" data-testid="catalog-products">
+            @for (p of state().products; track p.slug; let i = $index) {
+              <app-product-card [product]="p" [index]="i" [priority]="i < 2" />
+            }
+          </div>
+        } @else {
+          <div class="vide">
+            <p class="titre">Aucun produit trouvé</p>
+            <p>{{ hasFilters() ? 'Essayez un autre mot-clé, une autre catégorie ou élargissez la fourchette de prix.' : 'Aucun produit n\'est encore publié.' }}</p>
+            @if (hasFilters()) { <button type="button" class="bouton" (click)="reset()">Voir tous les produits</button> }
+          </div>
+        }
+      }
+    }
+  </div>
+</div>

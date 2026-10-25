@@ -1,0 +1,33 @@
+.page { padding-top: 32px; padding-bottom: 48px; }
+
+.entete-page { display: flex; flex-direction: column; gap: 16px; margin-top: 24px; }
+h1 { font-size: 36px; letter-spacing: -0.05em; }
+.compteur { margin: 8px 0 0; color: var(--texte-secondaire); font-size: 14px; }
+
+.outils { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.reinitialiser { border-color: var(--cuivre-3, #d4b89a); background: var(--surface-13, #fdf5ee); color: var(--cuivre-21, #915c35); font-weight: 600; }
+.tri { display: flex; align-items: center; gap: 8px; color: var(--texte-secondaire); font-size: 14px; }
+.tri span { display: none; }
+.tri select { border-radius: 999px; }
+
+.recherche-page { display: block; margin-top: 20px; }
+.recherche-page input { width: 100%; max-width: 480px; height: 48px; border-radius: 999px; padding: 0 20px; }
+.masque { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+.pastilles { display: flex; gap: 8px; margin-top: 16px; padding-bottom: 8px; overflow-x: auto; }
+.pastille.promo { color: var(--promo); }
+.pastille.promo.active { border-color: var(--promo); background: var(--promo); color: var(--carte); }
+
+.panneau-prix { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; margin-top: 16px; padding: 20px; border: 1px solid var(--bordure); border-radius: 18px; background: var(--carte); }
+.panneau-prix label { display: flex; flex-direction: column; gap: 8px; font-size: 14px; font-weight: 500; }
+.panneau-prix input { width: 160px; }
+.panneau-prix p { margin: 0; color: var(--texte-secondaire); font-size: 12px; }
+
+.resultats { margin-top: 32px; }
+.vide .bouton { margin-top: 20px; }
+
+@media (min-width: 640px) {
+  .entete-page { flex-direction: row; align-items: flex-end; justify-content: space-between; }
+  h1 { font-size: 48px; }
+  .tri span { display: inline; }
+}

@@ -1,0 +1,242 @@
+/* Identité visuelle d'Elegance Deco (mêmes couleurs et polices que le site React). */
+/* A-10e : toutes les couleurs sont des variables. Principales : ci-dessous. Secondaires : var(--nom, #valeur-claire)
+   dans chaque composant (la valeur claire est la couleur d'origine). Thème sombre : palette-sombre.css, publiée à part
+   (theme-sombre.css, angular.json) et chargée SEULEMENT en sombre
+   (choisi par <html data-theme="sombre">, posé avant l'affichage par le petit script de index.html) */
+
+:root {
+  color-scheme: light;
+  --fond: #faf8f4;
+  --carte: #ffffff;
+  --beige: #f1e6da;
+  --beige-clair: #f5efe8;
+  --bordure: #e6ddd2;
+  --texte: #2a2420;
+  --texte-secondaire: #6b625b;
+  --accent: #a8693f;
+  --surtitre: #8a4f2b;
+  --bouton: #2a2420;
+  --erreur: #b0413e;
+  --promo: #aa584f; /* A-10g : 4.24 → 4.63:1 sur les fonds clairs */
+  --police-titre: "Playfair Display", Georgia, serif;
+  --police-texte: "DM Sans", system-ui, sans-serif;
+  /* Courbes des animations (mêmes valeurs que le site React) */
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --ease-sortie: cubic-bezier(.23, 1, .32, 1);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: var(--police-texte);
+  line-height: 1.5;
+}
+
+h1, h2, h3 {
+  font-family: var(--police-titre);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0;
+}
+
+a { color: inherit; }
+
+/* Petit titre au-dessus d'un titre (« CONNEXION ») */
+.surtitre {
+  margin: 0 0 8px;
+  color: var(--surtitre);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* Boutons « pilule », hauteur minimale de 44 px (cible tactile) */
+.bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 24px;
+  border: none;
+  border-radius: 999px;
+  background: var(--bouton);
+  color: var(--carte);
+  font: 600 14px var(--police-texte);
+  text-decoration: none;
+  cursor: pointer;
+}
+.bouton:disabled { opacity: 0.5; cursor: not-allowed; }
+.bouton-clair { background: var(--beige); color: var(--texte); }
+
+.carte {
+  background: var(--carte);
+  border: 1px solid var(--bordure);
+  border-radius: 24px;
+  padding: 24px;
+}
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* Conteneur de page : même largeur maximale et mêmes marges que le site React */
+.conteneur {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+@media (min-width: 640px) { .conteneur { padding: 0 24px; } }
+@media (min-width: 1024px) { .conteneur { padding: 0 40px; } }
+
+/* Fil d'Ariane */
+.ariane { display: flex; flex-wrap: wrap; align-items: center; gap: 0 8px; color: var(--texte-secondaire); font-size: 14px; }
+.ariane a { display: inline-flex; min-height: 44px; align-items: center; text-decoration: none; }
+.ariane a:hover { color: var(--accent); }
+.ariane .courant { color: var(--texte); }
+
+/* Pastille (filtre) */
+.pastille {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
+  background: var(--carte);
+  color: var(--texte);
+  font: 500 14px var(--police-texte);
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+}
+.pastille:hover { border-color: var(--accent); }
+.pastille.active { border-color: var(--texte); background: var(--texte); color: var(--carte); }
+
+/* Grille de cartes produit : 2 colonnes sur téléphone, 4 sur ordinateur */
+.grille-produits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 12px; }
+@media (min-width: 768px) { .grille-produits { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px 20px; } }
+@media (min-width: 1024px) { .grille-produits { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/*
+ * ANIMATIONS DU SITE PUBLIC (les 6 du site React). Règles : uniquement transform et opacity,
+ * 0,3 à 0,8 s (sauf boucles discrètes), rien ne bloque l'utilisateur, TOUT est coupé avec
+ * « réduire les animations » (bloc à la fin de ce fichier).
+ */
+
+/* 1. Apparition de l'accueil : éléments du haut l'un après l'autre, sections à l'entrée dans l'écran */
+@keyframes monte { from { opacity: 0; transform: translate3d(0, 22px, 0); } to { opacity: 1; transform: none; } }
+.monte { animation: monte .8s var(--ease) both; }
+.delai-1 { animation-delay: .12s; }
+.delai-2 { animation-delay: .26s; }
+.delai-3 { animation-delay: .40s; }
+/* Classe .visible posée UNE fois par la directive appReveal */
+.apparition { opacity: 0; transform: translate3d(0, 22px, 0); transition: opacity .8s var(--ease), transform .8s var(--ease); }
+.apparition.visible { opacity: 1; transform: none; }
+
+/* 2. Cartes produit au survol et cœur favori : dans le composant ProductCard */
+/* 3. Prix animé : chiffres à largeur fixe pour que le texte ne bouge pas */
+.chiffres { font-variant-numeric: tabular-nums; }
+/* 4. Néon qui s'allume : plus bas */
+
+/* 5. Tuiles (catégories, boutiques) au survol, photos du haut de l'accueil qui zooment */
+.tuile-anim { transition: transform .35s var(--ease-sortie); }
+.tuile-anim .tuile-img { transition: transform .5s var(--ease-sortie); }
+.tuile-anim:focus-visible, .tuile-anim:focus-within { transform: translate3d(0, -8px, 0); }
+.tuile-anim:focus-visible .tuile-img, .tuile-anim:focus-within .tuile-img { transform: scale(1.04); }
+.zoom-img { transition: transform .7s var(--ease-sortie); }
+.zoom:focus-visible .zoom-img { transform: scale(1.04); }
+@media (hover: hover) and (pointer: fine) {
+  .tuile-anim:hover { transform: translate3d(0, -8px, 0); }
+  .tuile-anim:hover .tuile-img { transform: scale(1.04); }
+  .zoom:hover .zoom-img { transform: scale(1.04); }
+}
+
+/* 6. Chargement élégant : squelette avec reflet qui passe (mêmes couleurs que React) */
+@keyframes reflet { from { transform: translate3d(-100%, 0, 0); } to { transform: translate3d(100%, 0, 0); } }
+.squelette { position: relative; overflow: hidden; background: var(--ligne-11, #efe7dd); }
+.squelette::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, var(--surface-23, #f8f3ed), transparent); transform: translate3d(-100%, 0, 0); animation: reflet 1.3s ease-in-out infinite; }
+
+/*
+ * Néon qui s'allume (mêmes étapes que le site React) : 2-3 clignotements en 1,8 s, puis un scintillement
+ * très discret toutes les 6 s. « Réduire les animations » : tout est coupé par la règle plus haut.
+ * .neon-allume : dès l'affichage ; .neon-a-l-ecran : éteint jusqu'à ce que la classe .visible soit posée.
+ */
+@keyframes neon-allumage {
+  0% { opacity: .08; }
+  10% { opacity: .9; }
+  14% { opacity: .15; }
+  28% { opacity: 1; }
+  32% { opacity: .3; }
+  36% { opacity: .95; }
+  52% { opacity: .55; }
+  60%, 100% { opacity: 1; }
+}
+@keyframes neon-scintillement {
+  0%, 94%, 100% { opacity: 1; }
+  95% { opacity: .82; }
+  96.5% { opacity: 1; }
+  97.5% { opacity: .9; }
+}
+.neon-allume, .neon-a-l-ecran.visible { opacity: 1; animation: neon-allumage 1.8s linear both, neon-scintillement 6s linear 1.8s infinite; }
+.neon-a-l-ecran { opacity: .08; }
+@media (prefers-reduced-motion: reduce) { .neon-a-l-ecran { opacity: 1; } }
+
+/* Message « vide » */
+.vide {
+  padding: 48px 16px;
+  border: 1px dashed var(--bordure);
+  border-radius: 22px;
+  background: var(--carte);
+  text-align: center;
+  color: var(--texte-secondaire);
+}
+.vide .titre { margin: 0 0 8px; color: var(--texte); font-family: var(--police-titre); font-size: 24px; }
+
+.champ {
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--bordure);
+  border-radius: 14px;
+  background: var(--carte);
+  color: var(--texte);
+  font: 15px var(--police-texte);
+}
+.champ:focus { outline: none; border-color: var(--accent); }
+
+/* Réduire les animations : tout est coupé, le contenu est affiché immédiatement, rien ne se déplace */
+@media (prefers-reduced-motion: reduce) {
+  .apparition { opacity: 1 !important; transform: none !important; }
+  .tuile-anim:hover, .tuile-anim:focus-visible, .tuile-anim:focus-within,
+  .tuile-anim:hover .tuile-img, .tuile-anim:focus-visible .tuile-img, .tuile-anim:focus-within .tuile-img,
+  .zoom:hover .zoom-img, .zoom:focus-visible .zoom-img { transform: none !important; }
+}
+
+/* Texte lu par les lecteurs d'écran, invisible à l'écran */
+.masque-lecteur { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* Icônes Lucide (app-icon) : alignées sur le texte qui les entoure */
+app-icon { vertical-align: -0.2em; }
+.avec-icone { display: flex; align-items: center; gap: 8px; }
+.accent-icone { color: var(--accent); }
+
+/* A-10d : glissement de page vers / depuis la fiche produit (téléphone ; voir core/layout/route-transition.ts).
+   Sans data-sens-page (ordinateur, « réduire les animations », autres pages), aucune transition n'a lieu. */
+:root[data-sens-page]::view-transition-old(root), :root[data-sens-page]::view-transition-new(root) { animation-duration: .34s; animation-timing-function: var(--ease); animation-fill-mode: both; }
+:root[data-sens-page="avant"]::view-transition-old(root) { animation-name: page-sort-gauche; }
+:root[data-sens-page="avant"]::view-transition-new(root) { animation-name: page-entre-droite; }
+:root[data-sens-page="arriere"]::view-transition-old(root) { animation-name: page-sort-droite; }
+:root[data-sens-page="arriere"]::view-transition-new(root) { animation-name: page-entre-gauche; }
+@keyframes page-entre-droite { from { transform: translateX(100%); } }
+@keyframes page-sort-gauche { to { transform: translateX(-30%); opacity: .6; } }
+@keyframes page-entre-gauche { from { transform: translateX(-30%); opacity: .6; } }
+@keyframes page-sort-droite { to { transform: translateX(100%); } }
+:root[data-sens-page="arriere"]::view-transition-old(root) { z-index: 1; }

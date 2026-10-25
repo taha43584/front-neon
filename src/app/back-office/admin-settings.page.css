@@ -1,0 +1,19 @@
+.panneau { margin-bottom: 24px; }
+.panneau + .panneau { margin-top: 0; }
+.lignes > * + * { border-top: 1px solid var(--surface-20, #f1f5f9); }
+.ligne { display: grid; gap: 8px; padding: 16px 20px; }
+.libelle { color: var(--bleu-10, #1e293b); font-size: 14px; font-weight: 500; }
+.libelle small { display: block; margin-top: 2px; color: var(--bleu-3, #64748b); font-size: 12px; font-weight: 400; }
+.ligne .champ-admin { width: 100%; }
+.ligne .champ-admin.court { width: 128px; }
+.ligne .champ-admin.moyen { max-width: 384px; }
+.non-enregistre { color: var(--cuivre-18, #b45309); font-size: 12px; }
+.bascule { display: flex; min-height: 44px; align-items: center; gap: 12px; color: var(--bleu-9, #334155); font-size: 14px; cursor: pointer; }
+.bascule { position: relative; }
+.bascule input { position: absolute; z-index: 1; width: 44px; height: 44px; margin: 0; opacity: 0; cursor: pointer; }
+.bascule span { flex-shrink: 0; width: 40px; height: 22px; border-radius: 999px; background: var(--ardoise-ligne-2, #cbd5e1); transition: background 0.2s; }
+.bascule span::after { display: block; width: 18px; height: 18px; margin: 2px; border-radius: 999px; background: var(--carte); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); content: ''; transition: transform 0.2s; }
+.bascule input:checked + span { background: var(--bleu-11, #0f172a); }
+.bascule input:checked + span::after { transform: translateX(18px); }
+.bascule input:focus-visible + span { outline: 2px solid var(--cuivre-4, #f59e0b); outline-offset: 2px; }
+@media (min-width: 768px) { .ligne { grid-template-columns: 240px 1fr; gap: 24px; } }

@@ -1,0 +1,38 @@
+{
+  "name": "client-angular",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "start:test": "ng serve --proxy-config proxy.test.json --port 4201",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "lint": "ng lint"
+  },
+  "private": true,
+  "packageManager": "npm@10.9.2",
+  "dependencies": {
+    "@angular/common": "^21.2.0",
+    "@angular/compiler": "^21.2.0",
+    "@angular/core": "^21.2.0",
+    "@angular/forms": "^21.2.0",
+    "@angular/platform-browser": "^21.2.0",
+    "@angular/router": "^21.2.0",
+    "@trpc/client": "11.6.0",
+    "@trpc/server": "11.6.0",
+    "rxjs": "~7.8.0",
+    "superjson": "1.13.3",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^21.2.27",
+    "@angular/cli": "^21.2.27",
+    "@angular/compiler-cli": "^21.2.0",
+    "angular-eslint": "21.4.0",
+    "eslint": "9.39.5",
+    "lighthouse": "12.8.2",
+    "typescript": "~5.9.2",
+    "typescript-eslint": "8.72.0"
+  }
+}

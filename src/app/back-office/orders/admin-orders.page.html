@@ -1,0 +1,94 @@
+<div class="entete-page">
+  <div>
+    <h1>Commandes</h1>
+    <p>Toutes les commandes passées sur la marketplace.</p>
+  </div>
+</div>
+
+<section class="panneau">
+  <div class="filtres">
+    <div class="ligne-haut">
+      <div class="onglets" role="tablist" aria-label="Filtrer les commandes">
+        @for (t of tabs(); track t.value) {
+          <button type="button" role="tab" [attr.aria-selected]="status() === t.value" (click)="setStatus(t.value)">{{ t.label }}@if (t.count !== undefined) { <span class="nombre">{{ t.count }}</span> }</button>
+        }
+      </div>
+      <div class="recherche-admin">
+        <input class="champ-admin" type="search" placeholder="N° (ED-000012), client, e-mail, tél." aria-label="N° (ED-000012), client, e-mail, tél." [value]="search()" (input)="setFilter(search, $any($event.target).value)" data-testid="admin-search" />
+        @if (search()) { <button type="button" class="effacer" aria-label="Effacer la recherche" (click)="setFilter(search, '')">✕</button> }
+      </div>
+    </div>
+    <div class="ligne-filtres">
+      <select class="champ-admin" aria-label="Filtrer par vendeur" [value]="shopId()" (change)="setFilter(shopId, $any($event.target).value)">
+        <option value="">Tous les vendeurs</option>
+        @for (s of shops(); track s.id) { <option [value]="s.id" [selected]="'' + s.id === shopId()">{{ s.name }}</option> }
+      </select>
+      <label class="date">Du <input class="champ-admin" type="date" [value]="from()" (change)="setFilter(from, $any($event.target).value)" /></label>
+      <label class="date">au <input class="champ-admin" type="date" [value]="to()" (change)="setFilter(to, $any($event.target).value)" /></label>
+      @if (filtered()) { <button type="button" class="b" (click)="reset()">Réinitialiser</button> }
+    </div>
+  </div>
+
+  @switch (list.status()) {
+    @case ('loading') { <p class="info" role="status">Chargement…</p> }
+    @case ('error') { <div class="erreur-etat" role="alert"><p>{{ list.error() }}</p><button type="button" class="b" (click)="list.reload()">Réessayer</button></div> }
+    @default {
+      @if (!rows().length) {
+        <p class="vide">Aucune commande pour ces critères</p>
+      } @else {
+        <div class="tableau">
+          <table data-testid="admin-orders-table">
+            <thead><tr>
+              <th>Commande</th>
+              <th>Client</th>
+              <th>Boutique(s)</th>
+              <th>Ville</th>
+              <th class="droite">Articles</th>
+              <th class="droite">Total</th>
+              <th>Statut</th>
+            </tr></thead>
+            <tbody>
+              @for (o of rows(); track o.id) {
+                <tr [attr.data-testid]="'order-row-' + o.id">
+                  <td><a class="nom" [routerLink]="['/admin/commandes', o.id]">{{ o.reference }}</a><span class="sous">{{ o.createdAt | date: 'dd/MM/y HH:mm' }}</span></td>
+                  <td>{{ o.shippingName }}<span class="sous">{{ o.clientEmail }}</span></td>
+                  <td class="coupe-cellule">{{ o.shopNames ?? '—' }}</td>
+                  <td>{{ o.shippingCity }}</td>
+                  <td class="droite">{{ o.itemCount }}</td>
+                  <td class="droite fort">{{ o.totalTnd | prixDt }}</td>
+                  <td><app-status-badge [status]="o.status" /></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @let d = list.data()!;
+        <app-admin-pagination [page]="d.page" [pageCount]="d.pageCount" [total]="d.total" (pageChange)="page.set($event)" />
+      }
+    }
+  }
+</section>
+
+<!-- Demandes de devis néon (logo) envoyées aux ateliers ; cachée s'il n'y en a aucune (comme le site React) -->
+@if (quotes().length) {
+  <section class="panneau" data-testid="admin-neon-quotes">
+    <div class="titre-panneau"><h2>Demandes de devis néon ({{ quotes().length }})</h2></div>
+    <div class="tableau">
+      <table>
+        <thead><tr><th>Logo</th><th>Client</th><th>Atelier</th><th>Demande</th><th>Statut</th><th>Date</th></tr></thead>
+        <tbody>
+          @for (q of quotes(); track q.id) {
+            <tr>
+              <td>@if (q.logoUrl) { <a [href]="q.logoUrl" target="_blank" rel="noreferrer"><img class="logo-devis" [src]="q.logoUrl" [alt]="'Logo envoyé par ' + (q.clientName ?? q.clientEmail)" /></a> } @else { — }</td>
+              <td>{{ q.clientName }}<span class="sous">{{ q.clientEmail }}{{ q.phone ? ' · ' + q.phone : '' }}</span></td>
+              <td>{{ q.shopName }}</td>
+              <td class="demande"><span class="sous">{{ quoteDetails(q) }}</span>@if (q.message) { <span class="texte-demande">{{ q.message }}</span> }</td>
+              <td><app-status-badge [status]="q.status" [label]="quoteStatus[q.status] || q.status" /></td>
+              <td>{{ q.createdAt | date: 'dd/MM/y' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}

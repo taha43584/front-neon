@@ -1,0 +1,87 @@
+@switch (status()) {
+  @case ('loading') { <p class="info" role="status">Chargement…</p> }
+  @case ('error') { <div class="erreur-etat" role="alert"><p>{{ loadError() }}</p></div> }
+  @default {
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate data-testid="admin-settings">
+      <div class="entete-page">
+        <div>
+          <h1>Paramètres du marketplace</h1>
+          <p>Ces réglages sont enregistrés en base de données et appliqués immédiatement au site.</p>
+        </div>
+        <div class="actions-page">
+          @if (dirty()) { <span class="non-enregistre">Modifications non enregistrées</span> }
+          <button type="submit" class="b noir" [disabled]="!dirty() || saving()" data-testid="settings-save">{{ saving() ? 'Enregistrement…' : 'Enregistrer' }}</button>
+        </div>
+      </div>
+      @if (error()) { <p class="message erreur" role="alert" data-testid="settings-error">{{ error() }}</p> }
+      @if (message()) { <p class="message" role="status" data-testid="admin-message">{{ message() }}</p> }
+
+      <section class="panneau">
+        <div class="titre-panneau"><h2>Identité</h2></div>
+        <div class="lignes">
+          <label class="ligne"><span class="libelle">Nom du marketplace<small>En-tête, pied de page et titres du site.</small></span><input class="champ-admin" formControlName="marketplaceName" maxlength="80" /></label>
+          <label class="ligne"><span class="libelle">Slogan<small>Affiché sous le logo et dans le pied de page.</small></span><input class="champ-admin" formControlName="tagline" maxlength="200" /></label>
+        </div>
+      </section>
+
+      <section class="panneau">
+        <div class="titre-panneau"><h2>Coordonnées publiques</h2></div>
+        <div class="lignes">
+          <label class="ligne"><span class="libelle">E-mail de contact<small>Laisser vide pour ne pas l'afficher.</small></span><input class="champ-admin" type="email" formControlName="contactEmail" /></label>
+          <label class="ligne"><span class="libelle">Téléphone</span><input class="champ-admin" formControlName="contactPhone" maxlength="40" inputmode="tel" /></label>
+          <label class="ligne"><span class="libelle">WhatsApp</span><input class="champ-admin" formControlName="whatsapp" maxlength="40" inputmode="tel" /></label>
+          <label class="ligne"><span class="libelle">Adresse</span><input class="champ-admin" formControlName="contactAddress" maxlength="300" /></label>
+          <label class="ligne"><span class="libelle">Instagram<small>Lien complet (https://…).</small></span><input class="champ-admin" formControlName="socialInstagram" placeholder="https://www.instagram.com/…" /></label>
+          <label class="ligne"><span class="libelle">Facebook<small>Lien complet (https://…).</small></span><input class="champ-admin" formControlName="socialFacebook" placeholder="https://www.facebook.com/…" /></label>
+        </div>
+      </section>
+
+      <section class="panneau">
+        <div class="titre-panneau"><h2>Livraison</h2></div>
+        <div class="lignes">
+          <label class="ligne"><span class="libelle">Informations de livraison<small>Affichées sur les fiches produit, le panier et la page de commande. Les frais et délais précis restent ceux de chaque boutique.</small></span><textarea class="champ-admin" rows="3" maxlength="1000" formControlName="deliveryInfo"></textarea></label>
+        </div>
+      </section>
+
+      <section class="panneau">
+        <div class="titre-panneau"><h2>Modération et commissions</h2></div>
+        <div class="lignes">
+          <div class="ligne">
+            <span class="libelle">Validation des produits<small>Activé : un produit publié par un vendeur passe « en attente » jusqu'à votre approbation dans Produits. Désactivé : il est visible immédiatement.</small></span>
+            <label class="bascule"><input type="checkbox" role="switch" formControlName="requireProductApproval" /><span aria-hidden="true"></span>{{ values().requireProductApproval ? "Validation par l'administration requise" : 'Publication directe par les vendeurs approuvés' }}</label>
+          </div>
+          <label class="ligne"><span class="libelle">Taux de commission (%)<small>Appliqué aux nouvelles commandes. Les commandes déjà passées conservent leur commission.</small></span><input class="champ-admin court" formControlName="commissionRate" inputmode="decimal" /></label>
+        </div>
+      </section>
+
+      <section class="panneau">
+        <div class="titre-panneau"><h2>Configurateur néon</h2></div>
+        <div class="lignes">
+          <label class="ligne"><span class="libelle">Catégorie du configurateur néon<small>La page de cette catégorie affiche la bannière « Créer mon néon ». Choisie ici, jamais déduite du nom de la catégorie.</small></span>
+            <select class="champ-admin moyen" formControlName="neonCategorySlug" aria-label="Catégorie du configurateur néon" data-testid="settings-neon-category">
+              <option value="">Aucune</option>
+              @for (c of siteCategories(); track c.slug) { <option [value]="c.slug">{{ c.name }}{{ c.hidden ? ' (masquée)' : '' }} — {{ c.productCount }} création{{ c.productCount > 1 ? 's' : '' }}</option> }
+              @if (missingCategory()) { <option [value]="values().neonCategorySlug">{{ values().neonCategorySlug }} (introuvable)</option> }
+            </select>
+          </label>
+          <div class="ligne">
+            <span class="libelle">Masquer la bannière<small>La bannière « Créer mon néon » s'affiche automatiquement sur la catégorie choisie dès qu'une boutique active propose le néon. Activez ce bouton pour la masquer manuellement.</small></span>
+            <label class="bascule"><input type="checkbox" role="switch" formControlName="neonBannerHidden" aria-label="Masquer la bannière néon" /><span aria-hidden="true"></span>{{ values().neonBannerHidden ? 'Bannière masquée manuellement' : values().neonCategorySlug ? "Automatique : affichée dès qu'un atelier propose le néon" : 'Aucune catégorie choisie : bannière non affichée' }}</label>
+          </div>
+        </div>
+      </section>
+
+      <section class="panneau">
+        <div class="titre-panneau"><h2>Conditions</h2></div>
+        <div class="lignes">
+          <label class="ligne"><span class="libelle">Conditions générales d'utilisation<small>Publiées sur /conditions-generales. Texte brut, les retours à la ligne sont conservés.</small></span><textarea class="champ-admin" rows="8" formControlName="termsOfService" placeholder="Rédigez ici vos conditions générales…"></textarea></label>
+          <label class="ligne"><span class="libelle">Conditions de vente<small>Publiées sur /conditions-de-vente et rappelées lors de la commande.</small></span><textarea class="champ-admin" rows="8" formControlName="salesTerms" placeholder="Rédigez ici vos conditions de vente…"></textarea></label>
+        </div>
+      </section>
+    </form>
+    <!-- A-10e : apparence de la console sur CET appareil (hors du formulaire : rien n'est enregistré en base) -->
+    <section class="panneau" aria-label="Apparence">
+      <app-theme-choice />
+    </section>
+  }
+}

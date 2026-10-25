@@ -1,0 +1,273 @@
+@switch (status()) {
+  @case ('loading') { <p class="info" role="status">Chargement du produit…</p> }
+  @case ('error') { <p class="alerte" role="alert">{{ loadError() }}</p> }
+  @default {
+    <div class="entete-editeur">
+      <a routerLink="/espace-vendeur/produits" class="retour">← Retour à mes produits</a>
+      <h1>{{ productId() ? 'Modifier « ' + productName() + ' »' : 'Ajouter un produit' }}</h1>
+      @if (productStatus(); as s) {
+        <p class="petit">Statut actuel : <strong>{{ s === 'published' ? 'Publié' : s === 'pending' ? 'En attente de validation' : 'Brouillon' }}</strong></p>
+      }
+    </div>
+
+    @if (formError()) {
+      <div class="alerte" role="alert" data-testid="editor-error">
+        <p>{{ formError() }}</p>
+        @if (errorList().length) { <ul>@for (e of errorList(); track e) { <li>{{ e }}</li> }</ul> }
+      </div>
+    }
+
+    <form [formGroup]="form" class="grille-editeur" novalidate (ngSubmit)="submit('publish')">
+      <div class="colonne">
+        <!-- Informations principales -->
+        <section class="section">
+          <h2>Informations principales</h2>
+          <label class="champ-bloc">
+            <span class="label">Nom du produit <span class="requis">*</span></span>
+            <input class="champ" formControlName="name" placeholder="Ex. : Miroir soleil en laiton" [attr.aria-invalid]="!!errors()['name']" data-testid="product-name" />
+            @if (errors()['name']; as e) { <small class="erreur">{{ e }}</small> }
+          </label>
+          <label class="champ-bloc">
+            <span class="label">Description détaillée <span class="requis">*</span></span>
+            <textarea class="champ" rows="6" formControlName="description" placeholder="Matériaux, finitions, usage, entretien, personnalisation possible…" [attr.aria-invalid]="!!errors()['description']" data-testid="product-description"></textarea>
+            @if (errors()['description']; as e) { <small class="erreur">{{ e }}</small> } @else { <small>{{ (values().description ?? '').trim().length }} / 5000 caractères (20 minimum)</small> }
+          </label>
+          <div class="champ-bloc">
+            <span class="label">Catégorie</span>
+            <app-category-select [value]="form.controls.shopCategoryId.value" (selected)="form.controls.shopCategoryId.setValue($event)" />
+            <small>Catégorie de votre boutique ou d'une autre boutique (vos produits y sont regroupés sur le site). Facultatif.</small>
+          </div>
+
+          <!-- Type de prix -->
+          <div class="champ-bloc">
+            <span class="label" id="type-prix">Type de prix</span>
+            <div class="types-prix" role="radiogroup" aria-labelledby="type-prix">
+              @for (mode of pricingModes; track mode) {
+                <button type="button" role="radio" class="type-prix" [class.actif]="values().pricingMode === mode" [attr.aria-checked]="values().pricingMode === mode" (click)="setPricingMode(mode)" [attr.data-testid]="'pricing-' + mode">
+                  <strong>{{ pricingModeLabels[mode] }}</strong>
+                  <small>{{ mode === 'fixed' ? 'Un prix pour le produit' : mode === 'per_m2' ? 'Le client saisit largeur × hauteur' : 'Le client saisit une longueur' }}</small>
+                </button>
+              }
+            </div>
+          </div>
+
+          @if (!custom()) {
+            <div class="trois">
+              <label class="champ-bloc"><span class="label">Prix (DT) <span class="requis">*</span></span>
+                <input class="champ" inputmode="decimal" formControlName="priceTnd" placeholder="250,00" [attr.aria-invalid]="!!errors()['priceTnd']" data-testid="product-price" />
+                @if (errors()['priceTnd']; as e) { <small class="erreur">{{ e }}</small> }
+              </label>
+              <label class="champ-bloc"><span class="label">Prix promotionnel (DT)</span>
+                <input class="champ" inputmode="decimal" formControlName="promoPriceTnd" placeholder="—" [attr.aria-invalid]="!!errors()['promoPriceTnd']" />
+                @if (errors()['promoPriceTnd']; as e) { <small class="erreur">{{ e }}</small> } @else { <small>Facultatif, inférieur au prix</small> }
+              </label>
+              <label class="champ-bloc"><span class="label">Référence</span><input class="champ" formControlName="sku" placeholder="Facultatif" /></label>
+            </div>
+          } @else {
+            <!-- Sur mesure : prix au m² ou au mètre linéaire -->
+            <div class="sur-mesure" data-testid="custom-pricing">
+              <p class="titre-mesure"><app-icon name="ruler" [size]="16" /> {{ mode() === 'per_m2' ? 'Prix au m²' : 'Prix au mètre linéaire' }}</p>
+              <div class="trois">
+                <label class="champ-bloc"><span class="label">Prix au {{ unit() }} (DT) <span class="requis">*</span></span>
+                  <input class="champ" inputmode="decimal" formControlName="unitPriceTnd" placeholder="120,000" [attr.aria-invalid]="!!errors()['unitPriceTnd']" data-testid="unit-price" />
+                  @if (errors()['unitPriceTnd']; as e) { <small class="erreur">{{ e }}</small> }
+                </label>
+                <label class="champ-bloc"><span class="label">Prix minimum (DT)</span>
+                  <input class="champ" inputmode="decimal" formControlName="minPriceTnd" placeholder="—" />
+                  @if (errors()['minPriceTnd']; as e) { <small class="erreur">{{ e }}</small> } @else { <small>Facultatif</small> }
+                </label>
+                <label class="champ-bloc"><span class="label">Remise (%)</span>
+                  <input class="champ" inputmode="decimal" formControlName="promoPercent" placeholder="—" />
+                  @if (errors()['promoPercent']; as e) { <small class="erreur">{{ e }}</small> } @else { <small>Facultatif, sur le prix calculé</small> }
+                </label>
+              </div>
+              <div class="deux">
+                <div class="champ-bloc">
+                  <span class="label">{{ mode() === 'per_m2' ? 'Largeur min / max (cm)' : 'Longueur min / max (cm)' }} <span class="requis">*</span></span>
+                  <div class="min-max">
+                    <input class="champ" inputmode="numeric" formControlName="minWidthCm" placeholder="20" [attr.aria-label]="mode() === 'per_m2' ? 'Largeur minimum' : 'Longueur minimum'" data-testid="min-width" />
+                    <span>–</span>
+                    <input class="champ" inputmode="numeric" formControlName="maxWidthCm" placeholder="300" [attr.aria-label]="mode() === 'per_m2' ? 'Largeur maximum' : 'Longueur maximum'" data-testid="max-width" />
+                  </div>
+                  @if (errors()['minWidthCm'] || errors()['maxWidthCm']) { <small class="erreur">{{ errors()['minWidthCm'] || errors()['maxWidthCm'] }}</small> }
+                </div>
+                @if (mode() === 'per_m2') {
+                  <div class="champ-bloc">
+                    <span class="label">Hauteur min / max (cm) <span class="requis">*</span></span>
+                    <div class="min-max">
+                      <input class="champ" inputmode="numeric" formControlName="minHeightCm" placeholder="20" aria-label="Hauteur minimum" data-testid="min-height" />
+                      <span>–</span>
+                      <input class="champ" inputmode="numeric" formControlName="maxHeightCm" placeholder="300" aria-label="Hauteur maximum" data-testid="max-height" />
+                    </div>
+                    @if (errors()['minHeightCm'] || errors()['maxHeightCm']) { <small class="erreur">{{ errors()['minHeightCm'] || errors()['maxHeightCm'] }}</small> }
+                  </div>
+                }
+                <label class="champ-bloc"><span class="label">{{ mode() === 'per_m2' ? 'Surface minimum facturée (m²)' : 'Longueur minimum facturée (m)' }}</span>
+                  <input class="champ" inputmode="decimal" formControlName="minBillableArea" placeholder="0,5" />
+                  @if (errors()['minBillableArea']; as e) { <small class="erreur">{{ e }}</small> } @else { <small>Facultatif — ex. 0,5</small> }
+                </label>
+              </div>
+
+              <!-- Options avec supplément : FormArray -->
+              <div class="options" formArrayName="options">
+                <div class="titre-options">
+                  <span class="label">Options</span>
+                  <button type="button" class="bouton bouton-clair mini" (click)="addOption()" [disabled]="options.length >= maxOptions" data-testid="add-option">+ Ajouter une option</button>
+                </div>
+                @if (options.length === 0) {
+                  <small>Aucune option. Exemples : « Cadre doré » (+30 DT / {{ unit() }}), « Pose murale » (+25 DT).</small>
+                }
+                @for (option of options.controls; track option; let i = $index) {
+                  <div class="option" [formGroupName]="i" data-testid="option-row">
+                    <input class="champ" formControlName="name" placeholder="Nom (ex. Cadre doré)" maxlength="100" [attr.aria-label]="'Nom de l\'option ' + (i + 1)" />
+                    <select class="champ" formControlName="surchargeType" [attr.aria-label]="'Type de supplément de l\'option ' + (i + 1)">
+                      <option value="per_m2">Supplément au {{ unit() }}</option>
+                      <option value="fixed">Supplément fixe</option>
+                    </select>
+                    <input class="champ" inputmode="decimal" formControlName="amountTnd" placeholder="DT" [attr.aria-label]="'Montant de l\'option ' + (i + 1)" />
+                    <button type="button" class="supprimer" (click)="removeOption(i)" [attr.aria-label]="'Supprimer l\'option ' + (option.value.name || i + 1)">✕</button>
+                  </div>
+                }
+                @if (errors()['options']; as e) { <small class="erreur">{{ e }}</small> }
+              </div>
+
+              <!-- Aperçu en direct (fonction partagée) -->
+              @if (example(); as ex) {
+                <p class="apercu" aria-live="polite" data-testid="pricing-preview">
+                  @if (ex.result.ok) {
+                    Exemple : {{ ex.label }}@if (ex.result.minAreaApplied) { (facturé {{ area(ex.result.billedAreaM2) }}) } = <strong>{{ ex.result.priceTnd | prixDt }}</strong>
+                    @if (ex.result.promoPercent) { <span class="barre">{{ ex.result.regularPriceTnd | prixDt }}</span> }
+                    <small>(sans option)</small>
+                  } @else {
+                    Exemple : {{ ex.label }} — {{ ex.result.field === 'config' ? 'indiquez le prix unitaire pour voir l\'aperçu' : ex.result.error }}
+                  }
+                </p>
+              }
+              <label class="champ-bloc"><span class="label">Référence</span><input class="champ" formControlName="sku" placeholder="Facultatif" /></label>
+            </div>
+          }
+
+          <div class="deux">
+            <label class="champ-bloc"><span class="label">Disponibilité <span class="requis">*</span></span>
+              <select class="champ" formControlName="availability" data-testid="availability">
+                @for (key of availabilityKeys; track key) { <option [value]="key">{{ availabilityLabels[key] }}</option> }
+              </select>
+            </label>
+            <label class="champ-bloc"><span class="label">Quantité disponible @if (values().availability === 'in_stock') { <span class="requis">*</span> }</span>
+              <input class="champ" inputmode="numeric" formControlName="stock" [attr.aria-invalid]="!!errors()['stock']" data-testid="product-stock" />
+              @if (errors()['stock']; as e) { <small class="erreur">{{ e }}</small> } @else if (values().availability === 'made_to_order') { <small>Facultatif pour une fabrication sur commande</small> }
+            </label>
+          </div>
+        </section>
+
+        <!-- Variantes : groupe imbriqué -->
+        <section class="section">
+          <h2>Variantes</h2>
+          <p class="petit">Options proposées au client sur la fiche produit (laisser vide si non applicable).</p>
+          <div class="deux">
+            @for (group of variantGroups; track group.key) {
+              <div class="variante">
+                <p class="label">{{ group.label }}</p>
+                <div class="puces">
+                  @for (v of form.controls.variants.controls[group.key].value; track v) {
+                    <span class="puce">{{ v }} <button type="button" (click)="removeVariant(group.key, v)" [attr.aria-label]="'Retirer ' + v">✕</button></span>
+                  } @empty {
+                    <small>Aucune option</small>
+                  }
+                </div>
+                <div class="ajout-variante">
+                  <input class="champ" [value]="variantDrafts()[group.key]" (input)="setVariantDraft(group.key, $any($event.target).value)" (keydown.enter)="$event.preventDefault(); addVariant(group.key)" placeholder="Ajouter une option" [attr.aria-label]="'Ajouter une option : ' + group.label" [attr.data-testid]="'variant-' + group.key" />
+                  <button type="button" class="bouton bouton-clair mini" (click)="addVariant(group.key)">Ajouter</button>
+                </div>
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Livraison et informations complémentaires</h2>
+          <div class="deux">
+            <label class="champ-bloc"><span class="label">Informations de livraison</span><input class="champ" formControlName="delivery" placeholder="Ex. : Livraison partout en Tunisie sous 5 jours" /></label>
+            <label class="champ-bloc"><span class="label">Délai de préparation</span><input class="champ" formControlName="preparationTime" placeholder="Ex. : 48 h, 7 jours…" /></label>
+          </div>
+          <label class="champ-bloc"><span class="label">Informations complémentaires</span><textarea class="champ" rows="3" formControlName="extraInfo" placeholder="Installation, entretien, garantie…"></textarea></label>
+        </section>
+      </div>
+
+      <div class="colonne">
+        <!-- Photos : envoi avec progression -->
+        <section class="section">
+          <h2>Photos</h2>
+          <p class="petit">Jusqu'à {{ maxImages }} photos ({{ imageLimits }}). La photo principale apparaît sur les cartes du catalogue.</p>
+          <label class="depot" [class.en-erreur]="!!errors()['images']" (dragover)="$event.preventDefault()" (drop)="onDrop($event)">
+            <span class="icone" aria-hidden="true">⬆</span>
+            <strong>Ajouter des photos</strong>
+            <small>Cliquez ou glissez vos fichiers ici</small>
+            <input type="file" [accept]="imageAccept" multiple class="masque" (change)="onImageFiles($event)" data-testid="image-input" />
+          </label>
+          @if (errors()['images']; as e) { <small class="erreur">{{ e }}</small> }
+          @if (notice()) { <small class="erreur" role="status">{{ notice() }}</small> }
+          @if (images().length) {
+            <ul class="galerie" data-testid="image-grid">
+              @for (image of images(); track image.key; let i = $index) {
+                <li [class.principale]="image.isPrimary">
+                  <img [src]="image.url" [alt]="'Photo ' + (i + 1)" />
+                  @if (image.isPrimary) { <span class="etiquette">Principale</span> }
+                  @if (image.progress !== undefined) {
+                    <div class="progression" role="progressbar" [attr.aria-valuenow]="image.progress" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="'Envoi de la photo ' + (i + 1)">
+                      <span class="barre-progression"><span [style.width.%]="image.progress"></span></span> {{ image.progress }} %
+                    </div>
+                  }
+                  @if (image.error) { <div class="echec">{{ image.error }}</div> }
+                  <div class="outils-photo">
+                    <button type="button" (click)="move(i, i - 1)" [disabled]="i === 0" aria-label="Déplacer vers la gauche">←</button>
+                    <button type="button" (click)="move(i, i + 1)" [disabled]="i === images().length - 1" aria-label="Déplacer vers la droite">→</button>
+                    <button type="button" (click)="setPrimary(image.key)" [disabled]="image.isPrimary || !image.mediaId" aria-label="Définir comme image principale">★</button>
+                    <button type="button" class="rouge" (click)="removeImage(image.key)" aria-label="Supprimer la photo">✕</button>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        <section class="section">
+          <h2>Vidéo</h2>
+          <p class="petit">Une vidéo de présentation ({{ videoLimits }}) ou un lien YouTube / Vimeo.</p>
+          @if (video(); as v) {
+            <div class="video">
+              <video [src]="v.url" controls preload="metadata" data-testid="video-preview"></video>
+              @if (v.progress !== undefined) { <p class="petit">Envoi : {{ v.progress }} %</p> }
+              <button type="button" class="bouton bouton-clair mini" (click)="removeVideo()" [disabled]="v.progress !== undefined">Supprimer la vidéo</button>
+            </div>
+          } @else {
+            <label class="depot petit-depot">
+              <span class="icone"><app-icon name="film" [size]="24" /></span><strong>Sélectionner une vidéo</strong><small>{{ videoLimits }}</small>
+              <input type="file" [accept]="videoAccept" class="masque" (change)="onVideoFile($event)" data-testid="video-input" />
+            </label>
+          }
+          <label class="champ-bloc"><span class="label">Ou lien vidéo sécurisé</span>
+            <input class="champ" formControlName="videoUrl" placeholder="https://www.youtube.com/watch?v=…" [attr.aria-invalid]="!!errors()['videoUrl']" />
+            @if (errors()['videoUrl']; as e) { <small class="erreur">{{ e }}</small> } @else { <small>https://www.youtube.com/watch?v=… ou https://vimeo.com/…</small> }
+          </label>
+          @if ((values().videoUrl ?? '').trim()) {
+            @if (embedUrl(); as url) {
+              <iframe [src]="url" title="Aperçu de la vidéo" class="iframe" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe>
+            } @else {
+              <small class="erreur">Lien non reconnu : seules les URL YouTube et Vimeo en https sont acceptées.</small>
+            }
+          }
+        </section>
+
+        <div class="barre-actions">
+          <button type="submit" class="bouton" [disabled]="saving() || uploading()" data-testid="publish">{{ saving() ? 'Enregistrement…' : 'Publier' }}</button>
+          <button type="button" class="bouton bouton-clair" [disabled]="saving() || uploading()" (click)="submit('draft')" data-testid="save-draft">Enregistrer en brouillon</button>
+          <small>
+            @if (uploading()) { Envoi des fichiers en cours… }
+            @else { {{ requiresApproval() ? '« Publier » envoie le produit à l\'administration : il sera visible après validation.' : '« Publier » rend le produit visible immédiatement dans le catalogue.' }} Un brouillon reste privé. }
+          </small>
+        </div>
+      </div>
+    </form>
+  }
+}

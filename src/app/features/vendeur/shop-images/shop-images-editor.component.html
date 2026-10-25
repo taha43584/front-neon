@@ -1,0 +1,90 @@
+<section class="photos" aria-label="Photos de la boutique">
+  <!-- Couverture -->
+  <div class="couverture" data-testid="shop-cover">
+    @if (coverUrl(); as url) { <img [src]="url" [alt]="'Couverture de ' + shop().name" /> }
+    <div class="menu-image coin">
+      <button type="button" class="bouton-photo" data-menu-button="cover" aria-haspopup="menu" [attr.aria-expanded]="menu() === 'cover'" [attr.aria-label]="text.cover.change + ' de ' + shop().name" (click)="toggleMenu('cover')">
+        <svg class="icone-camera" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg> <span class="ordi">{{ text.cover.change }}</span><span class="tel">Couverture</span>
+      </button>
+      @if (menu() === 'cover') {
+        <div class="liste-menu droite" role="menu">
+          <button type="button" role="menuitem" (click)="pick('cover')">Importer une photo</button>
+          @if (coverUrl()) { <button type="button" role="menuitem" class="danger" (click)="remove('cover')">Supprimer la photo</button> }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Logo rond qui chevauche le bas de la couverture -->
+  <div class="identite">
+    <div class="menu-image logo-bloc">
+      <button type="button" class="logo" data-testid="shop-logo-button" data-menu-button="logo" aria-haspopup="menu" [attr.aria-expanded]="menu() === 'logo'" [title]="text.logo.change" [attr.aria-label]="text.logo.change + ' de ' + shop().name" (click)="toggleMenu('logo')">
+        @if (logoUrl(); as url) { <img [src]="url" [alt]="'Logo de ' + shop().name" /> } @else { <span class="initiales">{{ initials(shop().name) }}</span> }
+        <span class="survol">{{ text.logo.change }}</span>
+      </button>
+      <span class="pastille-camera" aria-hidden="true"><svg class="icone-camera" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>
+      @if (menu() === 'logo') {
+        <div class="liste-menu" role="menu">
+          <button type="button" role="menuitem" (click)="pick('logo')">Importer une photo</button>
+          @if (logoUrl()) { <button type="button" role="menuitem" class="danger" (click)="remove('logo')">Supprimer la photo</button> }
+        </div>
+      }
+    </div>
+    <div class="texte-identite">
+      <p class="nom-boutique">{{ shop().name }}</p>
+      <p class="petit">
+        Photo de profil 400 × 400, couverture 1600 × 500 — JPG, PNG ou WEBP, 5 Mo maximum.
+        @if (pending()) { Vos photos seront visibles publiquement après l'approbation de votre boutique. }
+      </p>
+    </div>
+  </div>
+
+  @if (message(); as m) {
+    <p class="message" [class.erreur]="m.error" [attr.role]="m.error ? 'alert' : 'status'" data-testid="shop-images-message">{{ m.text }}</p>
+  }
+
+  <input #logoInput type="file" accept="image/jpeg,image/png,image/webp" hidden data-testid="logo-input" (change)="onFile('logo', $event)" />
+  <input #coverInput type="file" accept="image/jpeg,image/png,image/webp" hidden data-testid="cover-input" (change)="onFile('cover', $event)" />
+</section>
+
+<!-- Fenêtre de recadrage : <dialog> natif (focus et clavier gérés par le navigateur) -->
+<dialog #cropBox class="fenetre-recadrage" aria-labelledby="titre-recadrage" aria-describedby="aide-fenetre" (cancel)="onDialogCancel($event)" data-testid="crop-dialog">
+  @if (cropping(); as crop) {
+    <div class="entete-fenetre">
+      <h2 id="titre-recadrage">{{ text[crop.slot].title }}</h2>
+      <p id="aide-fenetre" class="petit">{{ text[crop.slot].hint }}</p>
+    </div>
+    <div class="zone-recadrage">
+      <app-image-cropper
+        [src]="crop.src"
+        [aspect]="aspect(crop.slot)"
+        [shape]="crop.slot === 'logo' ? 'round' : 'rect'"
+        [showGrid]="crop.slot === 'cover'"
+        [disabled]="progress() !== null"
+        [label]="text[crop.slot].title"
+        [(zoom)]="zoom"
+        (areaChange)="onArea($event)"
+      />
+    </div>
+    <div class="pied-fenetre">
+      <div class="zoom">
+        <button type="button" class="rond" aria-label="Dézoomer" [disabled]="progress() !== null || zoom() <= 1" (click)="changeZoom(zoom() - 0.1)">−</button>
+        <input type="range" min="1" max="3" step="0.01" aria-label="Zoom" [attr.aria-valuetext]="zoomPercent() + ' %'" [value]="zoom()" [disabled]="progress() !== null" (input)="changeZoom(+$any($event.target).value)" />
+        <button type="button" class="rond" aria-label="Zoomer" [disabled]="progress() !== null || zoom() >= 3" (click)="changeZoom(zoom() + 0.1)">+</button>
+      </div>
+      @if (progress() !== null) {
+        <div aria-live="polite">
+          <div class="barre" role="progressbar" aria-label="Envoi de la photo" [attr.aria-valuenow]="progress()" aria-valuemin="0" aria-valuemax="100">
+            <span [style.width.%]="progress()! < 5 ? 5 : progress()"></span>
+          </div>
+          <p class="petit">Envoi en cours… {{ progress() }} %</p>
+        </div>
+      }
+      @if (cropError(); as e) { <p class="alerte" role="alert">{{ e }}</p> }
+      <div class="actions">
+        <button type="button" class="bouton bouton-clair" [disabled]="progress() !== null" (click)="closeCrop()">Annuler</button>
+        <button type="button" class="bouton" [disabled]="progress() !== null" (click)="save()" data-testid="crop-save">{{ progress() !== null ? 'Envoi…' : 'Enregistrer' }}</button>
+      </div>
+    </div>
+  }
+</dialog>

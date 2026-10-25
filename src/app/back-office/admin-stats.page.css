@@ -1,0 +1,17 @@
+.kpis.six { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.deux-graphes { display: grid; gap: 24px; margin-top: 24px; }
+.graphe { display: block; width: 100%; height: auto; padding: 12px 8px 4px; }
+.grille { stroke: var(--ardoise-ligne-1, #e2e8f0); stroke-dasharray: 3 3; }
+.axe { fill: var(--bleu-3, #64748b); font-size: 11px; }
+.barre-ambre { fill: var(--cuivre-11, #b95a00); }
+.barre-ambre-clair { fill: var(--cuivre-4, #f59e0b); }
+.barre-sombre { fill: var(--bleu-11, #0f172a); }
+.ligne-commandes { fill: none; stroke: var(--bleu-11, #0f172a); stroke-width: 2; }
+.ligne-annulees { fill: none; stroke: var(--rouge-10, #e11d48); stroke-width: 1.5; }
+.legende { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 14px; margin: 0; padding: 0 16px 14px; color: var(--bleu-8, #475569); font-size: 12px; }
+.puce { display: inline-block; width: 10px; height: 10px; margin-right: -8px; border-radius: 2px; }
+.puce.sombre { background: var(--bleu-11, #0f172a); }
+.puce.rose { background: var(--rouge-10, #e11d48); }
+.puce.ambre { background: var(--cuivre-4, #f59e0b); }
+@media (min-width: 768px) { .kpis.six { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1280px) { .kpis.six { grid-template-columns: repeat(6, minmax(0, 1fr)); } .deux-graphes { grid-template-columns: 1fr 1fr; } }

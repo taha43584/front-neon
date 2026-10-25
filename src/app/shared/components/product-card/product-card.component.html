@@ -1,0 +1,43 @@
+<article class="carte-produit fondu" [class.sans-fondu]="index() === null" [style.--rang]="rank()" data-testid="product-card">
+  <a class="lien-carte" [routerLink]="['/produit', product().slug]">
+    <div class="cadre">
+      <div class="photo">
+        @if (product().image; as image) {
+          <!-- NgOptimizedImage : chargement différé, mode « fill » dans un cadre 4/5 (aucun décalage) -->
+          <img [ngSrc]="image" [alt]="product().name" fill [priority]="priority()" />
+        } @else {
+          <span class="sans-photo">Sans photo</span>
+        }
+        <div class="badges">
+          @if (unit()) { <span class="badge badge-mesure">Sur mesure</span> }
+          @if (hasPromo()) { <span class="badge badge-promo">−{{ discountPercent() }} %</span> }
+          @if (product().availability === 'out_of_stock') { <span class="badge badge-rupture">Rupture de stock</span> }
+        </div>
+        <!-- Survol (souris) uniquement ; la carte entière reste le lien -->
+        <span class="voir" aria-hidden="true">Voir le produit</span>
+      </div>
+    </div>
+
+    <p class="boutique">
+      <app-shop-logo [name]="product().shopName" [logoUrl]="product().shopLogoUrl" [size]="24" />
+      <span>{{ product().shopName }}</span>
+    </p>
+    <p class="nom">{{ product().name }}</p>
+    @if (product().reviewCount) {
+      <p class="avis">★ {{ product().rating?.toFixed(1) }} · {{ product().reviewCount }} avis</p>
+    }
+    <p class="prix">
+      @if (unit()) { <span class="petit">à partir de</span> }
+      <strong [class.promo]="hasPromo()">{{ product().priceTnd | prixDt }}@if (unit()) {<span class="petit"> / {{ unit() }}</span>}</strong>
+      @if (hasPromo()) { <span class="barre">{{ product().regularPriceTnd | prixDt }}</span> }
+    </p>
+  </a>
+
+  <!-- Cœur favori : bouton SÉPARÉ du lien de la carte, petit « pop » au clic -->
+  <button type="button" class="favori" [class.actif]="favorite()" [attr.aria-pressed]="favorite()"
+    [attr.aria-label]="(favorite() ? 'Retirer ' : 'Ajouter ') + product().name + (favorite() ? ' des favoris' : ' aux favoris')" (click)="toggleFavorite()" data-testid="favorite-button">
+    @for (k of [pop()]; track k) {
+      <span class="coeur" [class.pop]="k > 0"><app-icon name="heart" [size]="18" [filled]="favorite()" /></span>
+    }
+  </button>
+</article>

@@ -1,0 +1,128 @@
+/* 1. Bande beige : titre + catégories en cercles */
+.bande { padding: 28px 0 24px; background: var(--beige); }
+.bande h1 { max-width: 760px; font-size: clamp(1.9rem, 4vw, 3.4rem); line-height: 1.08; letter-spacing: -0.04em; }
+/* scroll-padding : l'aimantation du défilement garde la marge de 16 px à gauche */
+.cercles, .espaces, .rangee-ateliers { scroll-padding: 0 16px; }
+.cercles { display: flex; gap: 16px; margin: 24px -16px 0; padding: 0 16px 4px; overflow-x: auto; list-style: none; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.cercles::-webkit-scrollbar { display: none; }
+.cercles li { display: flex; flex-shrink: 0; flex-direction: column; align-items: center; scroll-snap-align: start; }
+.cercle { display: flex; width: 96px; flex-direction: column; align-items: center; gap: 8px; color: var(--texte); text-align: center; text-decoration: none; }
+.rond { position: relative; display: flex; width: 88px; height: 88px; align-items: center; justify-content: center; overflow: hidden; border: 3px solid var(--carte); border-radius: 999px; background: var(--beige-clair); box-shadow: 0 8px 20px rgba(42, 36, 32, 0.08); box-shadow: 0 8px 20px color-mix(in srgb, var(--ombre, #2a2420) 8%, transparent); color: var(--accent); }
+.rond img { width: 100%; height: 100%; object-fit: cover; }
+.cercle:hover .rond, .cercle:focus-visible .rond { border-color: var(--accent); }
+.cercle:focus-visible { outline: none; }
+.cercle:focus-visible .nom-cercle { text-decoration: underline; }
+.nom-cercle { font-size: 13px; font-weight: 600; line-height: 1.25; }
+.ligne-cercle { display: block; width: 64px; height: 12px; margin-top: 10px; border-radius: 999px; }
+
+.section { padding-top: 32px; padding-bottom: 32px; }
+.titre-section { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+.titre-section h2 { font-size: 26px; letter-spacing: -0.03em; }
+.actions-section { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.lien-section { display: inline-flex; min-height: 44px; align-items: center; color: var(--surtitre); font-size: 14px; font-weight: 600; text-decoration: none; }
+.filtres { display: flex; gap: 8px; overflow-x: auto; }
+
+/* 2. Vidéos : téléphone = 1 grande + 2×2 ; ordinateur = 1 grande (2×2 cases) + 4 petites */
+.grille-videos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 210px; gap: 10px; }
+.grille-videos .grande { grid-column: span 2; grid-row: span 2; }
+.grille-videos[data-nombre="2"] > :last-child, .grille-videos[data-nombre="4"] > :last-child { grid-column: span 2; }
+
+/* 3. Nouveautés : 5 par ligne sur grand écran */
+@media (min-width: 1280px) { .grille-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 40px 18px; } }
+
+/* 4. Espaces : défilement horizontal sur téléphone, 6 colonnes sur ordinateur */
+.espaces { display: flex; gap: 12px; margin: 0 -16px; padding: 0 16px 4px; overflow-x: auto; list-style: none; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.espaces::-webkit-scrollbar { display: none; }
+.espaces li { flex-shrink: 0; scroll-snap-align: start; }
+.espace { display: flex; width: 140px; min-height: 132px; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 18px; border: 1px solid var(--bordure); border-radius: 20px; background: var(--carte); color: var(--texte); text-decoration: none; }
+.espace:hover { border-color: var(--accent); }
+.icone-espace { display: flex; width: 52px; height: 52px; align-items: center; justify-content: center; border-radius: 999px; background: var(--beige-clair); color: var(--accent); }
+.nom-espace { font-size: 15px; font-weight: 600; line-height: 1.25; }
+
+/* 6. Ateliers : cartes qui défilent sur téléphone, 4 colonnes sur ordinateur */
+.rangee-ateliers { display: flex; gap: 16px; margin: 0 -16px; padding: 0 16px 8px; overflow-x: auto; list-style: none; scroll-snap-type: x mandatory; }
+.carte-atelier { position: relative; display: flex; width: 82%; flex-shrink: 0; flex-direction: column; overflow: hidden; border: 1px solid var(--bordure); border-radius: 22px; background: var(--carte); scroll-snap-align: start; }
+.carte-atelier.fondu-carte { animation: fondu-carte .5s var(--ease) both; animation-delay: calc(var(--rang, 0) * .12s); }
+@keyframes fondu-carte { from { opacity: 0; } to { opacity: 1; } }
+.mosaique { display: grid; aspect-ratio: 4 / 3; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 3px; overflow: hidden; background: var(--beige); }
+.mosaique img { width: 100%; height: 100%; min-height: 0; object-fit: cover; }
+.mosaique[data-photos="1"] img { grid-column: span 2; grid-row: span 2; }
+.mosaique[data-photos="2"] img { grid-row: span 2; }
+.mosaique[data-photos="3"] img:first-child { grid-row: span 2; }
+.corps-atelier { display: flex; align-items: center; gap: 12px; padding: 14px 16px 16px; }
+.logo-atelier { position: relative; margin-top: -40px; border: 3px solid var(--carte); border-radius: 999px; }
+.texte-atelier { min-width: 0; }
+.nom-atelier { display: block; overflow: hidden; color: var(--texte); font-family: var(--police-titre); font-size: 18px; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; }
+/* Toute la carte est cliquable (le lien s'étend avec ::after), le texte reste lisible */
+.nom-atelier::after { content: ""; position: absolute; inset: 0; }
+.nom-atelier:focus-visible { outline: none; }
+.nom-atelier:focus-visible::after { border-radius: 22px; outline: 2px solid var(--accent); outline-offset: -2px; }
+.infos-atelier { display: flex; flex-wrap: wrap; gap: 2px 10px; margin: 2px 0 0; color: var(--texte-secondaire); font-size: 13px; }
+.note { color: var(--texte); font-weight: 600; }
+.petit { color: var(--texte-secondaire); font-weight: 400; }
+.ville { display: inline-flex; align-items: center; gap: 4px; }
+
+/* 7. Qu'est-ce qu'Elegance Deco ? */
+.quoi { padding: 28px 20px; border-radius: 24px; background: var(--beige-clair); text-align: center; }
+.quoi h2 { font-size: 28px; }
+.piliers { display: grid; gap: 24px; margin: 28px 0; padding: 0; list-style: none; text-align: left; }
+.icone-pilier { display: flex; width: 48px; height: 48px; align-items: center; justify-content: center; border-radius: 999px; background: var(--carte); color: var(--accent); }
+.piliers h3 { margin-top: 14px; font-size: 20px; }
+.piliers p { margin: 8px 0 0; color: var(--texte-secondaire); font-size: 14px; line-height: 1.7; }
+.bouton-contour { border: 1px solid rgba(42, 36, 32, .3); border: 1px solid color-mix(in srgb, var(--ombre, #2a2420) 30%, transparent); background: transparent; color: var(--texte); }
+.bouton-contour:hover { background: var(--carte); }
+
+/* 8. Newsletter (désactivée) */
+.newsletter { display: grid; gap: 20px; padding: 28px 20px; border-radius: 24px; background: var(--texte); color: var(--carte); }
+.newsletter h2 { font-size: 24px; }
+.newsletter p { margin: 8px 0 0; color: var(--ligne-35, #d7c8bd); font-size: 14px; }
+.form-newsletter { display: flex; flex-direction: column; gap: 10px; }
+.form-newsletter .champ { width: 100%; height: 48px; border-color: transparent; border-radius: 999px; }
+.form-newsletter .champ:disabled { background: var(--ligne-4, #f1ece6); cursor: not-allowed; }
+.form-newsletter .bouton { background: var(--accent); }
+
+.vide-accueil { padding: 56px 24px; border-radius: 28px; }
+.vide-accueil .titre { font-size: 30px; }
+.vide-accueil p:not(.titre) { max-width: 32rem; margin: 12px auto 0; font-size: 14px; line-height: 1.7; }
+.vide-accueil .bouton { margin-top: 24px; }
+
+@media (min-width: 640px) {
+  .carte-atelier { width: 46%; }
+  .form-newsletter { flex-direction: row; }
+  .form-newsletter .champ { flex: 1; }
+}
+
+@media (min-width: 768px) {
+  .bande { padding: 40px 0 32px; }
+  .cercles { gap: 24px; }
+  .cercle { width: 120px; }
+  .rond { width: 112px; height: 112px; }
+  .titre-section { flex-direction: row; align-items: flex-end; justify-content: space-between; }
+  .titre-section h2 { font-size: 34px; }
+  .section { padding-top: 44px; padding-bottom: 44px; }
+  .grille-videos { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 230px; gap: 14px; }
+  .grille-videos[data-nombre="2"] > :last-child, .grille-videos[data-nombre="4"] > :last-child { grid-column: auto; }
+  .quoi { padding: 48px 40px; }
+  .quoi h2 { font-size: 36px; }
+  .piliers { grid-template-columns: repeat(3, 1fr); gap: 32px; margin: 36px 0; }
+  .newsletter { grid-template-columns: 1fr 1fr; align-items: center; padding: 40px; }
+}
+
+@media (min-width: 1024px) {
+  .bande { padding: 48px 0 40px; }
+  .cercles { justify-content: space-between; margin: 32px 0 0; padding: 0; overflow: visible; }
+  .cercle { width: 150px; }
+  .rond { width: 136px; height: 136px; }
+  .nom-cercle { font-size: 14px; }
+  .section { padding-top: 56px; padding-bottom: 56px; }
+  .grille-videos { grid-auto-rows: 260px; }
+  .espaces { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); margin: 0; padding: 0; overflow: visible; }
+  .espace { width: auto; min-height: 150px; }
+  .rangee-ateliers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; padding: 0; overflow: visible; }
+  .carte-atelier { width: auto; }
+}
+
+/* A-11 : places réservées tant que les sections différées (@defer) ne sont pas chargées */
+.video-attente { border-radius: 20px; background: #2a2420; }
+.neon-attente { min-height: 470px; border-radius: 24px; background: var(--texte); }
+@media (min-width: 768px) { .neon-attente { min-height: 300px; } }

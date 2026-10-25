@@ -1,0 +1,68 @@
+<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- clic sur le fond du <dialog> ; au clavier : Échap (natif) -->
+<dialog #dialog class="fenetre" aria-labelledby="titre-donner-avis" (click)="onBackdrop($event)" data-testid="review-dialog">
+  @if (line(); as l) {
+    <form class="contenu" novalidate (submit)="$event.preventDefault(); submit()">
+      <div class="haut">
+        <div>
+          <h2 id="titre-donner-avis">Donner mon avis</h2>
+          <p class="produit">{{ l.productName }} · {{ l.shopName }}</p>
+          @if (l.purchasedVariant) { <p class="petit">Acheté : {{ l.purchasedVariant }}</p> }
+        </div>
+        <button type="button" class="fermer" aria-label="Fermer" (click)="close()"><app-icon name="x" /></button>
+      </div>
+
+      <app-star-input label="Note globale" [(value)]="rating" />
+      <div class="criteres">
+        @for (c of criteria; track c.key) {
+          <app-star-input [label]="c.label" [value]="ratingOf(c.key)()" (valueChange)="ratingOf(c.key).set($event)" />
+        }
+      </div>
+
+      <label class="champ-texte" for="texte-avis">Votre avis
+        <span class="aide">Ce qui vous a plu, la qualité, l'emballage… ({{ bodyMin }} caractères au moins)</span>
+      </label>
+      <textarea id="texte-avis" class="champ zone" rows="4" [maxLength]="bodyMax" [value]="body()" (input)="body.set($any($event.target).value)" data-testid="review-text"></textarea>
+      <p class="compteur" aria-live="polite">{{ body().trim().length }} / {{ bodyMax }}</p>
+
+      <!-- Photos : jusqu'à 3, même validation que les photos produits -->
+      <fieldset class="photos">
+        <legend>Photos <span class="aide">(facultatif, {{ maxPhotos }} au plus · {{ photoLabel }})</span></legend>
+        <ul class="vignettes">
+          @for (p of photos(); track p.key; let i = $index) {
+            <li class="vignette" [class.refusee]="p.error">
+              <img [src]="p.preview" [alt]="'Photo ' + (i + 1)" />
+              @if (p.id === null && !p.error) { <span class="etat" role="status">Envoi…</span> }
+              <button type="button" class="retirer" [attr.aria-label]="'Retirer la photo ' + (i + 1)" (click)="removePhoto(p.key)"><app-icon name="x" [size]="14" /></button>
+              @if (p.error) { <p class="erreur-photo" role="alert">{{ p.error }}</p> }
+            </li>
+          }
+          @if (photos().length < maxPhotos) {
+            <li>
+              <label class="ajouter">
+                <input type="file" class="masque-lecteur" [accept]="acceptTypes" multiple (change)="addPhotos($any($event.target))" data-testid="review-photo-input" />
+                <app-icon name="image-up" [size]="22" /><span>Ajouter</span>
+              </label>
+            </li>
+          }
+        </ul>
+      </fieldset>
+
+      <!-- Identité publique : affichée clairement avant l'envoi -->
+      <div class="identite" data-testid="review-identity">
+        <p>Votre avis sera publié avec : <strong>{{ publicIdentity() }}</strong></p>
+        <label class="case">
+          <input type="checkbox" [checked]="anonymous()" (change)="anonymous.set($any($event.target).checked)" data-testid="review-anonymous" />
+          <span>Publier anonymement <span class="aide">(« Client vérifié », sans gouvernorat)</span></span>
+        </label>
+        <p class="aide"><app-icon name="circle-check" [size]="14" /> Le badge « Achat vérifié » est affiché dans les deux cas.</p>
+      </div>
+
+      @if (error()) { <p class="erreur" role="alert">{{ error() }}</p> }
+      <div class="pied">
+        <button type="button" class="bouton bouton-contour" (click)="close()">Annuler</button>
+        <button type="submit" class="bouton" [disabled]="saving()" data-testid="review-send">{{ saving() ? 'Envoi…' : 'Envoyer mon avis' }}</button>
+      </div>
+      <p class="aide">Votre avis est vérifié par notre équipe avant publication.</p>
+    </form>
+  }
+</dialog>

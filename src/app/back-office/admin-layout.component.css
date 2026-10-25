@@ -1,0 +1,40 @@
+:host { display: block; min-height: 100vh; background: var(--surface-6, #f8fafc); color: var(--bleu-10, #1e293b); }
+.barre-laterale { display: flex; height: 100%; flex-direction: column; background: var(--bleu-11, #0f172a); color: var(--ardoise-ligne-2, #cbd5e1); }
+.marque { display: flex; height: 64px; align-items: center; gap: 8px; padding: 0 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); border-bottom: 1px solid color-mix(in srgb, var(--carte) 10%, transparent); }
+.logo-e { display: flex; width: 32px; height: 32px; align-items: center; justify-content: center; border-radius: 6px; background: var(--cuivre-4, #f59e0b); color: var(--bleu-11, #0f172a); font-size: 14px; font-weight: 700; }
+.marque p { margin: 0; line-height: 1.2; }
+.nom { color: var(--carte); font-size: 14px; font-weight: 600; }
+.role { color: var(--jaune-3, #fbbf24); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.navigation { display: flex; flex: 1; flex-direction: column; gap: 2px; overflow-y: auto; padding: 16px 12px; }
+.navigation a { display: flex; min-height: 44px; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; border-radius: 6px; color: var(--ardoise-ligne-2, #cbd5e1); font-size: 14px; text-decoration: none; }
+.navigation a:hover { background: rgba(255, 255, 255, 0.05); background: color-mix(in srgb, var(--carte) 5%, transparent); color: var(--carte); }
+.navigation a.actif { background: rgba(255, 255, 255, 0.1); background: color-mix(in srgb, var(--carte) 10%, transparent); color: var(--carte); font-weight: 500; box-shadow: inset 3px 0 0 var(--jaune-3, #fbbf24); }
+.compte { padding: 2px 6px; border-radius: 4px; background: var(--cuivre-4, #f59e0b); color: var(--bleu-11, #0f172a); font-size: 10px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pied-barre { padding: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid color-mix(in srgb, var(--carte) 10%, transparent); font-size: 12px; }
+.lien-site, .deconnexion { display: flex; width: 100%; min-height: 44px; align-items: center; padding: 0 12px; border: none; border-radius: 6px; background: none; color: var(--ardoise-ligne-2, #cbd5e1); font: 12px var(--police-texte); text-align: left; text-decoration: none; cursor: pointer; }
+.lien-site:hover { background: rgba(255, 255, 255, 0.05); background: color-mix(in srgb, var(--carte) 5%, transparent); color: var(--carte); }
+.deconnexion { color: var(--rouge-6, #fda4af); }
+.deconnexion:hover { background: rgba(255, 255, 255, 0.05); background: color-mix(in srgb, var(--carte) 5%, transparent); }
+.utilisateur { margin: 8px 0; padding: 8px 12px; border-radius: 6px; background: rgba(255, 255, 255, 0.05); background: color-mix(in srgb, var(--carte) 5%, transparent); }
+.utilisateur p { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nom-utilisateur { color: var(--carte); font-weight: 500; }
+.email { color: var(--bleu-1, #94a3b8); }
+
+.colonne { position: fixed; top: 0; bottom: 0; left: 0; z-index: 40; width: 240px; }
+.ordi-seul { display: none; }
+.tiroir { position: fixed; inset: 0; z-index: 50; }
+.voile { position: absolute; inset: 0; padding: 0; border: none; background: rgba(15, 23, 42, 0.6); background: color-mix(in srgb, var(--ombre-3, #0f172a) 60%, transparent); cursor: default; }
+.panneau-tiroir { position: absolute; top: 0; bottom: 0; left: 0; width: 256px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); }
+.fermer { position: absolute; top: 10px; right: 6px; width: 44px; height: 44px; border: none; background: none; color: var(--ardoise-ligne-2, #cbd5e1); font-size: 18px; cursor: pointer; }
+.barre-tel { position: sticky; top: 0; z-index: 30; display: flex; height: 56px; align-items: center; gap: 8px; padding: 0 8px; border-bottom: 1px solid var(--ardoise-ligne-1, #e2e8f0); background: rgba(255, 255, 255, 0.95); background: color-mix(in srgb, var(--carte) 95%, transparent); }
+.barre-tel p { margin: 0; color: var(--bleu-11, #0f172a); font-size: 14px; font-weight: 600; }
+.menu { width: 44px; height: 44px; border: none; border-radius: 6px; background: none; color: var(--bleu-8, #475569); font-size: 20px; cursor: pointer; }
+.contenu { max-width: 1280px; margin: 0 auto; padding: 24px 16px; }
+
+@media (min-width: 640px) { .contenu { padding: 24px; } }
+@media (min-width: 1024px) {
+  .ordi-seul { display: block; }
+  .tel-seul { display: none; }
+  .principal { padding-left: 240px; }
+  .contenu { padding: 32px; }
+}

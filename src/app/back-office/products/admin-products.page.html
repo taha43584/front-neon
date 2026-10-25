@@ -1,0 +1,87 @@
+<div class="entete-page">
+  <div>
+    <h1>Produits</h1>
+    <p>Tous les produits de la marketplace, quel que soit leur statut.</p>
+  </div>
+</div>
+@if (message()) { <p class="message" role="status" data-testid="admin-message">{{ message() }}</p> }
+
+<section class="panneau">
+  <div class="filtres">
+    <div class="ligne-haut">
+      <div class="onglets" role="tablist" aria-label="Filtrer les produits">
+        @for (t of tabs(); track t.value) {
+          <button type="button" role="tab" [attr.aria-selected]="status() === t.value" (click)="setStatus(t.value)">{{ t.label }}@if (t.count !== undefined) { <span class="nombre">{{ t.count }}</span> }</button>
+        }
+      </div>
+      <div class="recherche-admin">
+        <input class="champ-admin" type="search" placeholder="Nom ou référence" aria-label="Nom ou référence" [value]="search()" (input)="setFilter(search, $any($event.target).value)" data-testid="admin-search" />
+        @if (search()) { <button type="button" class="effacer" aria-label="Effacer la recherche" (click)="setFilter(search, '')">✕</button> }
+      </div>
+    </div>
+    <div class="ligne-filtres">
+      <select class="champ-admin" aria-label="Filtrer par vendeur" [value]="shopId()" (change)="setFilter(shopId, $any($event.target).value)" data-testid="filter-shop">
+        <option value="">Tous les vendeurs</option>
+        @for (s of shops(); track s.id) { <option [value]="s.id" [selected]="'' + s.id === shopId()">{{ s.name }}</option> }
+      </select>
+      <select class="champ-admin" aria-label="Filtrer par catégorie" [value]="categoryId()" (change)="setFilter(categoryId, $any($event.target).value)">
+        <option value="">Toutes les catégories</option>
+        @for (c of mainCategories(); track c.id) { <option [value]="c.id">{{ c.name }}</option> }
+      </select>
+      <input class="champ-admin court" inputmode="decimal" placeholder="Prix min (DT)" aria-label="Prix minimum" [value]="minPrice()" (input)="setFilter(minPrice, $any($event.target).value)" />
+      <input class="champ-admin court" inputmode="decimal" placeholder="Prix max (DT)" aria-label="Prix maximum" [value]="maxPrice()" (input)="setFilter(maxPrice, $any($event.target).value)" />
+      @if (filtered()) { <button type="button" class="b" (click)="reset()">Réinitialiser</button> }
+    </div>
+  </div>
+
+  @switch (list.status()) {
+    @case ('loading') { <p class="info" role="status">Chargement…</p> }
+    @case ('error') { <div class="erreur-etat" role="alert"><p>{{ list.error() }}</p><button type="button" class="b" (click)="list.reload()">Réessayer</button></div> }
+    @default {
+      @if (!rows().length) {
+        <p class="vide">Aucun produit pour ces filtres</p>
+      } @else {
+        <div class="tableau">
+          <table data-testid="admin-products-table">
+            <thead><tr>
+              <th>Produit</th>
+              <th>Vendeur</th>
+              <th>Catégories</th>
+              <th class="droite">Prix</th>
+              <th class="droite">Stock</th>
+              <th>Statut</th>
+              <th>Création</th>
+              <th class="droite">Actions</th>
+            </tr></thead>
+            <tbody>
+              @for (p of rows(); track p.id) {
+                <tr [attr.data-testid]="'product-row-' + p.id">
+                  <td><a class="nom produit-cellule" [routerLink]="['/admin/produits', p.id]">@if (p.imageUrl) { <img class="vignette" [src]="p.imageUrl" [alt]="p.name" loading="lazy" /> } @else { <span class="vignette vide"></span> }<span>{{ p.name }}</span></a></td>
+                  <td>
+                    @if (p.shopId) { <a class="nom" [routerLink]="['/admin/vendeurs', p.shopId]">{{ p.shopName }}</a> } @else { — }
+                    @if (p.shopStatus && p.shopStatus !== 'active') { <span class="alerte-texte sous">Boutique {{ shopState(p.shopStatus) }}</span> }
+                  </td>
+                  <td class="categories">
+                    <span class="sous">Vendeur : {{ p.shopCategoryName ?? 'Sans catégorie' }}</span>
+                    <app-global-category-select [productId]="p.id" [productName]="p.name" [categoryId]="p.categoryId" [options]="categoryOptions()" (saved)="message.set($event); list.reload()" />
+                  </td>
+                  <td class="droite">
+                    @if (p.promoPriceTnd !== null) { <span class="alerte-texte">{{ p.promoPriceTnd | prixDt }}</span><span class="sous barre">{{ p.priceTnd | prixDt }}</span> } @else { {{ p.priceTnd | prixDt }} }
+                  </td>
+                  <td class="droite">{{ p.availability === 'in_stock' ? (p.stock ?? 0) : availability[p.availability] }}</td>
+                  <td><app-status-badge [status]="p.status" />@if (p.moderationNote) { <span class="sous note" [title]="p.moderationNote">{{ p.moderationNote }}</span> }</td>
+                  <td>{{ p.createdAt | date: 'dd/MM/y' }}</td>
+                  <td><app-product-action-buttons [productId]="p.id" [name]="p.name" [status]="p.status" (action)="ask($event)" /></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @let d = list.data()!;
+        <app-admin-pagination [page]="d.page" [pageCount]="d.pageCount" [total]="d.total" (pageChange)="page.set($event)" />
+      }
+    }
+  }
+</section>
+
+<app-confirm-dialog [request]="request()" [busy]="busy()" [serverError]="actionError()" (confirmed)="apply($event)" (cancelled)="pending.set(null)" />

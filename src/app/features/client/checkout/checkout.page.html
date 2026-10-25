@@ -1,0 +1,101 @@
+@if (cart.isEmpty()) {
+  <div class="message-page">
+    <h1>Votre panier est vide</h1>
+    <p>Ajoutez une création avant de passer commande.</p>
+    <a routerLink="/produits" class="lien">← Retour au catalogue</a>
+  </div>
+} @else {
+  <div class="page">
+    <nav class="ariane" aria-label="Fil d'Ariane"><a routerLink="/panier">Panier</a><span>/</span><span class="courant">Livraison</span></nav>
+    <h1>Finaliser votre commande</h1>
+
+    <div class="mise-en-page">
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="carte-form" data-testid="checkout-form">
+        <div class="titre-form">
+          <span class="icone"><app-icon name="truck" [size]="24" /></span>
+          <div><h2>Coordonnées de livraison</h2><p>Nous les transmettrons aux boutiques concernées.</p></div>
+        </div>
+
+        <div class="champs">
+          <label class="large">
+            <span>Nom complet</span>
+            <input class="champ" formControlName="name" autocomplete="name" placeholder="Votre nom et prénom" [attr.aria-invalid]="!!error('name')" />
+            @if (error('name'); as e) { <small class="erreur">{{ e }}</small> }
+          </label>
+          <label class="large">
+            <span>Téléphone</span>
+            <input class="champ" formControlName="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="20 123 456" [attr.aria-invalid]="!!error('phone')" data-testid="checkout-phone" />
+            @if (error('phone'); as e) { <small class="erreur" data-testid="phone-error">{{ e }}</small> } @else { <small>8 chiffres, avec ou sans +216 / 00216</small> }
+          </label>
+          <label>
+            <span>Ville / délégation</span>
+            <input class="champ" formControlName="city" autocomplete="address-level2" placeholder="Hammam Sousse" [attr.aria-invalid]="!!error('city')" data-testid="checkout-city" />
+            @if (error('city'); as e) { <small class="erreur">{{ e }}</small> }
+          </label>
+          <label>
+            <span>Gouvernorat</span>
+            <select class="champ" formControlName="governorate" [attr.aria-invalid]="!!error('governorate')" data-testid="checkout-governorate">
+              <option value="" disabled>Choisissez…</option>
+              @for (g of governorates; track g) { <option [value]="g">{{ g }}</option> }
+            </select>
+            @if (error('governorate'); as e) { <small class="erreur">{{ e }}</small> }
+          </label>
+          <label class="large">
+            <span>Adresse de livraison</span>
+            <input class="champ" formControlName="address" autocomplete="street-address" placeholder="Rue, quartier, repère" [attr.aria-invalid]="!!error('address')" />
+            @if (error('address'); as e) { <small class="erreur">{{ e }}</small> }
+          </label>
+          <label class="large">
+            <span>Note pour la boutique <em>(optionnel)</em></span>
+            <textarea class="champ" formControlName="note" rows="3" placeholder="Une précision pour la livraison ou la personnalisation"></textarea>
+            @if (error('note'); as e) { <small class="erreur">{{ e }}</small> }
+          </label>
+        </div>
+
+        @if (auth.user() && !auth.isCustomer()) {
+          <p class="alerte">Vous êtes connecté avec un compte {{ auth.user()!.role === 'vendor' ? 'Vendeur' : 'Administrateur' }}. Les commandes sont réservées aux comptes Client.</p>
+        }
+
+        <div class="verification">
+          <p class="fort">Vérifiez vos coordonnées</p>
+          <p>Téléphone : <strong data-testid="checkout-phone-normalized">{{ normalizedPhone() || form.controls.phone.value || '—' }}</strong></p>
+          <p>Livraison : <strong>{{ form.controls.address.value || '—' }}{{ form.controls.city.value ? ', ' + form.controls.city.value : '' }}{{ form.controls.governorate.value ? ', ' + form.controls.governorate.value : '' }}</strong></p>
+          <label class="case">
+            <input type="checkbox" formControlName="confirmed" data-testid="checkout-confirm" />
+            <span>Je confirme que mon numéro de téléphone et mon adresse de livraison sont corrects.</span>
+          </label>
+          @if (error('confirmed'); as e) { <small class="erreur">{{ e }}</small> }
+        </div>
+
+        <p class="paiement"><app-icon name="shield-check" [size]="16" /> Paiement à la livraison : aucun paiement n'est demandé en ligne. En confirmant, vous acceptez les conditions de vente.</p>
+
+        @if (quote()?.hasProblems) {
+          <p class="alerte">Certains articles ne sont plus disponibles. <a routerLink="/panier">Modifiez votre panier</a> avant de confirmer.</p>
+        }
+        @if (serverError()) { <p class="alerte" role="alert" data-testid="checkout-error">{{ serverError() }}</p> }
+
+        <button type="submit" class="bouton plein" [disabled]="sending() || !canOrder()" data-testid="checkout-submit">
+          {{ sending() ? 'Confirmation…' : 'Confirmer la commande →' }}
+        </button>
+      </form>
+
+      <aside class="selection" aria-live="polite">
+        <p class="surtitre">Votre sélection</p>
+        @for (item of cart.items(); track item.lineId; let i = $index) {
+          @let q = quote()?.lines?.[i];
+          <div class="ligne">
+            <span>
+              {{ item.name }} × {{ item.quantity }}
+              @if (item.customSummary) { <small class="mesures" data-testid="checkout-measures">{{ item.customSummary }}</small> }
+              @if (q?.problem) { <small class="erreur">{{ q?.problem }}</small> }
+            </span>
+            <span class="montant">{{ q?.available ? (q!.unitPriceTnd * item.quantity | prixDt) : '—' }}</span>
+          </div>
+        }
+        <p class="total"><span>Total</span><strong data-testid="checkout-total">{{ quote() ? (quote()!.totalTnd | prixDt) : quoteError() ? '—' : '…' }}</strong></p>
+        <p class="petit">Montant recalculé par le serveur au moment de la confirmation.</p>
+        <p class="petit">✓ Référence de commande immédiate<br />✓ Suivi depuis votre espace client</p>
+      </aside>
+    </div>
+  </div>
+}

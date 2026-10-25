@@ -1,0 +1,52 @@
+<!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- conteneur : reçoit Échap depuis le champ et les options -->
+<div class="selecteur" (keydown.escape)="close()">
+  <button type="button" class="declencheur" [attr.aria-expanded]="open()" aria-haspopup="listbox" (click)="toggle()" data-testid="category-select">
+    <span [class.attenue]="!selectedName()">{{ selectedName() ?? 'Sans catégorie' }}</span>
+    <span aria-hidden="true">{{ busy() ? '…' : '▾' }}</span>
+  </button>
+
+  @if (open()) {
+    <div class="panneau">
+      <input #searchInput class="champ recherche" [value]="search()" (input)="search.set($any($event.target).value)" placeholder="Rechercher une catégorie (ex. Miroirs)…" aria-label="Rechercher une catégorie" data-testid="category-search" />
+
+      @if (similar().length) {
+        <div class="suggestion" data-testid="category-suggestion">
+          @for (s of similar(); track s.name) {
+            <p><app-icon name="sparkles" [size]="14" class="accent-icone" /> Vouliez-vous dire « {{ s.name }} » ? <button type="button" class="bouton mini" [disabled]="busy()" (click)="pickSuggestion(s.name)">Choisir « {{ s.name }} »</button></p>
+          }
+        </div>
+      }
+      @if (error()) { <p class="erreur" role="alert">{{ error() }}</p> }
+
+      <div class="liste" role="listbox" aria-label="Catégories">
+        @if (!search().trim()) {
+          <button type="button" role="option" class="option" [attr.aria-selected]="value() === null" (click)="choose(null)">
+            <span class="coche">{{ value() === null ? '✓' : '' }}</span> Sans catégorie
+          </button>
+        }
+        @if (ownShown().length) {
+          <p class="groupe">Mes catégories</p>
+          @for (c of ownShown(); track c.id) {
+            <button type="button" role="option" class="option" [attr.aria-selected]="value() === c.id" (click)="choose(c.id)">
+              <span class="coche">{{ value() === c.id ? '✓' : '' }}</span> {{ c.name }}
+              @if (c.hidden) { <small class="masquee">non affichée sur le site</small> }
+            </button>
+          }
+        }
+        @if (othersShown().length) {
+          <p class="groupe">Catégories utilisées par d'autres boutiques</p>
+          @for (c of othersShown(); track c.slug) {
+            <button type="button" role="option" aria-selected="false" class="option" [disabled]="busy()" (click)="adopt(c.slug)"><span class="coche">+</span> {{ c.name }}</button>
+          }
+        }
+        @if (canCreate()) {
+          <p class="groupe">Nouvelle catégorie</p>
+          <button type="button" role="option" aria-selected="false" class="option" [disabled]="busy()" (click)="create()" data-testid="category-create"><span class="coche">+</span> Créer « {{ typed() }} »</button>
+        }
+        @if (!ownShown().length && !othersShown().length && !canCreate() && search().trim()) {
+          <p class="vide">Aucune catégorie trouvée.</p>
+        }
+      </div>
+    </div>
+  }
+</div>

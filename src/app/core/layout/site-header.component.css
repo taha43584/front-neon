@@ -1,0 +1,120 @@
+/* Points de rupture comme le site React : md = 768 px, lg = 1024 px */
+:host { display: contents; }
+.md-plus, .lg-plus { display: none !important; }
+
+.bandeau { padding: 8px 16px; background: var(--texte); color: var(--beige); font-size: 12px; font-weight: 500; letter-spacing: 0.02em; text-align: center; }
+
+.entete { position: sticky; top: 0; z-index: 40; border-bottom: 1px solid var(--bordure); background: rgba(250, 248, 244, 0.95); background: color-mix(in srgb, var(--fond) 95%, transparent); backdrop-filter: blur(16px); }
+.ligne-haut { display: flex; align-items: center; gap: 12px; padding-top: 10px; padding-bottom: 10px; }
+.conteneur.ligne-haut { padding-left: 12px; padding-right: 12px; }
+
+.bouton-icone { position: relative; display: flex; width: 44px; height: 44px; flex-shrink: 0; align-items: center; justify-content: center; padding: 0; border: none; border-radius: 999px; background: none; color: var(--texte); cursor: pointer; transition: background .2s; }
+.bouton-icone:hover { background: var(--beige); }
+.point-connecte { position: absolute; right: 8px; bottom: 8px; width: 8px; height: 8px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 0 2px var(--fond); }
+.pastille-panier { position: absolute; top: 2px; right: 2px; display: flex; min-width: 20px; height: 20px; align-items: center; justify-content: center; padding: 0 4px; border-radius: 999px; background: var(--accent); color: var(--carte); font-size: 10px; font-weight: 700; }
+
+.zone-logo { display: flex; flex: 1; justify-content: center; }
+.logo { display: flex; min-height: 44px; flex-direction: column; flex-shrink: 0; justify-content: center; color: var(--texte); text-decoration: none; }
+.logo-nom { font-family: var(--police-titre); font-size: 24px; font-weight: 600; line-height: 1; letter-spacing: -0.04em; white-space: nowrap; }
+.logo-nom span { color: var(--cuivre-9, #936940); }
+.logo small { margin-top: 4px; color: var(--cuivre-12, #826d5c); font: 600 8px var(--police-texte); letter-spacing: 0.28em; text-transform: uppercase; white-space: nowrap; }
+
+/* Grande recherche centrale : bordure foncée, bouton loupe couleur accent */
+.recherche { flex: 1; max-width: 760px; align-items: center; margin: 0 8px; padding: 2px 2px 2px 20px; border: 2px solid var(--texte); border-radius: 999px; background: var(--carte); }
+.recherche:focus-within { box-shadow: 0 0 0 3px rgba(168, 105, 63, 0.25); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+.recherche input { flex: 1; min-width: 0; height: 44px; padding: 0 8px 0 0; border: none; outline: none; background: transparent; color: var(--texte); font: 15px var(--police-texte); }
+.recherche input::placeholder, .recherche-tel input::placeholder { color: var(--gris-4, #a89b91); }
+.bouton-loupe { display: flex; width: 56px; height: 44px; flex-shrink: 0; align-items: center; justify-content: center; padding: 0; border: none; border-radius: 999px; background: var(--accent); color: var(--carte); cursor: pointer; transition: background .2s; }
+.bouton-loupe:hover { background: var(--surtitre); }
+
+/* Bouton « Catégories » (ordinateur) et lien « Se connecter » */
+.bouton-categories { display: inline-flex; min-height: 44px; align-items: center; gap: 8px; padding: 0 18px; border: none; border-radius: 999px; background: var(--beige); color: var(--texte); font: 600 14px var(--police-texte); white-space: nowrap; cursor: pointer; transition: background .2s; }
+.bouton-categories:hover, .bouton-categories[aria-expanded="true"] { background: var(--ligne-26, #ead8cb); }
+.se-connecter { align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 999px; color: var(--texte); font-size: 14px; font-weight: 600; white-space: nowrap; text-decoration: none; transition: background .2s; }
+.se-connecter:hover { background: var(--beige); }
+
+.actions { display: flex; flex-shrink: 0; align-items: center; gap: 4px; }
+.menu-compte { position: relative; }
+.liste-compte { position: absolute; top: calc(100% + 6px); right: 0; z-index: 50; width: 224px; padding: 8px; border: 1px solid var(--bordure); border-radius: 16px; background: var(--carte); box-shadow: 0 20px 40px rgba(42, 36, 32, 0.12); box-shadow: 0 20px 40px color-mix(in srgb, var(--ombre, #2a2420) 12%, transparent); }
+.liste-compte .email { overflow: hidden; margin: 0; padding: 6px 8px; color: var(--texte-secondaire); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.liste-compte a, .liste-compte button { display: flex; width: 100%; min-height: 44px; align-items: center; gap: 8px; padding: 0 8px; border: none; border-radius: 12px; background: none; color: var(--texte); font: 14px var(--police-texte); text-align: left; text-decoration: none; cursor: pointer; }
+.liste-compte a:hover, .liste-compte button:hover, .liste-compte a:focus-visible, .liste-compte button:focus-visible { background: var(--beige-clair); }
+.liste-compte .deconnexion { color: var(--erreur); }
+
+.menu { border-top: 1px solid var(--ligne-8, #f0e9e4); }
+.menu-ligne { display: flex; min-height: 64px; align-items: center; gap: 24px; padding-top: 10px; padding-bottom: 10px; color: var(--texte); font-size: 14px; font-weight: 500; }
+.lien-menu { display: inline-flex; min-height: 44px; align-items: center; gap: 4px; padding: 0; border: none; background: none; color: inherit; font: inherit; white-space: nowrap; text-decoration: none; cursor: pointer; transition: color .2s; }
+.lien-menu:hover { color: var(--accent); }
+.lien-menu.fort { color: var(--encre-9, #302a26); font-weight: 600; }
+.vendre { display: inline-flex; min-height: 44px; align-items: center; margin-left: auto; padding: 0 16px; border-radius: 999px; background: var(--beige); color: var(--surtitre); font-weight: 600; white-space: nowrap; text-decoration: none; transition: background .2s; }
+.vendre:hover { background: var(--ligne-26, #ead8cb); }
+.menu-ligne > * { flex-shrink: 0; }
+.menu-ligne > .liens-categories { display: flex; min-width: 0; flex-shrink: 1; gap: 24px; margin: 0; padding: 0; overflow-x: auto; list-style: none; scrollbar-width: none; }
+.liens-categories::-webkit-scrollbar { display: none; }
+.separateur { width: 1px; height: 20px; background: var(--bordure); }
+.menu-categories { position: relative; }
+.liste-categories { position: absolute; top: 100%; left: 0; z-index: 50; width: 560px; padding-top: 8px; }
+.grille-categories { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 12px; border: 1px solid var(--ligne-19, #eee3da); border-radius: 16px; background: var(--carte); box-shadow: 0 20px 40px rgba(42, 36, 32, 0.12); box-shadow: 0 20px 40px color-mix(in srgb, var(--ombre, #2a2420) 12%, transparent); }
+.grille-categories a { display: flex; min-height: 44px; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; border-radius: 8px; color: var(--texte); text-decoration: none; }
+.grille-categories a span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.grille-categories a:hover { background: var(--surface-25, #f7f1ec); }
+.grille-categories small { flex-shrink: 0; color: var(--gris-4, #a89b91); font-size: 12px; }
+
+/* Recherche du téléphone (A-10d) : arrondie, pleine largeur, 46 px, ombre douce */
+.recherche-tel { display: flex; height: 46px; align-items: center; margin: 0 16px 10px; padding: 0 3px 0 16px; border: 1px solid var(--bordure); border-radius: 999px; background: var(--carte); box-shadow: 0 6px 18px rgba(42, 36, 32, 0.08); box-shadow: 0 6px 18px color-mix(in srgb, var(--ombre, #2a2420) 8%, transparent); }
+.recherche-tel:focus-within { box-shadow: 0 0 0 3px rgba(168, 105, 63, 0.25); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+.recherche-tel input { flex: 1; min-width: 0; height: 44px; padding: 0 8px 0 0; border: none; outline: none; background: transparent; color: var(--texte); font: 15px var(--police-texte); }
+.recherche-tel .bouton-loupe { width: 44px; height: 40px; }
+/* A-10e : la barre est un bouton qui ouvre l'écran de recherche */
+button.recherche-tel { width: calc(100% - 32px); color: var(--texte-secondaire); font: 15px var(--police-texte); text-align: left; cursor: pointer; }
+.faux-champ { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.faux-champ.rempli { color: var(--texte); }
+button.recherche-tel:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Tiroir : panneau à gauche, 86 % de la largeur (384 px au plus) */
+.tiroir { width: 86%; max-width: 384px; height: 100%; max-height: none; margin: 0; padding: 0; border: none; background: var(--surface-5, #fcfaf7); box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25); color: var(--texte); }
+.tiroir::backdrop { background: rgba(36, 30, 26, 0.4); backdrop-filter: blur(4px); }
+.tiroir-contenu { padding: 24px; }
+.tiroir-haut { display: flex; align-items: center; justify-content: space-between; }
+.tiroir-compte { display: grid; gap: 8px; margin-top: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--ligne-19, #eee3da); }
+.tiroir-compte .email { overflow: hidden; margin: 0; color: var(--gris-11, #7c6d64); font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.plein { width: 100%; min-height: 44px; border-radius: 12px; }
+.deconnexion-tiroir { min-height: 44px; border: none; background: none; color: var(--rouge-11, #c0392b); font: 12px var(--police-texte); cursor: pointer; }
+.surtitre-tiroir { margin: 24px 0 12px; color: var(--cuivre-13, #9a6341); font-size: 12px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; }
+.liens-tiroir { margin: 0; padding: 0; list-style: none; font-size: 15px; }
+.liens-tiroir li + li { margin-top: 4px; }
+.liens-tiroir a { display: flex; min-height: 44px; align-items: center; justify-content: space-between; padding: 8px; border-radius: 8px; color: var(--texte); text-decoration: none; }
+.liens-tiroir a:hover { background: var(--surface-32, #f5eee8); }
+.liens-tiroir small { color: var(--gris-4, #a89b91); font-size: 12px; }
+.liens-tiroir.separe { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--ligne-19, #eee3da); }
+
+@media (min-width: 640px) { .conteneur.ligne-haut { padding-left: 24px; padding-right: 24px; } }
+@media (min-width: 768px) {
+  .md-plus { display: flex !important; }
+  .tel-seul { display: none !important; }
+  .ligne-haut { padding-top: 14px; padding-bottom: 14px; }
+  .zone-logo { flex: none; justify-content: flex-start; }
+  .actions { margin-left: auto; }
+}
+@media (min-width: 1024px) {
+  .lg-plus { display: block !important; }
+  .sous-lg { display: none !important; }
+  .conteneur.ligne-haut { padding-left: 40px; padding-right: 40px; }
+}
+.bandeau .md-plus { justify-content: center; }
+.bouton-contour-tiroir { border: 1px solid var(--ligne-27, #e4d9d0); background: transparent; color: var(--texte); }
+
+/* ---------- A-10d : téléphone « façon application » (< 768 px ; l'ordinateur et la tablette ne changent pas) ---------- */
+@media (max-width: 767.98px) {
+  .pas-telephone { display: none !important; }
+  /* En-tête collant, légèrement transparent, avec flou ; logo à gauche, favoris + panier à droite */
+  .entete { background: rgba(250, 248, 244, 0.82); background: color-mix(in srgb, var(--fond) 82%, transparent); backdrop-filter: blur(14px) saturate(1.2); }
+  .conteneur.ligne-haut { padding-top: 8px; padding-bottom: 6px; padding-left: 16px; }
+  .zone-logo { justify-content: flex-start; }
+  .bouton-icone:active, .bouton-loupe:active { transform: scale(0.96); }
+  .bouton-icone, .bouton-loupe { transition: transform .15s ease, background .2s; }
+}
+@media (max-width: 767.98px) and (prefers-reduced-motion: reduce) {
+  .bouton-icone, .bouton-loupe { transition: none; }
+  .bouton-icone:active, .bouton-loupe:active { transform: none; }
+}
