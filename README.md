@@ -31,3 +31,5 @@ Pour des essais sur la **base de test** : lancer un back sur le port 3001 branch
 ```bash
 npm run build    # résultat dans dist/client-angular
 ```
+
+Mise en ligne sur un VPS Dokploy : [DEPLOIEMENT.md](DEPLOIEMENT.md).

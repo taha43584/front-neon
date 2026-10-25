@@ -1,0 +1,11 @@
+node_modules
+dist
+.angular
+site-local/site
+site-local/journaux
+demo-en-ligne/journaux
+demo-en-ligne/.mot-de-passe
+outils/rapports-lighthouse
+.env
+*.log
+.git
